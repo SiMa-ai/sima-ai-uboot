@@ -1060,6 +1060,164 @@ static ulong mem_test_quick(vu_long *buf, ulong start_addr, ulong end_addr,
 	return errs;
 }
 
+static int do_walking_one(struct cmd_tbl *cmdtp, int flag, int argc,
+			char *const argv[])
+{
+    ulong address;
+    ulong pattern = 0;
+
+    address = CONFIG_SYS_MEMTEST_START;
+
+    if (argc > 1)
+	    if (strict_strtoul(argv[1], 16, &address) < 0)
+		    return CMD_RET_USAGE;
+    /*
+     * Perform a walking 1's test at the given address.
+     */
+    for (pattern = 1; pattern != 0; pattern <<= 1)
+    {
+        /*
+         * Write the test pattern.
+         */
+	printf("\rWalking 1's %08lX  Writing..."
+		"%12s"
+		"\b\b\b\b\b\b\b\b\b\b",
+		pattern, "");
+        address = pattern;
+        /*
+         * Read it back (immediately is okay for this test).
+         */
+        if (address != pattern)
+        {
+            printf("Walking 1's test failed pattern = 0x%lx\n", pattern);
+	    return -1;
+        }
+	printf("\rWalking 1's %08lX  Reading..."
+		"%12s"
+		"\b\b\b\b\b\b\b\b\b\b",
+		pattern, "");
+    }
+    printf("\n");
+    return 0;
+}
+
+static int do_walking_zero(struct cmd_tbl *cmdtp, int flag, int argc,
+			char *const argv[])
+{
+    ulong address;
+    ulong pattern = 0;
+
+    address = CONFIG_SYS_MEMTEST_START;
+
+    if (argc > 1)
+	    if (strict_strtoul(argv[1], 16, &address) < 0)
+		    return CMD_RET_USAGE;
+    /*
+     * Perform a walking 0's test at the given address.
+     */
+    for (pattern = 1; pattern != 0; pattern <<= 1)
+    {
+        /*
+         * Write the test pattern.
+         */
+	printf("\rWalking 0's %08lX  Writing..."
+		"%12s"
+		"\b\b\b\b\b\b\b\b\b\b",
+		pattern, "");
+        address = (~pattern);
+        /*
+         * Read it back (immediately is okay for this test).
+         */
+        if (address != (~pattern))
+        {
+            printf("Walking 0's test failed pattern = 0x%lx\n", ~pattern);
+	    return -1;
+        }
+	printf("\rWalking 0's %08lX  Reading..."
+		"%12s"
+		"\b\b\b\b\b\b\b\b\b\b",
+		~pattern, "");
+    }
+    printf("\n");
+    return 0;
+}
+
+/*
+ * The smallest set of addresses that will cover all possible
+ * combinations is the set of "power-of-two" addresses.
+ * These addresses are analogous to the set of data values
+ * used in the walking 1's test.
+ * The corresponding memory locations are 00001h, 00002h, 00004h,
+ * 00008h, 00010h, 00020h, etc.
+ */
+static int do_address_bus_test(struct cmd_tbl *cmdtp, int flag, int argc,
+                        char *const argv[])
+{
+        ulong start, end;
+        vu_long scratch_space;
+        vu_long *buf, *dummy = &scratch_space;
+        ulong iteration_limit = 0;
+        ulong count = 0;
+        ulong errs = 0; /* number of errors, or -1 if interrupted */
+        ulong pattern = 0;
+        int iteration;
+
+        start = CONFIG_SYS_MEMTEST_START;
+        end = CONFIG_SYS_MEMTEST_END;
+
+        if (argc > 1)
+                if (strict_strtoul(argv[1], 16, &start) < 0)
+                        return CMD_RET_USAGE;
+
+        if (argc > 2)
+                if (strict_strtoul(argv[2], 16, &end) < 0)
+                        return CMD_RET_USAGE;
+
+        if (argc > 3)
+                if (strict_strtoul(argv[3], 16, &pattern) < 0)
+                        return CMD_RET_USAGE;
+
+        if (argc > 4)
+                if (strict_strtoul(argv[4], 16, &iteration_limit) < 0)
+                        return CMD_RET_USAGE;
+
+        if (end < start) {
+                printf("Refusing to do empty test\n");
+                return -1;
+        }
+
+        printf("Testing %08lx ... %08lx:\n", start, end);
+        debug("%s:%d: start %#08lx end %#08lx\n", __func__, __LINE__,
+              start, end);
+
+        buf = map_sysmem(start, end - start);
+        for (iteration = 0;
+                        !iteration_limit || iteration < iteration_limit;
+                        iteration++) {
+                if (ctrlc()) {
+                        errs = -1UL;
+                        break;
+                }
+
+                printf("Iteration: %6d\r", iteration + 1);
+                debug("\n");
+		errs = mem_test_alt(buf, start, end, dummy);
+		if (errs == -1UL)
+			break;
+                }
+                count += errs;
+
+        unmap_sysmem((void *)buf);
+
+        if (errs == -1UL) {
+                /* Memory test was aborted - write a newline to finish off */
+                putc('\n');
+        }
+        printf("Tested %d iteration(s) with %lu errors.\n", iteration, count);
+
+        return errs != 0;
+}
+
 /*
  * Perform a memory test. A more complete alternative test can be
  * configured using CONFIG_SYS_ALT_MEMTEST. The complete test loops until
@@ -1424,6 +1582,24 @@ U_BOOT_CMD(
 	mtest,	5,	1,	do_mem_mtest,
 	"simple RAM read/write test",
 	"[start [end [pattern [iterations]]]]"
+);
+
+U_BOOT_CMD(
+	p2atest,  5,	1,      do_address_bus_test,
+	"power-of-two addresses test",
+	"[start [end [pattern [iterations]]]]"
+);
+
+U_BOOT_CMD(
+	wone, 2,	1,	do_walking_one,
+	"DDR/OCM walking 1's test",
+	"[Test address]"
+);
+
+U_BOOT_CMD(
+	wzero, 2,	1,	do_walking_zero,
+	"DDR/OCM walking 0's test",
+	"[Test address]"
 );
 #endif	/* CONFIG_CMD_MEMTEST */
 
