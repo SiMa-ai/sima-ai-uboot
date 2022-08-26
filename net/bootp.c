@@ -174,6 +174,8 @@ static void store_bootp_params(struct bootp_hdr *bp)
 	 * don't delete exising entry when BOOTP / DHCP reply does
 	 * not contain a new value
 	 */
+	if (*tftp_server_name)
+		env_set("tftpserver", tftp_server_name);
 	if (*net_boot_file_name)
 		env_set("bootfile", net_boot_file_name);
 }
@@ -604,6 +606,14 @@ static int dhcp_extended(u8 *e, int message_type, struct in_addr server_ip,
 	*e++  = 42;
 	*cnt += 1;
 #endif
+#if defined(CONFIG_BOOTP_TFTPSERVER)
+	*e++ = 66;
+	*cnt += 1;
+#endif
+#if defined(CONFIG_BOOTP_BOOTFILENAME)
+	*e++ = 67;
+	*cnt += 1;
+#endif
 	/* no options, so back up to avoid sending an empty request list */
 	if (*cnt == 0)
 		e -= 2;
@@ -690,6 +700,16 @@ static int bootp_extended(u8 *e)
 	*e++ = 42;
 	*e++ = 4;
 	e   += 4;
+#endif
+#if defined(CONFIG_BOOTP_TFTPSERVER)
+	*e++ = 66;
+	*e++ = 32;
+	e   += 32;
+#endif
+#if defined(CONFIG_BOOTP_BOOTFILENAME)
+	*e++ = 67;
+	*e++ = 64;
+	e   += 64;
 #endif
 
 	*e++ = 255;		/* End of the list */
@@ -901,7 +921,11 @@ static void dhcp_process_options(uchar *popt, uchar *end)
 			break;
 		case 59:	/* Ignore Rebinding Time Option */
 			break;
-		case 66:	/* Ignore TFTP server name */
+		case 66:	/* TFTP server name */
+			size = truncate_sz("TFTP Server",
+					   sizeof(tftp_server_name), oplen);
+			memcpy(&tftp_server_name, popt + 2, size);
+			tftp_server_name[size] = 0;
 			break;
 		case 67:	/* Bootfile option */
 			if (!net_boot_file_name_explicit) {

@@ -174,6 +174,8 @@ ushort		net_native_vlan = 0xFFFF;
 
 /* Boot File name */
 char net_boot_file_name[1024];
+/* TFTP Server name */
+char tftp_server_name[1024];
 /* Indicates whether the file name was specified on the command line */
 bool net_boot_file_name_explicit;
 /* The actual transferred size of the bootfile (in bytes) */

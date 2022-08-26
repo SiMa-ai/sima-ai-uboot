@@ -1725,6 +1725,14 @@ config BOOTP_TIMEOFFSET
 	bool "Request & store 'timeoffset' from BOOTP/DHCP server"
 	depends on CMD_BOOTP && CMD_SNTP
 
+config BOOTP_TFTPSERVER
+	bool "Request & store name of TFTP server from BOOTP/DHCP server"
+	depends on CMD_BOOTP
+
+config BOOTP_BOOTFILENAME
+	bool "Request & store Bootfile name from BOOTP/DHCP server"
+	depends on CMD_BOOTP
+
 config CMD_PCAP
 	bool "pcap capture"
 	help
