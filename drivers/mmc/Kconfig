@@ -651,6 +651,14 @@ config MMC_SDHCI_ROCKCHIP
 	help
 	  Support for Arasan SDHCI host controller on Rockchip ARM SoCs platform
 
+config MMC_SDHCI_SIMA
+        bool "DW SDHCI controller for SiMa support"
+	depends on ARCH_SIMA
+	depends on DM_MMC && BLK
+	depends on MMC_SDHCI
+        help
+          Support for DW SDHCI host controller on SiMa SoCs platform
+
 config MMC_SDHCI_S5P
 	bool "SDHCI support on Samsung S5P SoC"
 	depends on MMC_SDHCI
