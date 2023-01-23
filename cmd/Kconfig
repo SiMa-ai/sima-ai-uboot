@@ -2052,6 +2052,14 @@ config CMD_PAUSE
 	  Delay execution waiting for any user input.
 	  Useful to allow the user to read a failure log.
 
+config CMD_DDR
+	bool "ddr"
+	depends on TARGET_DAVINCI_A65
+	default n
+	help
+	  Enable the 'ddr*' command for debugging SiMa.ai DDR PHY controller
+	  configuration.
+
 config CMD_RNG
 	bool "rng command"
 	depends on DM_RNG

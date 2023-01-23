@@ -304,7 +304,11 @@ void cli_simple_loop(void)
 #endif
 
 		if (len == -1)
+#ifdef CONFIG_CMD_DDR
+			return;
+#else
 			puts("<INTERRUPT>\n");
+#endif
 		else
 			rc = run_command_repeatable(lastcommand, flag);
 

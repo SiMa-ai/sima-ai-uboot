@@ -623,7 +623,7 @@ U_BOOT_DRIVER(ns16550_serial) = {
 	.priv_auto	= sizeof(struct ns16550),
 	.probe = ns16550_serial_probe,
 	.ops	= &ns16550_serial_ops,
-#if !CONFIG_IS_ENABLED(OF_CONTROL)
+#if !CONFIG_IS_ENABLED(OF_CONTROL) || CONFIG_IS_ENABLED(ARCH_SIMA)
 	.flags	= DM_FLAG_PRE_RELOC,
 #endif
 };

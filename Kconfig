@@ -208,7 +208,7 @@ config DISTRO_DEFAULTS
 	select CMD_PXE if NET
 	select CMD_SYSBOOT
 	select ENV_VARS_UBOOT_CONFIG
-	select HUSH_PARSER
+	select HUSH_PARSER if !CMD_DDR
 	select SUPPORT_RAW_INITRD
 	select SYS_LONGHELP
 	imply CMD_MII if NET
