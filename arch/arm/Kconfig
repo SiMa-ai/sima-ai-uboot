@@ -113,6 +113,10 @@ config GIC_V3_ITS
 	  ARM GICV3 has limitation, once the LPI table is enabled, LPI
 	  configuration table can not be re-programmed, unless GICV3 reset.
 
+config GIC600_RDIST_PWRON
+	depends on GICV3
+	bool "GIC600 specific redestributor Power On Sequence"
+
 config STATIC_RELA
 	bool
 	default y if ARM64

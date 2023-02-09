@@ -92,8 +92,20 @@ ENTRY(gic_init_secure_percpu)
 	add	x9, x9, #(2 << 16)
 	b	1b
 
+2:
+#if defined(CONFIG_GIC600_RDIST_PWRON)
+    /* Execute GIC600 specific wakeup code */
+    mov w10, #~0x3
+    ldr w11, [x9, GICR_PWRR]
+    and w11, w11, w10       /* Clear RDAG & RDPD */
+    str w11, [x9, GICR_PWRR]
+    dsb st
+    isb
+3:  ldr w10, [x9, GICR_PWRR]
+    tbnz    w10, #3, 3b     /* Wait Redistributor is powered up */
+#endif
 	/* x9: ReDistributor Base Address of Current CPU */
-2:	mov	w10, #~0x2
+	mov	w10, #~0x2
 	ldr	w11, [x9, GICR_WAKER]
 	and	w11, w11, w10		/* Clear ProcessorSleep */
 	str	w11, [x9, GICR_WAKER]
