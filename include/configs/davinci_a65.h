@@ -60,10 +60,22 @@
 	"cpio_name=combo-board-image-combo-board.cpio.gz\0" \
 	"booti_initrd=-\0"
 
+#define BOOTENV_DEFAULT_PATH \
+	"boot_path=/boot-0/\0"
+
+#define BOOTENV_PREFIXES \
+	"boot_prefixes=/boot-0/ /boot-1/\0"
+
+#define BOOTENV_ALTBOOTCMD \
+	"altbootcmd=if test -n ${boot_path} && test \"${boot_path}\" = \"/boot-0/\";then; setenv boot_prefixes /boot-1/;setenv boot_path /boot-1/;else;setenv boot_prefixes /boot-0/; setenv boot_path /boot-0/;fi;$bootcmd\0"
+
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	BOOTENV_BOOTARGS \
 	ENV_MEM_LAYOUT_SETTINGS \
 	BOOTENV_DEFAULT_NETCFG \
-	BOOTENV
+	BOOTENV_DEFAULT_PATH \
+	BOOTENV_ALTBOOTCMD \
+	BOOTENV \
+	BOOTENV_PREFIXES
 
 #endif /* __CONFIG_DAVINCI_A65_H */
