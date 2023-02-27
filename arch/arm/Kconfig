@@ -1032,6 +1032,15 @@ config ARCH_RMOBILE
 	imply SYS_THUMB_BUILD
 	imply ARCH_MISC_INIT if DISPLAY_CPUINFO
 
+config ARCH_SIMA
+	bool "Support SiMa ai SoCs"
+	select ARM64
+	select DM
+	select DM_SERIAL
+	select OF_CONTROL
+	imply DM_RNG
+	imply CMD_DM
+
 config ARCH_SNAPDRAGON
 	bool "Qualcomm Snapdragon SoCs"
 	select ARM64
@@ -2222,6 +2231,8 @@ source "arch/arm/mach-rockchip/Kconfig"
 
 source "arch/arm/mach-s5pc1xx/Kconfig"
 
+source "arch/arm/mach-sima/Kconfig"
+
 source "arch/arm/mach-snapdragon/Kconfig"
 
 source "arch/arm/mach-socfpga/Kconfig"
@@ -2300,6 +2311,7 @@ source "board/isee/igep003x/Kconfig"
 source "board/kontron/sl28/Kconfig"
 source "board/myir/mys_6ulx/Kconfig"
 source "board/siemens/common/Kconfig"
+source "board/sima/davinci_a65/Kconfig"
 source "board/seeed/npi_imx6ull/Kconfig"
 source "board/socionext/developerbox/Kconfig"
 source "board/st/stv0991/Kconfig"

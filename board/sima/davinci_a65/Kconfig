@@ -1,0 +1,12 @@
+if TARGET_DAVINCI_A65
+
+config SYS_BOARD
+	default "davinci_a65"
+
+config SYS_VENDOR
+	default "sima"
+
+config SYS_CONFIG_NAME
+	default "davinci_a65"
+
+endif

@@ -1,0 +1,6 @@
+Davinci A65
+M:	Arun Kumar <arun.kumar@sima.ai>
+S:	Maintained
+F:	board/sima/davinci-a65
+F:	include/configs/davinci-a65.h
+F:	configs/sima_davinci-a65_defconfig

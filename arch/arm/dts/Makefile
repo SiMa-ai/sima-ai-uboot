@@ -42,7 +42,7 @@ dtb-$(CONFIG_ARCH_APPLE) += \
 dtb-$(CONFIG_ARCH_DAVINCI) += \
 	da850-evm.dtb \
 	da850-lcdk.dtb \
-	da850-lego-ev3.dtb
+	da850-lego-ev3.dtb`
 
 dtb-$(CONFIG_ARCH_KIRKWOOD) += \
 	kirkwood-atl-sbx81lifkw.dtb \
@@ -172,6 +172,12 @@ dtb-$(CONFIG_ROCKCHIP_RV1108) += \
 
 dtb-$(CONFIG_ARCH_S5P4418) += \
 	s5p4418-nanopi2.dtb
+
+dtb-$(CONFIG_ARCH_SIMA) += \
+	simaai-davinci-combo-board.dtb \
+	simaai-davinci-dual-m2.dtb \
+	simaai-davinci-hhhl.dtb
+
 
 dtb-$(CONFIG_ARCH_MESON) += \
 	meson-axg-s400.dtb \

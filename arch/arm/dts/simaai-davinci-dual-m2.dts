@@ -1,0 +1,54 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * Copyright (c) 2023 SiMa ai
+ */
+
+/dts-v1/;
+
+#include "simaai-davinci-h.dtsi"
+
+
+/ {
+	model = "SiMa.ai DaVinci Dual M.2 Board";
+
+	chosen {
+		bootargs = "console=ttyS0,115200n8 root=/dev/ram0 rw rootfstype=ramfs";
+	};
+
+	aliases {
+		ethernet0 = &eth0;
+		ethernet1 = &eth1;
+		mmc0 = &emmc;
+		console   = &uart0;
+	};
+
+	memory@80000000 {
+		device_type = "memory";
+		reg = <0x0 0x80000000 0x0 0x80000000>;
+	};
+};
+
+&i2c0 {
+	status = "okay";
+};
+
+&i2c1 {
+	status = "okay";
+};
+
+&emmc {
+	status = "okay";
+};
+
+&eth0 {
+	status = "okay";
+};
+
+&eth1 {
+	status = "okay";
+};
+
+&pcie_ep {
+	status = "okay";
+};
+
