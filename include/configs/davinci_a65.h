@@ -56,7 +56,7 @@
 	"scriptaddr=0x90000000\0" \
 	"kernel_addr=0xC0080000\0" \
 	"cpio_addr=0xE0000000\0" \
-	"cpio_size=0x10000000\0" \
+	"cpio_size=0x18000000\0" \
 	"cpio_name=combo-board-image-combo-board.cpio.gz\0" \
 	"booti_initrd=-\0"
 
