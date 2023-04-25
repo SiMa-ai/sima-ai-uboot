@@ -86,6 +86,8 @@ int board_init(void)
 #ifdef CONFIG_BOARD_LATE_INIT
 int board_late_init(void)
 {
+    uint32_t altboot;
+    unsigned long bootlimit;
 	int32_t res = 0, i;
 	unsigned char mac[6];
 	boardinfo_t *info = get_board_info();
@@ -100,7 +102,17 @@ int board_late_init(void)
 		mac[5]++;
 	}
 	env_set("fdt_name", info->linuxdtb);
-
+    shmem_ocm_set_uboot_run_mode(1);
+    altboot = get_boot_partitions_mode();
+    if (altboot == 0x1) {
+        printf("altbootmode is set in ocm shm, altboot:0x%x \n",altboot);
+        if ( env_get_ulong("upgrade_available", 10, 0)) {
+            bootlimit = env_get_ulong("bootlimit", 10, 0);
+            /* set bootcount > bootlimit so that u-boot triggers altbootcmd to boot from secondary partitions */
+            env_set_ulong("bootcount", bootlimit + 1);
+            printf("set to boot from altboot \n");
+        }
+    }
 	return 0;
 }
 #endif
