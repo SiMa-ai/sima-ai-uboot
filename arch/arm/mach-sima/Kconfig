@@ -1,0 +1,20 @@
+if ARCH_SIMA
+
+choice
+	prompt "Davici A65 board select"
+	default TARGET_DAVINCI_A65
+
+config TARGET_DAVINCI_A65
+	bool "ARMv8, 64bit"
+	select ARM64
+	select BOARD_LATE_INIT
+	select GICV3
+	select GIC600_RDIST_PWRON
+	imply MULTI_DTB_FIT
+
+endchoice
+
+config SYS_SOC
+	default "sima"
+
+endif
