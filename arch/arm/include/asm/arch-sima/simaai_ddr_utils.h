@@ -46,6 +46,8 @@ ddrc_settings_t * get_ddrc_settings(void);
 void sima_ddr_init(void);
 void sima_eth_init(void);
 
+void sima_set_dtb_name(void);
+
 #ifdef CONFIG_CMD_DDR
 void sima_ddr_reset(void);
 

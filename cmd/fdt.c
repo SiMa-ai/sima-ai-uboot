@@ -18,6 +18,9 @@
 #include <fdt_support.h>
 #include <mapmem.h>
 #include <asm/io.h>
+#ifdef CONFIG_TARGET_DAVINCI_A65
+#include <asm/arch/simaai_ddr_utils.h>
+#endif
 
 #define MAX_LEVEL	32		/* how deeply nested we will go */
 #define SCRATCHPAD	1024		/* bytes of scratchpad memory */
@@ -134,6 +137,14 @@ static int do_fdt(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
 {
 	if (argc < 2)
 		return CMD_RET_USAGE;
+
+#ifdef CONFIG_TARGET_DAVINCI_A65
+	/* fdt addr: Set the name of of Linux dtb file */
+	if (strncmp(argv[1], "setname", 7) == 0) {
+		sima_set_dtb_name();
+		return CMD_RET_SUCCESS;
+	}
+#endif
 
 	/* fdt addr: Set the address of the fdt */
 	if (strncmp(argv[1], "ad", 2) == 0) {
@@ -1104,6 +1115,9 @@ static char fdt_help_text[] =
 #endif
 #ifdef CONFIG_OF_SYSTEM_SETUP
 	"fdt systemsetup                     - Do system-specific set up\n"
+#endif
+#ifdef CONFIG_TARGET_DAVINCI_A65
+	"fdt setname                         - Set Linux dtb file name depending on HWID\n"
 #endif
 	"fdt move   <fdt> <newaddr> <length> - Copy the fdt to <addr> and make it active\n"
 	"fdt resize [<extrasize>]            - Resize fdt to size + padding to 4k addr + some optional <extrasize> if needed\n"

@@ -69,8 +69,27 @@ static boardinfo_t * get_board_info(void)
 	return boards[0];
 }
 
+static inline unsigned int read_clusterctrl(void)
+{
+	unsigned int val;
+
+	asm volatile("mrs %0, S3_0_C15_C3_4" : "=r" (val) : : "cc");
+	return val;
+}
+
+static inline void write_clusterctrl(unsigned int val)
+{
+	asm volatile("msr S3_0_C15_C3_4, %0" : : "r" (val) : "cc");
+	isb();
+}
+
 int arch_cpu_init(void)
 {
+	// Disable sending of Cache Clean Evict
+	u32 val = read_clusterctrl();
+	val |= 1 << 3;
+	write_clusterctrl(val);
+
 #ifdef CONFIG_DEBUG_UART
 	debug_uart_init();
 #endif
@@ -81,6 +100,13 @@ int arch_cpu_init(void)
 int board_init(void)
 {
 	return 0;
+}
+
+void sima_set_dtb_name(void)
+{
+	boardinfo_t *info = get_board_info();
+
+	env_set("fdt_name", info->linuxdtb);
 }
 
 #ifdef CONFIG_BOARD_LATE_INIT
@@ -101,7 +127,7 @@ int board_late_init(void)
 		eth_env_get_enetaddr_by_index("eth", i, mac);
 		mac[5]++;
 	}
-	env_set("fdt_name", info->linuxdtb);
+	sima_set_dtb_name();
     shmem_ocm_set_uboot_run_mode(1);
     altboot = get_boot_partitions_mode();
     if (altboot == 0x1) {
