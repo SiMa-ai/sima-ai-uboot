@@ -6,6 +6,8 @@
 #ifndef __SHMEM_H__
 #define __SHMEM_H__
 
+#include <stdio.h>
+
 typedef enum board_id_t {
 	DAVINCI_DVT_COMBO_BOARD 	= 0x00000011,
 	DAVINCI_DVT_933MHZ_BOARD 	= 0x00001011,
@@ -17,5 +19,8 @@ typedef enum board_id_t {
 
 int populate_mac(char *mac);
 board_id_t get_board_id(void);
+uint32_t get_boot_partitions_mode( void );
+void shmem_ocm_set_uboot_run_mode(uint32_t state);
+uint32_t get_pcie_enabled( void );
 
 #endif /* __SHMEM_H__ */

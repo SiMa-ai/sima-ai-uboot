@@ -139,6 +139,65 @@ int board_late_init(void)
             printf("set to boot from altboot \n");
         }
     }
+
+	return 0;
+}
+#endif
+
+#ifdef CONFIG_OF_BOARD_SETUP
+int ft_board_setup(void *blob, struct bd_info *bd)
+{
+	int  nodeoffset, res;
+	const char ocm_path[] = "/reserved-memory/ocm@0";
+	const char pcieocm_path[] = "/reserved-memory/ocm@300000";
+	const char pcieep_path[] = "/pcie_ep@1800000";
+	const fdt64_t new_ocm[] = { cpu_to_fdt64(0x0), cpu_to_fdt64(0x400000) };
+	const fdt64_t new_pcie[] = { cpu_to_fdt64(0x400000), cpu_to_fdt64(0x0) };
+
+	if(get_pcie_enabled())
+		printf("PCIe enabled, leaving OCM memory node unchanged\n");
+	else {
+
+		/* Disable PCIe EP driver */
+		nodeoffset = fdt_path_offset(blob, pcieep_path);
+		if (nodeoffset < 0) {
+			printf("Cannot find path %s in dtb: %s\n", ocm_path, fdt_strerror(nodeoffset));
+			return 0;
+		}
+
+		res = fdt_setprop_string(blob, nodeoffset, "status", "disabled");
+		if (res < 0)
+			printf("Cannot disable node %s in dtb\n", pcieep_path);
+		else
+			printf ("Disabled node %s in dtb\n", pcieep_path);
+
+		/* Increase size of generic OCM */
+		nodeoffset = fdt_path_offset(blob, ocm_path);
+		if (nodeoffset < 0) {
+			printf("Cannot find path %s in dtb: %s\n", ocm_path, fdt_strerror(nodeoffset));
+			return 0;
+		}
+
+		res = fdt_setprop(blob, nodeoffset, "reg", new_ocm, sizeof(new_ocm));
+		if (res < 0)
+			printf("Cannot updates size of %s to 0x%08lx in dtb: %s\n", ocm_path, fdt64_to_cpu(new_ocm[1]), fdt_strerror(res));
+		else
+			printf ("Updated size of %s to 0x%08lx bytes in dtb\n", ocm_path, fdt64_to_cpu(new_ocm[1]));
+
+		/* Decrease size of PCIe OCM */
+		nodeoffset = fdt_path_offset(blob, pcieocm_path);
+		if (nodeoffset < 0) {
+			printf("Cannot find path %s in dtb: %s\n", pcieocm_path, fdt_strerror(nodeoffset));
+			return 0;
+		}
+
+		res = fdt_setprop(blob, nodeoffset, "reg", new_pcie, sizeof(new_pcie));
+		if (res < 0)
+			printf("Cannot updates size of %s to 0x%08lx in dtb: %s\n", pcieocm_path, fdt64_to_cpu(new_pcie[1]), fdt_strerror(res));
+		else
+			printf ("Updated size of %s to 0x%08lx bytes in dtb\n", pcieocm_path, fdt64_to_cpu(new_pcie[1]));
+
+	}
 	return 0;
 }
 #endif

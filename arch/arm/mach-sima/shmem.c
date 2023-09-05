@@ -13,6 +13,7 @@ typedef struct __attribute__ ((packed)) {
     uint32_t hwid;
     uint32_t altboot;
     uint32_t uboot_run_status;
+    uint32_t pcie_enabled;
 } shmem_ocm_s;
 volatile shmem_ocm_s *shmem_ocm_addr = (volatile shmem_ocm_s *)(SHMEM_OCM_ADDR);
 
@@ -46,3 +47,7 @@ void shmem_ocm_set_uboot_run_mode(uint32_t state)
     return;
 }
 
+uint32_t get_pcie_enabled( void )
+{
+    return (shmem_ocm_addr->pcie_enabled);
+}

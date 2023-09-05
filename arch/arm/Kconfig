@@ -1038,6 +1038,7 @@ config ARCH_SIMA
 	select DM
 	select DM_SERIAL
 	select OF_CONTROL
+	select OF_BOARD_SETUP
 	imply DM_RNG
 	imply CMD_DM
 
