@@ -16,6 +16,8 @@ typedef struct ddrc_addrs_t_ {
 	uint32_t ddrc_base;
 	uint32_t phy_base;
 	uint32_t rst_addr;
+	uint32_t pwr_reg1_addr;
+	uint32_t pwr_reg1_mask;
 } ddrc_addrs_t;
 
 typedef struct ddrc_settings_t_ {

@@ -5,6 +5,7 @@
 
 /dts-v1/;
 
+#include <dt-bindings/gpio/gpio.h>
 #include "simaai-davinci-h.dtsi"
 
 
@@ -46,10 +47,14 @@
 };
 
 &eth0 {
+    snps,reset-gpio = <&porta 4 GPIO_ACTIVE_LOW>;
+    snps,reset-delays-us = <0 20000 10000>;
 	status = "okay";
 };
 
 &eth1 {
+    snps,reset-gpio = <&porta 5 GPIO_ACTIVE_LOW>;
+    snps,reset-delays-us = <0 20000 10000>;
 	status = "okay";
 };
 

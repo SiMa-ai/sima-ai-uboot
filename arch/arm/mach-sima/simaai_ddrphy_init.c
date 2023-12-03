@@ -187,6 +187,8 @@ void sima_ddr_init(void)
 		RUN_DDR_SEQUENCE(PHY_INIT_DDR_PRERESET, ddrc);
 		debug("DDR INIT: Prereset completed for controller %d, bringing controller from reset (1)\n", j);
 		dms_out_of_reset(j, 1, ddrc->addrs[j].rst_addr);
+		prc_write(ddrc->addrs[j].pwr_reg1_addr,
+			prc_read(ddrc->addrs[j].pwr_reg1_addr) | ddrc->addrs[j].pwr_reg1_mask);
 		debug("DDR INIT: Brought controller %d from reset (1), starting postreset\n", j);
 		RUN_DDR_SEQUENCE(PHY_INIT_DDR_POSTRESET, ddrc);
 		debug("DDR INIT: Postreset completed for controller %d, preparing mailbox\n", j);

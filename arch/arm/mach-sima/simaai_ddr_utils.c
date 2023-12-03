@@ -34,18 +34,26 @@ static ddrc_t ddrc = {
 			.ddrc_base = 0x05800000,
 			.phy_base = 0x03800000,
 			.rst_addr = PRC_BASE + PRC_REG__CKG_RST_REG__DMS0_CK_RST_ADDR,
+			.pwr_reg1_addr = PRC_BASE + PRC_REG__POR_STAT_REG__TRT_HPI_STAT_ADDR,
+			.pwr_reg1_mask = (0x3 << 0),
 		}, {
 			.ddrc_base = 0x05810000,
 			.phy_base = 0x04000000,
 			.rst_addr = PRC_BASE + PRC_REG__CKG_RST_REG__DMS1_CK_RST_ADDR,
+			.pwr_reg1_addr = PRC_BASE + PRC_REG__POR_STAT_REG__TRT_HPI_STAT_ADDR,
+			.pwr_reg1_mask = (0x3 << 6),
 		}, {
 			.ddrc_base = 0x05820000,
 			.phy_base = 0x04800000,
 			.rst_addr = PRC_BASE + PRC_REG__CKG_RST_REG__DMS2_CK_RST_ADDR,
+			.pwr_reg1_addr = PRC_BASE + PRC_REG__POR_STAT_REG__TRT_HPI_STAT_ADDR,
+			.pwr_reg1_mask = (0x3 << 12),
 		}, {
 			.ddrc_base = 0x05830000,
 			.phy_base = 0x05000000,
 			.rst_addr = PRC_BASE + PRC_REG__CKG_RST_REG__DMS3_CK_RST_ADDR,
+			.pwr_reg1_addr = PRC_BASE + PRC_REG__POR_STAT_REG__TRT_HPI_STAT_ADDR,
+			.pwr_reg1_mask = (0x3 << 18),
 	}, },
 	.settings = NULL,
 };

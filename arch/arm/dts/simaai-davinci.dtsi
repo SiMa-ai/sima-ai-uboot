@@ -637,32 +637,32 @@
 		#size-cells = <0>;
 		porta: gpio@0 {
 				compatible = "snps,dw-apb-gpio-port";
-				//gpio-controller;
+				gpio-controller;
 				#gpio-cells = <2>;
 				snps,nr-gpios = <8>;
 				reg = <0>;
 				interrupt-controller;
-				//#interrupt-cells = <2>;
+				#interrupt-cells = <2>;
 				interrupt-parent = <&gic>;
 				interrupts = <GIC_SPI 40 IRQ_TYPE_LEVEL_HIGH>;
 		};
 		portb: gpio@1 {
 				compatible = "snps,dw-apb-gpio-port";
-				//gpio-controller;
+				gpio-controller;
 				#gpio-cells = <2>;
 				snps,nr-gpios = <8>;
 				reg = <1>;
 		};
 		portc: gpio@2 {
 				compatible = "snps,dw-apb-gpio-port";
-				//gpio-controller;
+				gpio-controller;
 				#gpio-cells = <2>;
 				snps,nr-gpios = <8>;
 				reg = <2>;
 		};
 		portd: gpio@3 {
 				compatible = "snps,dw-apb-gpio-port";
-				//gpio-controller;
+				gpio-controller;
 				#gpio-cells = <2>;
 				snps,nr-gpios = <8>;
 				reg = <3>;

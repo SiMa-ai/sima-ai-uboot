@@ -8,7 +8,12 @@
 #include <asm/global_data.h>
 #include <asm/armv8/mmu.h>
 #include <asm/arch/simaai_ddr_utils.h>
-
+#ifdef CONFIG_OF_BOARD_SETUP
+#include <linux/sizes.h>
+#endif
+#if CONFIG_IS_ENABLED(DM_GPIO)
+#include <asm-generic/gpio.h>
+#endif
 
 extern const boardinfo_t boardinfo_simaai_800mhz;
 extern const boardinfo_t boardinfo_simaai_933mhz;
@@ -110,6 +115,38 @@ void sima_set_dtb_name(void)
 }
 
 #ifdef CONFIG_BOARD_LATE_INIT
+#if CONFIG_IS_ENABLED(DM_GPIO)
+static void sima_reset_phy(void)
+{
+	ofnode node;
+	struct gpio_desc gpio;
+	uint32_t reset_delays[3] = { 0 };
+	char node_name[] = "/ethernet@1000000";
+	int i;
+
+	for(i = 0; i < 4; i++) {
+		node_name[11] = '0' + i * 2;
+		node = ofnode_path(node_name);
+		if (!ofnode_valid(node))
+			continue;
+
+		if (!gpio_request_by_name_nodev(node, "snps,reset-gpio", 0,
+				&gpio, GPIOD_IS_OUT | GPIOD_ACTIVE_LOW))
+			printf("Resetting Ethernet PHY for %s\n", node_name);
+		else
+			continue;
+
+		ofnode_read_u32_array(node, "snps,reset-delays-us", reset_delays, 3);
+		udelay(reset_delays[1]);
+		dm_gpio_set_value(&gpio, 1);
+		udelay(reset_delays[1]);
+		dm_gpio_set_value(&gpio, 0);
+		udelay(reset_delays[2]);
+		gpio_free_list_nodev(&gpio, 1);
+	}
+}
+#endif
+
 int board_late_init(void)
 {
     uint32_t altboot;
@@ -118,6 +155,9 @@ int board_late_init(void)
 	unsigned char mac[6];
 	boardinfo_t *info = get_board_info();
 
+#if CONFIG_IS_ENABLED(DM_GPIO)
+	sima_reset_phy();
+#endif
 	sima_eth_init();
 
 	res = populate_mac(mac);
@@ -147,12 +187,19 @@ int board_late_init(void)
 #ifdef CONFIG_OF_BOARD_SETUP
 int ft_board_setup(void *blob, struct bd_info *bd)
 {
-	int  nodeoffset, res;
+	int  nodeoffset, res, i, len;
 	const char ocm_path[] = "/reserved-memory/ocm@0";
 	const char pcieocm_path[] = "/reserved-memory/ocm@300000";
 	const char pcieep_path[] = "/pcie_ep@1800000";
+	const char dmscma_path[][33] = { "/reserved-memory/dms@0x100000000",
+					 "/reserved-memory/dms@0x200000000",
+					 "/reserved-memory/dms@0x300000000",
+					 "/reserved-memory/dms@0x380000000" };
 	const fdt64_t new_ocm[] = { cpu_to_fdt64(0x0), cpu_to_fdt64(0x400000) };
 	const fdt64_t new_pcie[] = { cpu_to_fdt64(0x400000), cpu_to_fdt64(0x0) };
+	fdt64_t *new_dmscma;
+	char *ep;
+	long dmscma_size;
 
 	if(get_pcie_enabled())
 		printf("PCIe enabled, leaving OCM memory node unchanged\n");
@@ -196,7 +243,39 @@ int ft_board_setup(void *blob, struct bd_info *bd)
 			printf("Cannot updates size of %s to 0x%08lx in dtb: %s\n", pcieocm_path, fdt64_to_cpu(new_pcie[1]), fdt_strerror(res));
 		else
 			printf ("Updated size of %s to 0x%08lx bytes in dtb\n", pcieocm_path, fdt64_to_cpu(new_pcie[1]));
+	}
 
+	ep = env_get("dms_cma_size");
+	if(ep != NULL) {
+		dmscma_size = simple_strtol(ep, NULL, 10);
+		if(dmscma_size < SZ_1G) {
+			printf("Cannot set DMS CMA size to less than 1 GB, using 1 GB instead\n");
+			dmscma_size = SZ_1G;
+		}
+		if(dmscma_size > SZ_2G) {
+			printf("Cannot set DMS CMA size to more than 2 GB, using 2 GB instead\n");
+			dmscma_size = SZ_2G;
+		}
+
+		for(i = 0; i < 4; i++) {
+			nodeoffset = fdt_path_offset(blob, dmscma_path[i]);
+			if (nodeoffset < 0) {
+				printf("Cannot find path %s in dtb: %s\n", dmscma_path[i], fdt_strerror(nodeoffset));
+				continue;
+			}
+			new_dmscma = fdt_getprop(blob, nodeoffset, "reg", &len);
+			if (!new_dmscma || (len != (sizeof(*new_dmscma) * 2))) {
+				printf("Cannot get reg of %s in dtb: %s\n", dmscma_path[i], fdt_strerror(res));
+				continue;
+			}
+
+			new_dmscma[1] = cpu_to_fdt64(dmscma_size);
+			res = fdt_setprop(blob, nodeoffset, "reg", new_dmscma, sizeof(*new_dmscma) * 2);
+			if (res < 0)
+				printf("Cannot updates size of %s in dtb: %s\n", dmscma_path[i], fdt_strerror(res));
+			else
+				printf ("Updated size of %s to 0x%08lx bytes in dtb\n", dmscma_path[i], dmscma_size);
+		}
 	}
 	return 0;
 }
