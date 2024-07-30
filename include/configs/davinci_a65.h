@@ -55,9 +55,9 @@
 	func(NET, staticip, na)
 
 #define ENV_MEM_LAYOUT_SETTINGS \
-	"fdt_addr=0xC8000000\0" \
+	"fdt_addr=0xAF000000\0" \
 	"scriptaddr=0x90000000\0" \
-	"kernel_addr=0xC0080000\0" \
+	"kernel_addr=0xAA000000\0" \
 	"cpio_addr=0xE0000000\0" \
 	"cpio_size=0x18000000\0" \
 	"cpio_name=simaai-image-palette-davinci.cpio.gz\0" \
