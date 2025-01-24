@@ -55,6 +55,14 @@ static struct mm_region simaai_mem_map[] = {
 		.attrs = PTE_BLOCK_MEMTYPE(MT_NORMAL) |
 			 PTE_BLOCK_INNER_SHARE
 	}, {
+		/* DRAM */
+
+		.virt = 0x180000000UL,
+		.phys = 0x180000000UL,
+		.size = 0x80000000UL,
+		.attrs = PTE_BLOCK_MEMTYPE(MT_NORMAL) |
+			 PTE_BLOCK_INNER_SHARE
+	}, {
 		/* List terminator */
 		0,
 	}
@@ -303,6 +311,11 @@ int dram_init(void)
 	return 0;
 }
 
+int dram_init_banksize(void)
+{
+        return fdtdec_setup_memory_banksize();
+}
+
 ddrc_settings_t * get_ddrc_settings(void)
 {
 	boardinfo_t *info = get_board_info();
@@ -327,6 +340,7 @@ int checkboard (void)
 {
 	boardinfo_t *info = get_board_info();
 
+	printf("SIMAAI: \n");
 	printf("Board: %s\n", info->name);
 	printf("U-boot device tree name: %s.dtb\n", info->ubootdtb);
 	printf("Linux device tree name: %s\n", info->linuxdtb);
