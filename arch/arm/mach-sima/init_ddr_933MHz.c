@@ -4,6 +4,7 @@
  * Generated 04/15/2022 18:02:44 by sima
  */
 
+#include <linux/kernel.h>
 #include <asm/arch/init_ddr_933MHz.h>
 
 static init_element_t seq1_init_ddr_933MHz[] = {

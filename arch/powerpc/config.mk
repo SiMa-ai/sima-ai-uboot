@@ -3,7 +3,6 @@
 # (C) Copyright 2000-2010
 # Wolfgang Denk, DENX Software Engineering, wd@denx.de.
 
-CONFIG_STANDALONE_LOAD_ADDR ?= 0x40000
 LDFLAGS_FINAL += --gc-sections
 LDFLAGS_FINAL += --bss-plt
 PLATFORM_RELFLAGS += -fpic -mrelocatable -ffunction-sections \
@@ -28,7 +27,7 @@ PLATFORM_CPPFLAGS+= -D__PPC__
 endif
 
 # Only test once
-ifneq ($(CONFIG_SPL_BUILD),y)
+ifneq ($(CONFIG_XPL_BUILD),y)
 archprepare: checkgcc4
 
 # GCC 3.x is reported to have problems generating the type of relocation

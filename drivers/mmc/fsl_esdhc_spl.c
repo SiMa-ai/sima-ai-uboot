@@ -3,13 +3,13 @@
  * Copyright 2013 Freescale Semiconductor, Inc.
  */
 
-#include <common.h>
+#include <config.h>
 #include <cpu_func.h>
 #include <hang.h>
 #include <mmc.h>
 #include <malloc.h>
 
-#ifndef CONFIG_SYS_MMC_U_BOOT_OFFS
+#ifndef CFG_SYS_MMC_U_BOOT_OFFS
 extern uchar mmc_u_boot_offs[];
 #endif
 
@@ -24,7 +24,6 @@ extern uchar mmc_u_boot_offs[];
 #define ESDHC_BOOT_IMAGE_ADDR	0x50
 #define MBRDBR_BOOT_SIG_55	0x1fe
 #define MBRDBR_BOOT_SIG_AA	0x1ff
-
 
 void mmc_spl_load_image(uint32_t offs, unsigned int size, void *vdst)
 {
@@ -97,7 +96,7 @@ void __noreturn mmc_boot(void)
 	}
 
 #ifdef CONFIG_FSL_CORENET
-	offset = CONFIG_SYS_MMC_U_BOOT_OFFS;
+	offset = CFG_SYS_MMC_U_BOOT_OFFS;
 #else
 	sector = 0;
 again:
@@ -153,16 +152,16 @@ again:
 		val = *(tmp_buf + blk_off + ESDHC_BOOT_IMAGE_ADDR + i);
 		offset = (offset << 8) + val;
 	}
-#ifndef CONFIG_SYS_MMC_U_BOOT_OFFS
+#ifndef CFG_SYS_MMC_U_BOOT_OFFS
 	offset += (ulong)&mmc_u_boot_offs - CONFIG_SPL_TEXT_BASE;
 #else
-	offset += CONFIG_SYS_MMC_U_BOOT_OFFS;
+	offset += CFG_SYS_MMC_U_BOOT_OFFS;
 #endif
 #endif
 	/*
 	* Load U-Boot image from mmc into RAM
 	*/
-	code_len = CONFIG_SYS_MMC_U_BOOT_SIZE;
+	code_len = CFG_SYS_MMC_U_BOOT_SIZE;
 	blk_start = offset / mmc->read_bl_len;
 	blk_off = offset % mmc->read_bl_len;
 	blk_cnt = ALIGN(code_len, mmc->read_bl_len) / mmc->read_bl_len + 1;
@@ -176,7 +175,7 @@ again:
 		blk_start++;
 	}
 	err = mmc->block_dev.block_read(&mmc->block_dev, blk_start, blk_cnt,
-					(uchar *)CONFIG_SYS_MMC_U_BOOT_DST +
+					(uchar *)CFG_SYS_MMC_U_BOOT_DST +
 					(blk_off ? (mmc->read_bl_len - blk_off) : 0));
 	if (err != blk_cnt) {
 		puts("spl: mmc read failed!!\n");
@@ -189,18 +188,18 @@ again:
 	 * after SDHC DMA transfer.
 	 */
 	if (blk_off)
-		memcpy((uchar *)CONFIG_SYS_MMC_U_BOOT_DST,
+		memcpy((uchar *)CFG_SYS_MMC_U_BOOT_DST,
 		       tmp_buf + blk_off, mmc->read_bl_len - blk_off);
 
 	/*
 	* Clean d-cache and invalidate i-cache, to
 	* make sure that no stale data is executed.
 	*/
-	flush_cache(CONFIG_SYS_MMC_U_BOOT_DST, CONFIG_SYS_MMC_U_BOOT_SIZE);
+	flush_cache(CFG_SYS_MMC_U_BOOT_DST, CFG_SYS_MMC_U_BOOT_SIZE);
 
 	/*
 	* Jump to U-Boot image
 	*/
-	uboot = (void *)CONFIG_SYS_MMC_U_BOOT_START;
+	uboot = (void *)CFG_SYS_MMC_U_BOOT_START;
 	(*uboot)();
 }

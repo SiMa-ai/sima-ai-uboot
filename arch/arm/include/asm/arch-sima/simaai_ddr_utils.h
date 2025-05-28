@@ -6,18 +6,25 @@
 #ifndef __SIMAAI_DDR_UTILS_H__
 #define __SIMAAI_DDR_UTILS_H__
 
+#include <stdint.h>
 #include <asm/arch/phy_init.h>
 #include <asm/arch/shmem.h>
-#include <asm/arch/prc_addr_map.h>
 
 #define PHY_DDR_MAX_CONTROLLERS	4
+#define PHY_DDR_PRE_SEQ1_RESETS 6
+#define PHY_DDR_MAX_RESETS 9
+
+typedef struct ddrc_rst_t_ {
+	uint32_t addr;
+	uint32_t set_bits;
+	uint32_t clr_bits;
+	uint32_t delay_us;
+} ddrc_rst_t;
 
 typedef struct ddrc_addrs_t_ {
 	uint32_t ddrc_base;
 	uint32_t phy_base;
-	uint32_t rst_addr;
-	uint32_t pwr_reg1_addr;
-	uint32_t pwr_reg1_mask;
+	ddrc_rst_t resets[PHY_DDR_MAX_RESETS];
 } ddrc_addrs_t;
 
 typedef struct ddrc_settings_t_ {
@@ -41,9 +48,21 @@ typedef struct boardinfo_t_ {
 	const char linuxdtb[64];
 } boardinfo_t;
 
+void do_apb_write(uint32_t base, uint32_t regoff, uint32_t data);
+void do_apb_read(uint32_t base, uint32_t regoff, uint32_t expdata);
+void do_phy_write(uint32_t base, uint32_t regoff, uint16_t data);
+void do_phy_writes(uint32_t base, uint32_t regoff, uint16_t data, uint32_t *offsets, uint32_t count);
+uint16_t do_phy_read(uint32_t base, uint32_t regoff);
+void do_apb_poll(uint32_t base, uint32_t regoff, uint32_t expdata);
+void do_phy_poll(uint32_t base, uint32_t regoff, uint16_t expdata);
+
 ddrc_t * get_ddrc(void);
+unique_sequence_t * get_unique_vals(ddrc_t *ddrc, init_type_t sequence);
 uint32_t freq_to_uint(ddr_freq_t freq);
 ddrc_settings_t * get_ddrc_settings(void);
+void board_specific_ddrc_settings(uint32_t cbase, chip_settings_t *sets);
+void board_specific_ddrphy_settings(uint32_t phybase, chip_settings_t *sets);
+void board_specific_mr_settings(uint32_t phybase, uint32_t addr, chip_settings_t *sets);
 
 void sima_ddr_init(void);
 void sima_eth_init(void);

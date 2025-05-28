@@ -3,7 +3,7 @@
  * Copyright 2008 Freescale Semiconductor, Inc.
  */
 
-#include <common.h>
+#include <config.h>
 #include <log.h>
 #include <asm/io.h>
 #include <fsl_ddr_sdram.h>
@@ -73,7 +73,7 @@ ddr_enable_ecc(unsigned int dram_size)
 	struct ccsr_ddr __iomem *ddr =
 		(struct ccsr_ddr __iomem *)(CFG_SYS_FSL_DDR_ADDR);
 
-	dma_meminit(CONFIG_MEM_INIT_VALUE, dram_size);
+	dma_meminit(dram_size);
 
 	/*
 	 * Enable errors for ECC.

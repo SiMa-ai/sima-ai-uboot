@@ -3,7 +3,6 @@
  * Copyright (C) 2016 Freescale Semiconductor, Inc.
  */
 
-#include <common.h>
 #include <cpu_func.h>
 #include <asm/io.h>
 #include <asm/arch/imx-regs.h>
@@ -24,10 +23,6 @@ struct ulp_wdt_priv {
 	struct wdog_regs *wdog;
 	u32 clk_rate;
 };
-
-#ifndef CONFIG_WATCHDOG_TIMEOUT_MSECS
-#define CONFIG_WATCHDOG_TIMEOUT_MSECS 0x1500
-#endif
 
 #define REFRESH_WORD0 0xA602 /* 1st refresh word */
 #define REFRESH_WORD1 0xB480 /* 2nd refresh word */
@@ -126,6 +121,7 @@ void hw_watchdog_init(void)
 	ulp_watchdog_init(wdog, CONFIG_WATCHDOG_TIMEOUT_MSECS);
 }
 
+#if !CONFIG_IS_ENABLED(SYSRESET)
 void reset_cpu(void)
 {
 	struct wdog_regs *wdog = (struct wdog_regs *)WDOG_BASE_ADDR;
@@ -163,6 +159,7 @@ void reset_cpu(void)
 
 	while (1);
 }
+#endif
 
 static int ulp_wdt_start(struct udevice *dev, u64 timeout_ms, ulong flags)
 {

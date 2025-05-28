@@ -3,24 +3,26 @@
  * Copyright (c) 2011 The Chromium OS Authors.
  */
 
-#include <common.h>
 #include <addr_map.h>
+#include <config.h>
 #include <cpu_func.h>
 #include <cros_ec.h>
 #include <dm.h>
 #include <efi.h>
 #include <efi_loader.h>
 #include <env_internal.h>
+#include <extension_board.h>
 #include <init.h>
 #include <led.h>
+#include <malloc.h>
+#include <mapmem.h>
 #include <os.h>
+#include <acpi/acpi_table.h>
 #include <asm/global_data.h>
 #include <asm/test.h>
 #include <asm/u-boot-sandbox.h>
 #include <linux/kernel.h>
-#include <malloc.h>
-
-#include <extension_board.h>
+#include <linux/sizes.h>
 
 /*
  * Pointer to initial global data area
@@ -29,35 +31,19 @@
  */
 gd_t *gd;
 
-#if CONFIG_IS_ENABLED(EFI_HAVE_CAPSULE_SUPPORT)
-/* GUIDs for capsule updatable firmware images */
-#define SANDBOX_UBOOT_IMAGE_GUID \
-	EFI_GUID(0x09d7cf52, 0x0720, 0x4710, 0x91, 0xd1, \
-		 0x08, 0x46, 0x9b, 0x7f, 0xe9, 0xc8)
-
-#define SANDBOX_UBOOT_ENV_IMAGE_GUID \
-	EFI_GUID(0x5a7021f5, 0xfef2, 0x48b4, 0xaa, 0xba, \
-		 0x83, 0x2e, 0x77, 0x74, 0x18, 0xc0)
-
-#define SANDBOX_FIT_IMAGE_GUID \
-	EFI_GUID(0x3673b45d, 0x6a7c, 0x46f3, 0x9e, 0x60, \
-		 0xad, 0xab, 0xb0, 0x3f, 0x79, 0x37)
-
+#if IS_ENABLED(CONFIG_EFI_HAVE_CAPSULE_SUPPORT)
 struct efi_fw_image fw_images[] = {
 #if defined(CONFIG_EFI_CAPSULE_FIRMWARE_RAW)
 	{
-		.image_type_id = SANDBOX_UBOOT_IMAGE_GUID,
 		.fw_name = u"SANDBOX-UBOOT",
 		.image_index = 1,
 	},
 	{
-		.image_type_id = SANDBOX_UBOOT_ENV_IMAGE_GUID,
 		.fw_name = u"SANDBOX-UBOOT-ENV",
 		.image_index = 2,
 	},
 #elif defined(CONFIG_EFI_CAPSULE_FIRMWARE_FIT)
 	{
-		.image_type_id = SANDBOX_FIT_IMAGE_GUID,
 		.fw_name = u"SANDBOX-FIT",
 		.image_index = 1,
 	},
@@ -67,10 +53,10 @@ struct efi_fw_image fw_images[] = {
 struct efi_capsule_update_info update_info = {
 	.dfu_string = "sf 0:0=u-boot-bin raw 0x100000 0x50000;"
 		"u-boot-env raw 0x150000 0x200000",
+	.num_images = ARRAY_SIZE(fw_images),
 	.images = fw_images,
 };
 
-u8 num_image_type_guids = ARRAY_SIZE(fw_images);
 #endif /* EFI_HAVE_CAPSULE_SUPPORT */
 
 #if !CONFIG_IS_ENABLED(OF_PLATDATA)
@@ -115,7 +101,7 @@ enum env_location env_get_location(enum env_operation op, int prio)
 
 int dram_init(void)
 {
-	gd->ram_size = CONFIG_SYS_SDRAM_SIZE;
+	gd->ram_size = CFG_SYS_SDRAM_SIZE;
 	return 0;
 }
 
@@ -154,6 +140,8 @@ int extension_board_scan(struct list_head *extension_list)
 int board_late_init(void)
 {
 	struct udevice *dev;
+	ulong addr, end;
+	void *ptr;
 	int ret;
 
 	ret = uclass_first_device_err(UCLASS_CROS_EC, &dev);
@@ -166,6 +154,18 @@ int board_late_init(void)
 		panic("Cannot init cros-ec device");
 		return -1;
 	}
+
+	if (IS_ENABLED(CONFIG_GENERATE_ACPI_TABLE)) {
+		/* Reserve 64K for ACPI tables, aligned to a 4K boundary */
+		ptr = memalign(SZ_4K, SZ_64K);
+		addr = map_to_sysmem(ptr);
+
+		/* Generate ACPI tables */
+		end = write_acpi_tables(addr);
+		gd->arch.table_start = addr;
+		gd->arch.table_end = addr;
+	}
+
 	return 0;
 }
 #endif
@@ -173,7 +173,7 @@ int board_late_init(void)
 int init_addr_map(void)
 {
 	if (IS_ENABLED(CONFIG_ADDR_MAP))
-		addrmap_set_entry(0, 0, CONFIG_SYS_SDRAM_SIZE, 0);
+		addrmap_set_entry(0, 0, CFG_SYS_SDRAM_SIZE, 0);
 
 	return 0;
 }

@@ -12,6 +12,12 @@
 #ifndef __ASSEMBLY__
 #include "compiler.h"
 
+/* Flag param bits for bootelf() function */
+typedef struct {
+	unsigned phdr      : 1; /* load via program (not section) headers */
+	unsigned autostart : 1; /* Start ELF after loading */
+} Bootelf_flags;
+
 /* This version doesn't work for 64-bit ABIs - Erik */
 
 /* These typedefs need to be handled better */
@@ -360,6 +366,15 @@ typedef struct {
 	Elf32_Half	st_shndx;	/* section header index */
 } Elf32_Sym;
 
+typedef struct {
+	Elf64_Word	st_name;	/* name - index into string table */
+	unsigned char	st_info;	/* type and binding */
+	unsigned char	st_other;	/* 0 - no defined meaning */
+	Elf64_Half	st_shndx;	/* section header index */
+	Elf64_Addr	st_value;	/* symbol value */
+	Elf64_Xword	st_size;	/* symbol size */
+} Elf64_Sym;
+
 /* Symbol table index */
 #define STN_UNDEF	0		/* undefined */
 
@@ -691,6 +706,10 @@ unsigned long elf_hash(const unsigned char *name);
 #define R_RISCV_RELATIVE	3
 
 #ifndef __ASSEMBLY__
+unsigned long bootelf_exec(ulong (*entry)(int, char * const[]),
+			   int argc, char *const argv[]);
+unsigned long bootelf(unsigned long addr, Bootelf_flags flags,
+		      int argc, char *const argv[]);
 int valid_elf_image(unsigned long addr);
 unsigned long load_elf64_image_phdr(unsigned long addr);
 unsigned long load_elf64_image_shdr(unsigned long addr);

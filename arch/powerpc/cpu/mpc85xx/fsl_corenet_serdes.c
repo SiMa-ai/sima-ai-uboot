@@ -3,7 +3,7 @@
  * Copyright 2009-2011 Freescale Semiconductor, Inc.
  */
 
-#include <common.h>
+#include <config.h>
 #include <env.h>
 #include <log.h>
 #include <time.h>
@@ -264,9 +264,9 @@ void serdes_reset_rx(enum srds_prtcl device)
 }
 #endif
 
-#ifndef CONFIG_SYS_DCSRBAR_PHYS
-#define CONFIG_SYS_DCSRBAR_PHYS	0x80000000 /* Must be 1GB-aligned for rev1.0 */
-#define CONFIG_SYS_DCSRBAR	0x80000000
+#ifndef CFG_SYS_DCSRBAR_PHYS
+#define CFG_SYS_DCSRBAR_PHYS	0x80000000 /* Must be 1GB-aligned for rev1.0 */
+#define CFG_SYS_DCSRBAR	0x80000000
 #define __DCSR_NOT_DEFINED_BY_CONFIG
 #endif
 
@@ -315,16 +315,16 @@ static void enable_bank(ccsr_gur_t *gur, int bank)
 	 */
 	{
 #ifdef __DCSR_NOT_DEFINED_BY_CONFIG
-		struct law_entry law = find_law(CONFIG_SYS_DCSRBAR_PHYS);
+		struct law_entry law = find_law(CFG_SYS_DCSRBAR_PHYS);
 		int law_index;
 		if (law.index == -1)
-			law_index = set_next_law(CONFIG_SYS_DCSRBAR_PHYS,
+			law_index = set_next_law(CFG_SYS_DCSRBAR_PHYS,
 						 LAW_SIZE_1M, LAW_TRGT_IF_DCSR);
 		else
-			set_law(law.index, CONFIG_SYS_DCSRBAR_PHYS, LAW_SIZE_1M,
+			set_law(law.index, CFG_SYS_DCSRBAR_PHYS, LAW_SIZE_1M,
 				LAW_TRGT_IF_DCSR);
 #endif
-		u32 *p = (void *)CONFIG_SYS_DCSRBAR + 0x20114;
+		u32 *p = (void *)CFG_SYS_DCSRBAR + 0x20114;
 		out_be32(p, rcw5);
 #ifdef __DCSR_NOT_DEFINED_BY_CONFIG
 		if (law.index == -1)
@@ -481,7 +481,6 @@ static void wait_for_rstdone(unsigned int bank)
 	if (!(rstctl & SRDS_RSTCTL_RSTDONE))
 		printf("SERDES: timeout resetting bank %u\n", bank + 1);
 }
-
 
 static void __soc_serdes_init(void)
 {

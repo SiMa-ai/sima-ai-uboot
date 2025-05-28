@@ -21,11 +21,7 @@ class Entry_u_boot_tpl_nodtb(Entry_blob):
     expands to a section containing u-boot-tpl-dtb, u-boot-tpl-bss-pad and
     u-boot-tpl-dtb
 
-    TPL can access binman symbols at runtime. See:
-
-        'Access to binman entry offsets at run time (symbols)'
-
-    in the binman README for more information.
+    TPL can access binman symbols at runtime. See :ref:`binman_fdt`.
 
     The ELF file 'tpl/u-boot-tpl' must also be available for this to work, since
     binman uses that to look up symbols to write into the TPL binary.

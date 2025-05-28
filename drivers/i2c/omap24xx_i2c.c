@@ -38,11 +38,11 @@
  *
  */
 
-#include <common.h>
 #include <dm.h>
 #include <i2c.h>
 #include <log.h>
 #include <linux/delay.h>
+#include <linux/printk.h>
 
 #include <asm/io.h>
 #include <asm/omap_i2c.h>

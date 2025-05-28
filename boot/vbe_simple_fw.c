@@ -8,7 +8,6 @@
 
 #define LOG_CATEGORY LOGC_BOOT
 
-#include <common.h>
 #include <bloblist.h>
 #include <bootdev.h>
 #include <bootflow.h>
@@ -158,7 +157,7 @@ static int simple_load_from_image(struct spl_image_info *spl_image,
 	struct vbe_handoff *handoff;
 	int ret;
 
-	if (spl_phase() != PHASE_VPL && spl_phase() != PHASE_SPL)
+	if (xpl_phase() != PHASE_VPL && xpl_phase() != PHASE_SPL)
 		return -ENOENT;
 
 	ret = bloblist_ensure_size(BLOBLISTT_VBE, sizeof(struct vbe_handoff),
@@ -176,7 +175,7 @@ static int simple_load_from_image(struct spl_image_info *spl_image,
 
 	priv = dev_get_priv(meth);
 	log_debug("simple %s\n", priv->storage);
-	ret = bootdev_find_by_label(priv->storage, &bdev);
+	ret = bootdev_find_by_label(priv->storage, &bdev, NULL);
 	if (ret)
 		return log_msg_ret("bd", ret);
 	log_debug("bootdev %s\n", bdev->name);
@@ -198,7 +197,7 @@ static int simple_load_from_image(struct spl_image_info *spl_image,
 	bootflow_free(&bflow);
 
 	/* Record that VBE was used in this phase */
-	handoff->phases |= 1 << spl_phase();
+	handoff->phases |= 1 << xpl_phase();
 
 	return 0;
 }

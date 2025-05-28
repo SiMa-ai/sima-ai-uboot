@@ -5,18 +5,17 @@
  * Peng Fan <peng.fan@nxp.com>
  */
 
-#include <common.h>
 #include <dm.h>
 #include <dm/pinctrl.h>
 
 #include "pinctrl-imx.h"
 
 static struct imx_pinctrl_soc_info imx7ulp_pinctrl_soc_info0 = {
-	.flags = ZERO_OFFSET_VALID | SHARE_MUX_CONF_REG | CONFIG_IBE_OBE,
+	.flags = ZERO_OFFSET_VALID | SHARE_MUX_CONF_REG | CFG_IBE_OBE,
 };
 
 static struct imx_pinctrl_soc_info imx7ulp_pinctrl_soc_info1 = {
-	.flags = ZERO_OFFSET_VALID | SHARE_MUX_CONF_REG | CONFIG_IBE_OBE,
+	.flags = ZERO_OFFSET_VALID | SHARE_MUX_CONF_REG | CFG_IBE_OBE,
 };
 
 static int imx7ulp_pinctrl_probe(struct udevice *dev)

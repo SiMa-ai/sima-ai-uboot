@@ -4,7 +4,6 @@
  * Reinhard Pfau, Guntermann & Drunck GmbH, reinhard.pfau@gdsys.cc
  */
 
-#include <common.h>
 #include <log.h>
 #include <malloc.h>
 #include <fs.h>
@@ -15,7 +14,6 @@
 #include <u-boot/sha1.h>
 #include <asm/byteorder.h>
 #include <asm/unaligned.h>
-#include <pca9698.h>
 
 #include "hre.h"
 
@@ -168,7 +166,7 @@ static int find_key(struct udevice *tpm, const uint8_t auth[20],
 			return -1;
 		if (err)
 			continue;
-		sha1_csum(buf, buf_len, digest);
+		sha1_csum_wd(buf, buf_len, digest, SHA1_DEF_CHUNK_SZ);
 		if (!memcmp(digest, pubkey_digest, 20)) {
 			*handle = key_handles[i];
 			return 0;

@@ -3,108 +3,33 @@
  * Copyright (c) 2022 Sima ai
  */
 
-//#define PRINT_PHY_TRAINING_MESSAGES 1
-
 #include <stdio.h>
+#include <linux/kernel.h>
 #include <linux/delay.h>
 #include <asm/arch/phy_init.h>
+#include <asm/arch/simaai_ddr_utils.h>
 #ifdef PRINT_PHY_TRAINING_MESSAGES
 #include <asm/arch/ddr_phy_debug.h>
 #endif
 
-static char ops[PHY_INIT_TYPE_NUM][32] = {
-		[PHY_INIT_TYPE_WRITE] = "Write to DDRC",
-		[PHY_INIT_TYPE_READ] = "Read from DDRC",
-		[PHY_INIT_TYPE_POLL] = "Poll from DDRC",
-		[PHY_INIT_TYPE_PHY] = "Write to DDR PHY",
-		[PHY_INIT_TYPE_FIRMWARE] = "Load firmware binary",
-		[PHY_INIT_TYPE_RUN] = "Run firmware",
-		[PHY_INIT_TYPE_DEBUG] = "Debug read from PHY",
-		[PHY_INIT_TYPE_DUMPEYE] = "Dump PHY EYE",
-		[PHY_INIT_TYPE_PHYPOLL] = "Poll from PHY",
-		[PHY_INIT_TYPE_DDRCSETTINGS] = "Set DDRC settings",
-		[PHY_INIT_TYPE_PHYSETTINGS] = "Set PHY settings",
+static char ops[PHY_INIT_TYPE_NUM][40] = {
+	[PHY_INIT_TYPE_WRITE] = "Write to DDRC",
+	[PHY_INIT_TYPE_WRITE_FREQ] = "Write to DDRC (frequency specific)",
+	[PHY_INIT_TYPE_READ] = "Read from DDRC",
+	[PHY_INIT_TYPE_POLL] = "Poll from DDRC",
+	[PHY_INIT_TYPE_PHY] = "Write to DDR PHY",
+	[PHY_INIT_TYPE_PHY_FREQ] = "Write to DDR PHY (frequency specific)",
+	[PHY_INIT_TYPE_FIRMWARE] = "Load firmware binary",
+	[PHY_INIT_TYPE_RUN] = "Run firmware",
+	[PHY_INIT_TYPE_DEBUG] = "Debug read from PHY",
+	[PHY_INIT_TYPE_DUMPEYE] = "Dump PHY EYE",
+	[PHY_INIT_TYPE_PHYPOLL] = "Poll from PHY",
+	[PHY_INIT_TYPE_DDRCSETTINGS] = "Set DDRC settings",
+	[PHY_INIT_TYPE_PHYSETTINGS] = "Set PHY settings",
 };
 #ifdef PRINT_PHY_TRAINING_MESSAGES
-static char major_messages[0x100][64] = {
-		[0x00] = "End of initialization",
-		[0x01] = "End of fine write leveling",
-		[0x02] = "End of read enable training",
-		[0x03] = "End of read delay center optimization",
-		[0x04] = "End of write delay center optimization",
-		[0x05] = "End of 2D read delay/voltage center optimization",
-		[0x06] = "End of 2D write delay /voltage center optimization",
-		[0x07] = "Training has run successfully (firmware complete)",
-		/*[0x08] = "Start streaming message mode",*/
-		[0x09] = "End of max read latency training",
-		[0x0a] = "End of read dq deskew training",
-		[0x0b] = "Reserved",
-		[0x0c] = "End of all DB training (MREP/DWL/MRD/MWD complete)",
-		[0x0d] = "End of CA training",
-		[0x0e ... 0xfc] = "",
-		[0xfd] = "End of MPR read delay center optimization",
-		[0xfe] = "End of Write leveling coarse delay",
-		[0xff] = "Training has failed (firmware complete)",
-};
+extern char major_messages[0x100][90];
 #endif
-
-static inline void do_apb_write(uint32_t base, uint32_t regoff, uint32_t data)
-{
-	*((volatile uint32_t*)(base + regoff)) = data;
-}
-
-static inline void do_apb_read(uint32_t base, uint32_t regoff, uint32_t expdata)
-{
-	uint32_t data = *((volatile uint32_t*)(base + regoff));
-
-	if(data != expdata)
-		printf("PHY INIT: Warning! Read [%#x] failed! expected: %#x, actual: %#x\n", regoff, expdata, data);
-}
-
-static inline void do_apb_poll(uint32_t base, uint32_t regoff, uint32_t expdata)
-{
-	uint32_t data;
-	int pollcnt = 1000000;
-
-	do {
-		data = *((volatile uint32_t*)(base + regoff));
-		if(data != expdata)
-			udelay(1);
-	} while((pollcnt-- > 0) && (data != expdata));
-	if(data != expdata)
-		printf("PHY INIT: Warning! Poll [%#x] failed! expected: %#x, actual: %#x\n", regoff, expdata, data);
-}
-
-static inline void do_phy_write(uint32_t base, uint32_t regoff, uint16_t data)
-{
-	*((volatile uint16_t*)(base + (regoff << 1))) = data;
-}
-
-static inline void do_phy_writes(uint32_t base, uint32_t regoff, uint16_t data, uint32_t *offsets, uint32_t count)
-{
-	int i;
-	for(i = 0; i < count; i++)
-		do_phy_write(base, regoff + offsets[i], data);
-}
-
-static inline uint16_t do_phy_read(uint32_t base, uint32_t regoff)
-{
-	return *((volatile uint16_t*)(base + (regoff << 1)));
-}
-
-static inline void do_phy_poll(uint32_t base, uint32_t regoff, uint16_t expdata)
-{
-	uint16_t data;
-	int pollcnt = 1000000;
-
-	do {
-		data = do_phy_read(base, regoff);
-		if(data != expdata)
-			udelay(1);
-	} while((pollcnt-- > 0) && (data != expdata));
-	if(data != expdata)
-		printf("PHY INIT: Warning! Poll [%#x] failed! expected: %#x, actual: %#x\n", regoff, expdata, data);
-}
 
 static inline void load_firmware(uint32_t base, firmware_t f, chip_settings_t *s) {
 	uint32_t i;
@@ -113,31 +38,15 @@ static inline void load_firmware(uint32_t base, firmware_t f, chip_settings_t *s
 	for(i = 0; i < f.size; i++)
 		do_phy_write(base, f.addr + i, f.values[i]);
 
-	if(f.addr == 0x54000) {
+	if(f.addr != 0x50000) {
 		do_phy_write(base, f.addr + 0x0, 0x0000);
 #ifdef PRINT_PHY_TRAINING_MESSAGES
 		do_phy_write(base, f.addr + 0x9, 0x0004);
+#else
+		do_phy_write(base, f.addr + 0x9, 0x00ff);
 #endif
 		/* Set board specific settings in MRs */
-		do_phy_write(base, f.addr + 0x6, s->phyvref);
-		do_phy_write(base, f.addr + 0x19, (PHY_DDR_MR2(s) << 8 | PHY_DDR_MR1(s)));
-		do_phy_write(base, f.addr + 0x1f, (PHY_DDR_MR2(s) << 8 | PHY_DDR_MR1(s)));
-		do_phy_write(base, f.addr + 0x32, (PHY_DDR_MR1(s) << 8 | PHY_DDR_MR24(s)));
-		do_phy_write(base, f.addr + 0x38, (PHY_DDR_MR1(s) << 8 | PHY_DDR_MR24(s)));
-		do_phy_write(base, f.addr + 0x1a, (PHY_DDR_MR4(s) << 8 | PHY_DDR_MR3(s)));
-		do_phy_write(base, f.addr + 0x20, (PHY_DDR_MR4(s) << 8 | PHY_DDR_MR3(s)));
-		do_phy_write(base, f.addr + 0x33, (PHY_DDR_MR3(s) << 8 | PHY_DDR_MR2(s)));
-		do_phy_write(base, f.addr + 0x39, (PHY_DDR_MR3(s) << 8 | PHY_DDR_MR2(s)));
-		do_phy_write(base, f.addr + 0x1b, (PHY_DDR_MR12(s) << 8 | PHY_DDR_MR11(s)));
-		do_phy_write(base, f.addr + 0x21, (PHY_DDR_MR12(s) << 8 | PHY_DDR_MR11(s)));
-		do_phy_write(base, f.addr + 0x34, (PHY_DDR_MR11(s) << 8 | PHY_DDR_MR4(s)));
-		do_phy_write(base, f.addr + 0x3a, (PHY_DDR_MR11(s) << 8 | PHY_DDR_MR4(s)));
-		do_phy_write(base, f.addr + 0x35, (PHY_DDR_MR13(s) << 8 | PHY_DDR_MR12(s)));
-		do_phy_write(base, f.addr + 0x3b, (PHY_DDR_MR13(s) << 8 | PHY_DDR_MR12(s)));
-		do_phy_write(base, f.addr + 0x1c, (PHY_DDR_MR14(s) << 8 | PHY_DDR_MR13(s)));
-		do_phy_write(base, f.addr + 0x22, (PHY_DDR_MR14(s) << 8 | PHY_DDR_MR13(s)));
-		do_phy_write(base, f.addr + 0x36, (PHY_DDR_MR16(s) << 8 | PHY_DDR_MR14(s)));
-		do_phy_write(base, f.addr + 0x3c, (PHY_DDR_MR16(s) << 8 | PHY_DDR_MR14(s)));
+		board_specific_mr_settings(base, f.addr, s);
 	}
 }
 
@@ -162,37 +71,75 @@ static uint32_t get_mail(uint32_t base, uint32_t full)
 }
 
 #ifdef PRINT_PHY_TRAINING_MESSAGES
-void varprintf0(char * str, uint32_t *args) {printf(str);};
-void varprintf1(char * str, uint32_t *args) {printf(str, args[0]);};
-void varprintf2(char * str, uint32_t *args) {printf(str, args[0], args[1]);};
-void varprintf3(char * str, uint32_t *args) {printf(str, args[0], args[1], args[2]);};
-void varprintf4(char * str, uint32_t *args) {printf(str, args[0], args[1], args[2], args[3]);};
-void varprintf5(char * str, uint32_t *args) {printf(str, args[0], args[1], args[2], args[3], args[4]);};
-void varprintf6(char * str, uint32_t *args) {printf(str, args[0], args[1], args[2], args[3], args[4], args[5]);};
-void varprintf7(char * str, uint32_t *args) {printf(str, args[0], args[1], args[2], args[3], args[4], args[5], args[6]);};
-void varprintf8(char * str, uint32_t *args) {printf(str, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7]);};
-void varprintf9(char * str, uint32_t *args) {printf(str, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8]);};
-void varprintf10(char * str, uint32_t *args) {printf(str, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9]);};
-void varprintf11(char * str, uint32_t *args) {printf(str, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10]);};
-void varprintf12(char * str, uint32_t *args) {printf(str, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11]);};
-void varprintf13(char * str, uint32_t *args) {printf(str, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11], args[12]);};
-void varprintf14(char * str, uint32_t *args) {printf(str, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11], args[12], args[13]);};
-void varprintf15(char * str, uint32_t *args) {printf(str, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11], args[12], args[13], args[14]);};
-void varprintf31(char * str, uint32_t *args) {printf(str, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11], args[12], args[13], args[14],
+// #define COMPRESSED_MESSAGES 1
+#ifdef COMPRESSED_MESSAGES
+void varprintf0(uint32_t id, char * str, uint32_t *args) {printf("%x:\n", id);};
+void varprintf1(uint32_t id, char * str, uint32_t *args) {printf("%x:%x\n", id, args[0]);};
+void varprintf2(uint32_t id, char * str, uint32_t *args) {printf("%x:%x,%x\n", id, args[0], args[1]);};
+void varprintf3(uint32_t id, char * str, uint32_t *args) {printf("%x:%x,%x,%x\n", id, args[0], args[1], args[2]);};
+void varprintf4(uint32_t id, char * str, uint32_t *args) {printf("%x:%x,%x,%x,%x\n", id, args[0], args[1], args[2], args[3]);};
+void varprintf5(uint32_t id, char * str, uint32_t *args) {printf("%x:%x,%x,%x,%x,%x\n", id, args[0], args[1], args[2], args[3], args[4]);};
+void varprintf6(uint32_t id, char * str, uint32_t *args) {printf("%x:%x,%x,%x,%x,%x,%x\n", id, args[0], args[1], args[2], args[3], args[4], args[5]);};
+void varprintf7(uint32_t id, char * str, uint32_t *args) {printf("%x:%x,%x,%x,%x,%x,%x,%x\n", id, args[0], args[1], args[2], args[3], args[4], args[5], args[6]);};
+void varprintf8(uint32_t id, char * str, uint32_t *args) {printf("%x:%x,%x,%x,%x,%x,%x,%x,%x\n", id, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7]);};
+void varprintf9(uint32_t id, char * str, uint32_t *args) {printf("%x:%x,%x,%x,%x,%x,%x,%x,%x,%x\n", id, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8]);};
+void varprintf10(uint32_t id, char * str, uint32_t *args) {printf("%x:%x,%x,%x,%x,%x,%x,%x,%x,%x,%x\n", id, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9]);};
+void varprintf11(uint32_t id, char * str, uint32_t *args) {printf("%x:%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x\n", id, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10]);};
+void varprintf12(uint32_t id, char * str, uint32_t *args) {printf("%x:%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x\n", id, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11]);};
+void varprintf13(uint32_t id, char * str, uint32_t *args) {printf("%x:%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x\n", id, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11], args[12]);};
+void varprintf14(uint32_t id, char * str, uint32_t *args) {printf("%x:%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x\n", id, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11], args[12], args[13]);};
+void varprintf15(uint32_t id, char * str, uint32_t *args) {printf("%x:%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x\n", id, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11], args[12], args[13], args[14]);};
+void varprintf29(uint32_t id, char * str, uint32_t *args) {printf("%x:%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x\n", id, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11], args[12], args[13], args[14],
+		args[15], args[16], args[17], args[18], args[19], args[20], args[21], args[22], args[23], args[24], args[25], args[26], args[27], args[28]);};
+void varprintf31(uint32_t id, char * str, uint32_t *args) {printf("%x:%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x\n", id, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11], args[12], args[13], args[14],
 		args[15], args[16], args[17], args[18], args[19], args[20], args[21], args[22], args[23], args[24], args[25], args[26], args[27], args[28], args[29], args[30]);};
-static void (*varprintf[])(char * str, uint32_t *args) = {
+void varprintf64(uint32_t id, char * str, uint32_t *args) {printf("%x:%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x\n", id, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11], args[12], args[13], args[14],
+		args[15], args[16], args[17], args[18], args[19], args[20], args[21], args[22], args[23], args[24], args[25], args[26], args[27], args[28], args[29], args[30], args[31], args[32], args[33],
+		args[34], args[35], args[36], args[37], args[38], args[39], args[40], args[41], args[42], args[43], args[44], args[45], args[46], args[47], args[48], args[49], args[50], args[51], args[52],
+		args[53], args[54], args[55], args[56], args[57], args[58], args[59], args[60], args[61], args[62], args[63]);};
+#else
+void varprintf0(uint32_t id, char * str, uint32_t *args) {printf(str);};
+void varprintf1(uint32_t id, char * str, uint32_t *args) {printf(str, args[0]);};
+void varprintf2(uint32_t id, char * str, uint32_t *args) {printf(str, args[0], args[1]);};
+void varprintf3(uint32_t id, char * str, uint32_t *args) {printf(str, args[0], args[1], args[2]);};
+void varprintf4(uint32_t id, char * str, uint32_t *args) {printf(str, args[0], args[1], args[2], args[3]);};
+void varprintf5(uint32_t id, char * str, uint32_t *args) {printf(str, args[0], args[1], args[2], args[3], args[4]);};
+void varprintf6(uint32_t id, char * str, uint32_t *args) {printf(str, args[0], args[1], args[2], args[3], args[4], args[5]);};
+void varprintf7(uint32_t id, char * str, uint32_t *args) {printf(str, args[0], args[1], args[2], args[3], args[4], args[5], args[6]);};
+void varprintf8(uint32_t id, char * str, uint32_t *args) {printf(str, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7]);};
+void varprintf9(uint32_t id, char * str, uint32_t *args) {printf(str, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8]);};
+void varprintf10(uint32_t id, char * str, uint32_t *args) {printf(str, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9]);};
+void varprintf11(uint32_t id, char * str, uint32_t *args) {printf(str, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10]);};
+void varprintf12(uint32_t id, char * str, uint32_t *args) {printf(str, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11]);};
+void varprintf13(uint32_t id, char * str, uint32_t *args) {printf(str, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11], args[12]);};
+void varprintf14(uint32_t id, char * str, uint32_t *args) {printf(str, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11], args[12], args[13]);};
+void varprintf15(uint32_t id, char * str, uint32_t *args) {printf(str, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11], args[12], args[13], args[14]);};
+void varprintf29(uint32_t id, char * str, uint32_t *args) {printf(str, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11], args[12], args[13], args[14],
+		args[15], args[16], args[17], args[18], args[19], args[20], args[21], args[22], args[23], args[24], args[25], args[26], args[27], args[28]);};
+void varprintf31(uint32_t id, char * str, uint32_t *args) {printf(str, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11], args[12], args[13], args[14],
+		args[15], args[16], args[17], args[18], args[19], args[20], args[21], args[22], args[23], args[24], args[25], args[26], args[27], args[28], args[29], args[30]);};
+void varprintf64(uint32_t id, char * str, uint32_t *args) {printf(str, args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11], args[12], args[13], args[14],
+		args[15], args[16], args[17], args[18], args[19], args[20], args[21], args[22], args[23], args[24], args[25], args[26], args[27], args[28], args[29], args[30], args[31], args[32], args[33],
+		args[34], args[35], args[36], args[37], args[38], args[39], args[40], args[41], args[42], args[43], args[44], args[45], args[46], args[47], args[48], args[49], args[50], args[51], args[52],
+		args[53], args[54], args[55], args[56], args[57], args[58], args[59], args[60], args[61], args[62], args[63]);};
+#endif
+static void (*varprintf[])(uint32_t id, char * str, uint32_t *args) = {
 		&varprintf0, &varprintf1, &varprintf2, &varprintf3,
 		&varprintf4, &varprintf5, &varprintf6, &varprintf7,
 		&varprintf8, &varprintf9, &varprintf10, &varprintf11,
 		&varprintf12, &varprintf13, &varprintf14, &varprintf15,
 		NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-		NULL, NULL, NULL, NULL, NULL, NULL, &varprintf31,
+		NULL, NULL, NULL, NULL, &varprintf29, NULL, &varprintf31,
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+		NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+		NULL, NULL, NULL, NULL, NULL,  &varprintf64,
 };
 
 static void get_streaming_message(uint32_t base, uint32_t id)
 {
 	uint32_t index = get_mail(base, 1);
-	uint32_t i, args[32];
+	uint32_t i, args[64];
 	int32_t res;
 	char *str;
 
@@ -202,7 +149,9 @@ static void get_streaming_message(uint32_t base, uint32_t id)
 	if((get_ddr_phy_debug_string(id, index, &str) == 0) &&
 			((index & 0xffff) < ARRAY_SIZE(varprintf)) &&
 			(varprintf[i] != NULL))
-		(*(varprintf[i]))(str, args);
+		(*(varprintf[i]))(index, str, args);
+	else
+		printf("PHY: Unknown message 0x%08x\n", index);
 }
 #endif
 
@@ -220,23 +169,21 @@ static int32_t do_training_run(uint32_t base, uint32_t id) {
 #endif
 		if(mail == 0x07)
 			return 0;
-		if(mail == 0x0ff)
+		if(mail == 0xff)
 			return -4;
 	}
 }
 
-static uint32_t odtimps[] = { 0x10000, 0x10100, 0x11000, 0x11100, 0x12000, 0x12100, 0x13000, 0x13100 };
-static uint32_t atximps[] = { 0x0000, 0x1000, 0x2000, 0x3000, 0x4000, 0x5000 };
-
-
-int32_t run_sequence(uint32_t cbase, uint32_t phybase, init_sequence_t s, firmware_t *f, int32_t fs, chip_settings_t *sets) {
-	uint32_t i, j, k, offset = 3, cols, rows;
+int32_t run_sequence(uint32_t cbase, uint32_t phybase, init_sequence_t s,
+		firmware_t *f, int32_t fs, chip_settings_t *sets, unique_sequence_t *u)
+{
+	uint32_t i, j, k, offset = 3, cols, rows, last_unique = 0;
 	int32_t res = 0;
 	uint16_t val;
 
-	debug("PHY INIT: Running sequence %#x, value %#x\n", cbase, phybase);
+	debug("PHY INIT: Running sequence base %#x, phy %#x, size %d\n", cbase, phybase, s.size);
 
-	if(s.elements == NULL)
+	if((s.elements == NULL) && (s.size != 0))
 		return -1;
 
 	for(i = 0; i < s.size && res == 0; i++) {
@@ -244,6 +191,18 @@ int32_t run_sequence(uint32_t cbase, uint32_t phybase, init_sequence_t s, firmwa
 		switch(s.elements[i].type) {
 		case PHY_INIT_TYPE_WRITE:
 			do_apb_write(cbase, s.elements[i].addr, s.elements[i].value);
+			break;
+		case PHY_INIT_TYPE_WRITE_FREQ:
+			res = s.elements[i].value;
+			for(j = 0; u && (j < u->size); j++)
+				if((u->elements[j].addr == s.elements[i].addr) &&
+					(u->elements[j].type == PHY_INIT_TYPE_WRITE)) {
+						res = u->elements[j].value;
+						break;
+					}
+			debug("PHY INIT: Frequency specific value: %#x\n", res);
+			do_apb_write(cbase, s.elements[i].addr, res);
+			res = 0;
 			break;
 		case PHY_INIT_TYPE_READ:
 			do_apb_read(cbase, s.elements[i].addr, s.elements[i].value);
@@ -253,6 +212,19 @@ int32_t run_sequence(uint32_t cbase, uint32_t phybase, init_sequence_t s, firmwa
 			break;
 		case PHY_INIT_TYPE_PHY:
 			do_phy_write(phybase, s.elements[i].addr, s.elements[i].value);
+			break;
+		case PHY_INIT_TYPE_PHY_FREQ:
+			res = s.elements[i].value;
+			for(j = last_unique; u && (j < u->size); j++)
+				if((u->elements[j].addr == s.elements[i].addr) &&
+					(u->elements[j].type == PHY_INIT_TYPE_PHY)) {
+						res = u->elements[j].value;
+						last_unique = j;
+						break;
+					}
+			debug("PHY INIT: Frequency specific value: [%#x] = %#x\n", s.elements[i].addr, res);
+			do_phy_write(phybase, s.elements[i].addr, res);
+			res = 0;
 			break;
 		case PHY_INIT_TYPE_PHYPOLL:
 			do_phy_poll(phybase, s.elements[i].addr, s.elements[i].value);
@@ -274,6 +246,10 @@ int32_t run_sequence(uint32_t cbase, uint32_t phybase, init_sequence_t s, firmwa
 		case PHY_INIT_TYPE_DEBUG:
 			printf("PHY INIT: Debug message addr %#x, value %#x\n", s.elements[i].addr, do_phy_read(phybase, s.elements[i].addr));
 			break;
+		case PHY_INIT_TYPE_DEBUG_RANGE:
+			for(j = 0; j < s.elements[i].value; j++)
+				printf("PHY INIT: Debug message addr %#x, value %#x\n", s.elements[i].addr + j, do_phy_read(phybase, s.elements[i].addr + j));
+			break;
 		case PHY_INIT_TYPE_DUMPEYE:
 			printf("PHY INIT: Dumping EYE at address %#x\n", s.elements[i].addr);
 			cols = do_phy_read(phybase, s.elements[i].addr) & 0xff;
@@ -282,7 +258,7 @@ int32_t run_sequence(uint32_t cbase, uint32_t phybase, init_sequence_t s, firmwa
 			for(j = 0; j < rows; j++) {
 				for(k = 0; k < cols; k += 2) {
 					val = do_phy_read(phybase, s.elements[i].addr + offset);
-					printf("%03d %03d ", val & 0xff, (val >> 8) & 0xff);
+					printf("%02x %02x ", val & 0xff, (val >> 8) & 0xff);
 					offset++;
 				}
 				printf("\n");
@@ -291,21 +267,14 @@ int32_t run_sequence(uint32_t cbase, uint32_t phybase, init_sequence_t s, firmwa
 		case PHY_INIT_TYPE_DDRCSETTINGS:
 			if(sets == NULL)
 				res = -4;
-			else {
-				do_apb_write(cbase, 0x000000dc, (PHY_DDR_MR1(sets) << 16 | PHY_DDR_MR2(sets)));
-				do_apb_write(cbase, 0x000000e0, (PHY_DDR_MR3(sets) << 16 | PHY_DDR_MR13(sets)));
-				do_apb_write(cbase, 0x000000e8, (PHY_DDR_MR11(sets) << 16 | PHY_DDR_MR12(sets)));
-			}
+			else
+				board_specific_ddrc_settings(cbase, sets);
 			break;
 		case PHY_INIT_TYPE_PHYSETTINGS:
 			if(sets == NULL)
 				res = -4;
-			else {
-				do_phy_writes(phybase, 0x4d, sets->txodt, odtimps, ARRAY_SIZE(odtimps));
-				do_phy_writes(phybase, 0x49, sets->tximp, odtimps, ARRAY_SIZE(odtimps));
-				do_phy_writes(phybase, 0x43, sets->atximp, atximps, ARRAY_SIZE(atximps));
-				do_phy_write(phybase, 0x200b2, VREFGLOBAL(sets->phyvref));
-			}
+			else
+				board_specific_ddrphy_settings(phybase, sets);
 			break;
 		default:
 			break;

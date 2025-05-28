@@ -1,15 +1,22 @@
 if ARCH_SIMA
 
 choice
-	prompt "Davici A65 board select"
-	default TARGET_DAVINCI_A65
+	prompt "Davici / Modalix board select"
 
-config TARGET_DAVINCI_A65
+config TARGET_DAVINCI
 	bool "ARMv8, 64bit"
 	select ARM64
 	select BOARD_LATE_INIT
 	select GICV3
-	select GIC600_RDIST_PWRON
+	select GICV3_SUPPORT_GIC600
+	imply MULTI_DTB_FIT
+
+config TARGET_MODALIX
+	bool "ARMv8, 64bit"
+	select ARM64
+	select BOARD_LATE_INIT
+	select GICV3
+	select GICV3_SUPPORT_GIC600
 	imply MULTI_DTB_FIT
 
 endchoice

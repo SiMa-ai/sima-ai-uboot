@@ -11,20 +11,7 @@
 #include "tegra20-common.h"
 
 /* Board-specific serial config */
-#define CONFIG_TEGRA_ENABLE_UARTA
-#define CONFIG_TEGRA_UARTA_SDIO1
-#define CONFIG_SYS_NS16550_COM1		NV_PA_APB_UARTA_BASE
-
-/* NAND support */
-
-#define UBOOT_UPDATE \
-	"update_uboot=nand erase.part u-boot && " \
-		"nand write ${loadaddr} u-boot ${filesize}\0" \
-
-/* Environment in NAND, 64K is a bit excessive but erase block is 512K anyway */
-#define BOARD_EXTRA_ENV_SETTINGS \
-	"boot_script_dhcp=boot.scr\0" \
-	UBOOT_UPDATE
+#define CFG_SYS_NS16550_COM1		NV_PA_APB_UARTA_BASE
 
 #include "tegra-common-post.h"
 

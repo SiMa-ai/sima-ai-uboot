@@ -3,7 +3,7 @@
  * Copyright (c) 2022 Sima ai
  */
 
-#include <common.h>
+
 #include <dm.h>
 #include <dt-structs.h>
 #include <linux/libfdt.h>

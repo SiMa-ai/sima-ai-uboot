@@ -13,7 +13,6 @@
 #include <linux/pm_runtime.h>
 #include "internals.h"
 #else
-#include <common.h>
 #include <dm.h>
 #include <errno.h>
 #include <malloc.h>
@@ -181,8 +180,12 @@ bool spi_mem_dtr_supports_op(struct spi_slave *slave,
 	if (op->dummy.nbytes && op->dummy.buswidth == 8 && op->dummy.nbytes % 2)
 		return false;
 
-	if (op->data.dir != SPI_MEM_NO_DATA &&
-	    op->dummy.buswidth == 8 && op->data.nbytes % 2)
+	/*
+	 * Transactions of odd length do not make sense for 8D-8D-8D mode
+	 * because a byte is transferred in just half a cycle.
+	 */
+	if (op->data.dir != SPI_MEM_NO_DATA && op->data.dir != SPI_MEM_DATA_IN &&
+	    op->data.buswidth == 8 && op->data.nbytes % 2)
 		return false;
 
 	return spi_mem_check_buswidth(slave, op);

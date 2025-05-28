@@ -6,7 +6,6 @@
  * Basic support for the pwm module on imx6.
  */
 
-#include <common.h>
 #include <div64.h>
 #include <dm.h>
 #include <log.h>
@@ -21,10 +20,11 @@ int pwm_config_internal(struct pwm_regs *pwm, unsigned long period_cycles,
 	u32 cr;
 
 	writel(0, &pwm->ir);
-	cr = PWMCR_PRESCALER(prescale) |
+
+	cr = readl(&pwm->cr) & PWMCR_EN;
+	cr |= PWMCR_PRESCALER(prescale) |
 		PWMCR_DOZEEN | PWMCR_WAITEN |
 		PWMCR_DBGEN | PWMCR_CLKSRC_IPG_HIGH;
-
 	writel(cr, &pwm->cr);
 	/* set duty cycles */
 	writel(duty_cycles, &pwm->sar);
@@ -76,7 +76,7 @@ int pwm_imx_get_parms(int period_ns, int duty_ns, unsigned long *period_c,
 	 * value here as a define. Replace it when we have the clock
 	 * framework.
 	 */
-	c = CONFIG_IMX6_PWM_PER_CLK;
+	c = CFG_IMX6_PWM_PER_CLK;
 	c = c * period_ns;
 	do_div(c, 1000000000);
 	*period_c = c;

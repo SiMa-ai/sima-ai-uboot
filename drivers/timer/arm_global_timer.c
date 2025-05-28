@@ -6,7 +6,7 @@
  * ARM Cortext A9 global timer driver
  */
 
-#include <common.h>
+#include <config.h>
 #include <dm.h>
 #include <clk.h>
 #include <timer.h>
@@ -59,7 +59,7 @@ static int arm_global_timer_probe(struct udevice *dev)
 			return ret;
 		uc_priv->clock_rate = ret;
 	} else {
-		uc_priv->clock_rate = CONFIG_SYS_HZ_CLOCK;
+		uc_priv->clock_rate = CFG_SYS_HZ_CLOCK;
 	}
 
 	/* init timer */

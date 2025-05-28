@@ -5,7 +5,6 @@
  * Copyright (C) 2021 Xilinx, Inc.
  */
 
-#include <common.h>
 #include <errno.h>
 #include <asm/io.h>
 #include <asm/gpio.h>
@@ -48,6 +47,9 @@ static int modepin_gpio_set_value(struct udevice *dev, unsigned int offset,
 	int ret;
 
 	ret = get_gpio_modepin(ret_payload);
+	if (ret)
+		return ret;
+
 	if (value)
 		out_val = OUTVAL(offset) | ret_payload[1];
 	else

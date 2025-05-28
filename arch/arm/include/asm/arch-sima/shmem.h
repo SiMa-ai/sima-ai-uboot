@@ -15,6 +15,8 @@ typedef enum board_id_t {
 	DAVINCI_8L_DUAL_M2_BOARD 	= 0x00000031,
 	DAVINCI_10L_DUAL_M2_BOARD 	= 0x00001031,
 	DAVINCI_HHHL 			= 0x00000041,
+	MODALIX_DVT 		        = 0x00000101,
+	MODALIX_HHHL 		        = 0x00000121,
 } board_id_t;
 
 int populate_mac(char *mac);

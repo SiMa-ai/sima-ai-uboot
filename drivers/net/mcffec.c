@@ -10,7 +10,8 @@
  * (C) 2019 Angelo Dureghello <angelo.dureghello@timesys.com>
  */
 
-#include <common.h>
+#include <config.h>
+#include <cpu_func.h>
 #include <env.h>
 #include <hang.h>
 #include <malloc.h>
@@ -39,11 +40,11 @@ DECLARE_GLOBAL_DATA_PTR;
 
 static void init_eth_info(struct fec_info_s *info)
 {
-#ifdef CONFIG_SYS_FEC_BUF_USE_SRAM
+#ifdef CFG_SYS_FEC_BUF_USE_SRAM
 	static u32 tmp;
 
 	if (info->index == 0)
-		tmp = CONFIG_SYS_INIT_RAM_ADDR + 0x1000;
+		tmp = CFG_SYS_INIT_RAM_ADDR + 0x1000;
 	else
 		info->rxbd = (cbd_t *)DBUF_LENGTH;
 
@@ -56,7 +57,7 @@ static void init_eth_info(struct fec_info_s *info)
 	tmp = (u32)info->txbd;
 	info->txbuf =
 	    (char *)((u32)info->txbuf + tmp +
-	    (CONFIG_SYS_TX_ETH_BUFFER * sizeof(cbd_t)));
+	    (CFG_SYS_TX_ETH_BUFFER * sizeof(cbd_t)));
 	tmp = (u32)info->txbuf;
 #else
 	info->rxbd =
@@ -387,7 +388,7 @@ static int mcffec_send(struct udevice *dev, void *packet, int length)
 	/* Activate transmit Buffer Descriptor polling */
 	fecp->tdar = 0x01000000;	/* Descriptor polling active    */
 
-#ifndef CONFIG_SYS_FEC_BUF_USE_SRAM
+#ifndef CFG_SYS_FEC_BUF_USE_SRAM
 	/*
 	 * FEC unable to initial transmit data packet.
 	 * A nop will ensure the descriptor polling active completed.
@@ -399,7 +400,7 @@ static int mcffec_send(struct udevice *dev, void *packet, int length)
 #endif
 
 #ifdef CONFIG_SYS_UNIFY_CACHE
-	icache_invalid();
+	invalidate_icache_all();
 #endif
 
 	j = 0;
@@ -433,7 +434,7 @@ static int mcffec_recv(struct udevice *dev, int flags, uchar **packetp)
 
 	for (;;) {
 #ifdef CONFIG_SYS_UNIFY_CACHE
-		icache_invalid();
+		invalidate_icache_all();
 #endif
 		/* If nothing received - leave for() loop */
 		if (info->rxbd[info->rx_idx].cbd_sc & BD_ENET_RX_EMPTY)

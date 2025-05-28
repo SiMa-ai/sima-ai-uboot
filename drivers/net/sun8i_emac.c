@@ -16,7 +16,6 @@
 #include <asm/global_data.h>
 #include <asm/gpio.h>
 #include <asm/io.h>
-#include <common.h>
 #include <clk.h>
 #include <dm.h>
 #include <fdt_support.h>
@@ -29,6 +28,7 @@
 #include <net.h>
 #include <reset.h>
 #include <wait_bit.h>
+#include <power/regulator.h>
 
 #define MDIO_CMD_MII_BUSY		BIT(0)
 #define MDIO_CMD_MII_WRITE		BIT(1)
@@ -43,19 +43,19 @@
 #define MDIO_CMD_MII_CLK_CSR_DIV_128	0x3
 #define MDIO_CMD_MII_CLK_CSR_SHIFT	20
 
-#define CONFIG_TX_DESCR_NUM	32
-#define CONFIG_RX_DESCR_NUM	32
-#define CONFIG_ETH_BUFSIZE	2048 /* Note must be dma aligned */
+#define CFG_TX_DESCR_NUM	32
+#define CFG_RX_DESCR_NUM	32
+#define CFG_ETH_BUFSIZE	2048 /* Note must be dma aligned */
 
 /*
  * The datasheet says that each descriptor can transfers up to 4096 bytes
  * But later, the register documentation reduces that value to 2048,
  * using 2048 cause strange behaviours and even BSP driver use 2047
  */
-#define CONFIG_ETH_RXSIZE	2044 /* Note must fit in ETH_BUFSIZE */
+#define CFG_ETH_RXSIZE	2044 /* Note must fit in ETH_BUFSIZE */
 
-#define TX_TOTAL_BUFSIZE	(CONFIG_ETH_BUFSIZE * CONFIG_TX_DESCR_NUM)
-#define RX_TOTAL_BUFSIZE	(CONFIG_ETH_BUFSIZE * CONFIG_RX_DESCR_NUM)
+#define TX_TOTAL_BUFSIZE	(CFG_ETH_BUFSIZE * CFG_TX_DESCR_NUM)
+#define RX_TOTAL_BUFSIZE	(CFG_ETH_BUFSIZE * CFG_RX_DESCR_NUM)
 
 #define H3_EPHY_DEFAULT_VALUE	0x58000
 #define H3_EPHY_DEFAULT_MASK	GENMASK(31, 15)
@@ -75,7 +75,7 @@
 #define SC_ERXDC_MASK		GENMASK(9, 5)
 #define SC_ERXDC_OFFSET		5
 
-#define CONFIG_MDIO_TIMEOUT	(3 * CONFIG_SYS_HZ)
+#define CFG_MDIO_TIMEOUT	(3 * CONFIG_SYS_HZ)
 
 #define AHB_GATE_OFFSET_EPHY	0
 
@@ -127,12 +127,10 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
-enum emac_variant {
-	A83T_EMAC = 1,
-	H3_EMAC,
-	A64_EMAC,
-	R40_GMAC,
-	H6_EMAC,
+struct emac_variant {
+	uint			syscon_offset;
+	bool			soc_has_internal_phy;
+	bool			support_rmii;
 };
 
 struct emac_dma_desc {
@@ -143,8 +141,8 @@ struct emac_dma_desc {
 } __aligned(ARCH_DMA_MINALIGN);
 
 struct emac_eth_dev {
-	struct emac_dma_desc rx_chain[CONFIG_TX_DESCR_NUM];
-	struct emac_dma_desc tx_chain[CONFIG_RX_DESCR_NUM];
+	struct emac_dma_desc rx_chain[CFG_TX_DESCR_NUM];
+	struct emac_dma_desc tx_chain[CFG_RX_DESCR_NUM];
 	char rxbuffer[RX_TOTAL_BUFSIZE] __aligned(ARCH_DMA_MINALIGN);
 	char txbuffer[TX_TOTAL_BUFSIZE] __aligned(ARCH_DMA_MINALIGN);
 
@@ -160,20 +158,18 @@ struct emac_eth_dev {
 	u32 tx_slot;
 	bool use_internal_phy;
 
-	enum emac_variant variant;
+	const struct emac_variant *variant;
 	void *mac_reg;
-	phys_addr_t sysctl_reg;
+	void *sysctl_reg;
 	struct phy_device *phydev;
 	struct mii_dev *bus;
 	struct clk tx_clk;
 	struct clk ephy_clk;
 	struct reset_ctl tx_rst;
 	struct reset_ctl ephy_rst;
-#if CONFIG_IS_ENABLED(DM_GPIO)
 	struct gpio_desc reset_gpio;
-#endif
+	struct udevice *phy_reg;
 };
-
 
 struct sun8i_eth_pdata {
 	struct eth_pdata eth_pdata;
@@ -181,7 +177,6 @@ struct sun8i_eth_pdata {
 	int tx_delay_ps;
 	int rx_delay_ps;
 };
-
 
 static int sun8i_mdio_read(struct mii_dev *bus, int addr, int devad, int reg)
 {
@@ -209,7 +204,7 @@ static int sun8i_mdio_read(struct mii_dev *bus, int addr, int devad, int reg)
 
 	ret = wait_for_bit_le32(priv->mac_reg + EMAC_MII_CMD,
 				MDIO_CMD_MII_BUSY, false,
-				CONFIG_MDIO_TIMEOUT, true);
+				CFG_MDIO_TIMEOUT, true);
 	if (ret < 0)
 		return ret;
 
@@ -244,7 +239,7 @@ static int sun8i_mdio_write(struct mii_dev *bus, int addr, int devad, int reg,
 
 	return wait_for_bit_le32(priv->mac_reg + EMAC_MII_CMD,
 				 MDIO_CMD_MII_BUSY, false,
-				 CONFIG_MDIO_TIMEOUT, true);
+				 CFG_MDIO_TIMEOUT, true);
 }
 
 static int sun8i_eth_write_hwaddr(struct udevice *dev)
@@ -317,25 +312,12 @@ static int sun8i_emac_set_syscon(struct sun8i_eth_pdata *pdata,
 {
 	u32 reg;
 
-	if (priv->variant == R40_GMAC) {
-		/* Select RGMII for R40 */
-		reg = readl(priv->sysctl_reg + 0x164);
-		reg |= SC_ETCS_INT_GMII |
-		       SC_EPIT |
-		       (CONFIG_GMAC_TX_DELAY << SC_ETXDC_OFFSET);
-
-		writel(reg, priv->sysctl_reg + 0x164);
-		return 0;
-	}
-
-	reg = readl(priv->sysctl_reg + 0x30);
+	reg = readl(priv->sysctl_reg);
 
 	reg = sun8i_emac_set_syscon_ephy(priv, reg);
 
 	reg &= ~(SC_ETCS_MASK | SC_EPIT);
-	if (priv->variant == H3_EMAC ||
-	    priv->variant == A64_EMAC ||
-	    priv->variant == H6_EMAC)
+	if (priv->variant->support_rmii)
 		reg &= ~SC_RMII_EN;
 
 	switch (priv->interface) {
@@ -349,13 +331,10 @@ static int sun8i_emac_set_syscon(struct sun8i_eth_pdata *pdata,
 		reg |= SC_EPIT | SC_ETCS_INT_GMII;
 		break;
 	case PHY_INTERFACE_MODE_RMII:
-		if (priv->variant == H3_EMAC ||
-		    priv->variant == A64_EMAC ||
-		    priv->variant == H6_EMAC) {
+		if (priv->variant->support_rmii) {
 			reg |= SC_RMII_EN | SC_ETCS_EXT_GMII;
-		break;
+			break;
 		}
-		/* RMII not supported on A83T */
 	default:
 		debug("%s: Invalid PHY interface\n", __func__);
 		return -EINVAL;
@@ -369,7 +348,7 @@ static int sun8i_emac_set_syscon(struct sun8i_eth_pdata *pdata,
 		reg |= ((pdata->rx_delay_ps / 100) << SC_ERXDC_OFFSET)
 			 & SC_ERXDC_MASK;
 
-	writel(reg, priv->sysctl_reg + 0x30);
+	writel(reg, priv->sysctl_reg);
 
 	return 0;
 }
@@ -412,11 +391,11 @@ static void rx_descs_init(struct emac_eth_dev *priv)
 	invalidate_dcache_range((uintptr_t)rxbuffs,
 				(uintptr_t)rxbuffs + sizeof(priv->rxbuffer));
 
-	for (i = 0; i < CONFIG_RX_DESCR_NUM; i++) {
+	for (i = 0; i < CFG_RX_DESCR_NUM; i++) {
 		desc_p = &desc_table_p[i];
-		desc_p->buf_addr = (uintptr_t)&rxbuffs[i * CONFIG_ETH_BUFSIZE];
+		desc_p->buf_addr = (uintptr_t)&rxbuffs[i * CFG_ETH_BUFSIZE];
 		desc_p->next = (uintptr_t)&desc_table_p[i + 1];
-		desc_p->ctl_size = CONFIG_ETH_RXSIZE;
+		desc_p->ctl_size = CFG_ETH_RXSIZE;
 		desc_p->status = EMAC_DESC_OWN_DMA;
 	}
 
@@ -438,9 +417,9 @@ static void tx_descs_init(struct emac_eth_dev *priv)
 	struct emac_dma_desc *desc_p;
 	int i;
 
-	for (i = 0; i < CONFIG_TX_DESCR_NUM; i++) {
+	for (i = 0; i < CFG_TX_DESCR_NUM; i++) {
 		desc_p = &desc_table_p[i];
-		desc_p->buf_addr = (uintptr_t)&txbuffs[i * CONFIG_ETH_BUFSIZE];
+		desc_p->buf_addr = (uintptr_t)&txbuffs[i * CFG_ETH_BUFSIZE];
 		desc_p->next = (uintptr_t)&desc_table_p[i + 1];
 		desc_p->ctl_size = 0;
 		desc_p->status = 0;
@@ -541,7 +520,7 @@ static int sun8i_emac_eth_recv(struct udevice *dev, int flags, uchar **packetp)
 		return 0;
 	}
 
-	if (length > CONFIG_ETH_RXSIZE) {
+	if (length > CFG_ETH_RXSIZE) {
 		debug("RX: Too large packet (%d bytes)\n", length);
 		return 0;
 	}
@@ -575,7 +554,7 @@ static int sun8i_emac_eth_send(struct udevice *dev, void *packet, int length)
 	cache_clean_descriptor(desc_p);
 
 	/* Move to next Descriptor and wrap around */
-	if (++desc_num >= CONFIG_TX_DESCR_NUM)
+	if (++desc_num >= CFG_TX_DESCR_NUM)
 		desc_num = 0;
 	priv->tx_currdescnum = desc_num;
 
@@ -633,7 +612,6 @@ err_tx_clk:
 	return ret;
 }
 
-#if CONFIG_IS_ENABLED(DM_GPIO)
 static int sun8i_mdio_reset(struct mii_dev *bus)
 {
 	struct udevice *dev = bus->priv;
@@ -665,7 +643,6 @@ static int sun8i_mdio_reset(struct mii_dev *bus)
 
 	return 0;
 }
-#endif
 
 static int sun8i_mdio_init(const char *name, struct udevice *priv)
 {
@@ -680,9 +657,7 @@ static int sun8i_mdio_init(const char *name, struct udevice *priv)
 	bus->write = sun8i_mdio_write;
 	snprintf(bus->name, sizeof(bus->name), name);
 	bus->priv = (void *)priv;
-#if CONFIG_IS_ENABLED(DM_GPIO)
 	bus->reset = sun8i_mdio_reset;
-#endif
 
 	return  mdio_register(bus);
 }
@@ -701,7 +676,7 @@ static int sun8i_eth_free_pkt(struct udevice *dev, uchar *packet,
 	cache_clean_descriptor(desc_p);
 
 	/* Move to next desc and wrap-around condition. */
-	if (++desc_num >= CONFIG_RX_DESCR_NUM)
+	if (++desc_num >= CFG_RX_DESCR_NUM)
 		desc_num = 0;
 	priv->rx_currdescnum = desc_num;
 
@@ -737,6 +712,9 @@ static int sun8i_emac_eth_probe(struct udevice *dev)
 		return ret;
 
 	sun8i_emac_set_syscon(sun8i_pdata, priv);
+
+	if (priv->phy_reg)
+		regulator_set_enable(priv->phy_reg, true);
 
 	sun8i_mdio_init(dev->name, dev);
 	priv->bus = miiphy_get_dev_by_name(dev->name);
@@ -792,12 +770,11 @@ static int sun8i_emac_eth_of_to_plat(struct udevice *dev)
 	struct sun8i_eth_pdata *sun8i_pdata = dev_get_plat(dev);
 	struct eth_pdata *pdata = &sun8i_pdata->eth_pdata;
 	struct emac_eth_dev *priv = dev_get_priv(dev);
+	phys_addr_t syscon_base;
 	const fdt32_t *reg;
 	int node = dev_of_offset(dev);
 	int offset = 0;
-#if CONFIG_IS_ENABLED(DM_GPIO)
 	int reset_flags = GPIOD_IS_OUT;
-#endif
 	int ret;
 
 	pdata->iobase = dev_read_addr(dev);
@@ -806,7 +783,7 @@ static int sun8i_emac_eth_of_to_plat(struct udevice *dev)
 		return -EINVAL;
 	}
 
-	priv->variant = dev_get_driver_data(dev);
+	priv->variant = (const void *)dev_get_driver_data(dev);
 
 	if (!priv->variant) {
 		printf("%s: Missing variant\n", __func__);
@@ -837,30 +814,31 @@ static int sun8i_emac_eth_of_to_plat(struct udevice *dev)
 		      __func__);
 		return -EINVAL;
 	}
-	priv->sysctl_reg = fdt_translate_address((void *)gd->fdt_blob,
-						 offset, reg);
-	if (priv->sysctl_reg == FDT_ADDR_T_NONE) {
+
+	syscon_base = fdt_translate_address((void *)gd->fdt_blob, offset, reg);
+	if (syscon_base == FDT_ADDR_T_NONE) {
 		debug("%s: Cannot find syscon base address\n", __func__);
 		return -EINVAL;
 	}
+
+	priv->sysctl_reg = (void *)syscon_base + priv->variant->syscon_offset;
+
+	device_get_supply_regulator(dev, "phy-supply", &priv->phy_reg);
 
 	pdata->phy_interface = -1;
 	priv->phyaddr = -1;
 	priv->use_internal_phy = false;
 
 	offset = fdtdec_lookup_phandle(gd->fdt_blob, node, "phy-handle");
-	if (offset < 0) {
-		debug("%s: Cannot find PHY address\n", __func__);
-		return -EINVAL;
-	}
-	priv->phyaddr = fdtdec_get_int(gd->fdt_blob, offset, "reg", -1);
+	if (offset >= 0)
+		priv->phyaddr = fdtdec_get_int(gd->fdt_blob, offset, "reg", -1);
 
 	pdata->phy_interface = dev_read_phy_mode(dev);
 	debug("phy interface %d\n", pdata->phy_interface);
 	if (pdata->phy_interface == PHY_INTERFACE_MODE_NA)
 		return -EINVAL;
 
-	if (priv->variant == H3_EMAC) {
+	if (priv->variant->soc_has_internal_phy) {
 		ret = sun8i_handle_internal_phy(dev, priv);
 		if (ret)
 			return ret;
@@ -880,7 +858,6 @@ static int sun8i_emac_eth_of_to_plat(struct udevice *dev)
 		printf("%s: Invalid RX delay value %d\n", __func__,
 		       sun8i_pdata->rx_delay_ps);
 
-#if CONFIG_IS_ENABLED(DM_GPIO)
 	if (fdtdec_get_bool(gd->fdt_blob, dev_of_offset(dev),
 			    "snps,reset-active-low"))
 		reset_flags |= GPIOD_ACTIVE_LOW;
@@ -895,21 +872,52 @@ static int sun8i_emac_eth_of_to_plat(struct udevice *dev)
 	} else if (ret == -ENOENT) {
 		ret = 0;
 	}
-#endif
 
 	return 0;
 }
 
+static const struct emac_variant emac_variant_a83t = {
+	.syscon_offset		= 0x30,
+};
+
+static const struct emac_variant emac_variant_h3 = {
+	.syscon_offset		= 0x30,
+	.soc_has_internal_phy	= true,
+	.support_rmii		= true,
+};
+
+static const struct emac_variant emac_variant_r40 = {
+	.syscon_offset		= 0x164,
+};
+
+static const struct emac_variant emac_variant_v3s = {
+	.syscon_offset		= 0x30,
+	.soc_has_internal_phy	= true,
+};
+
+static const struct emac_variant emac_variant_a64 = {
+	.syscon_offset		= 0x30,
+	.support_rmii		= true,
+};
+
+static const struct emac_variant emac_variant_h6 = {
+	.syscon_offset		= 0x30,
+	.support_rmii		= true,
+};
+
 static const struct udevice_id sun8i_emac_eth_ids[] = {
-	{.compatible = "allwinner,sun8i-h3-emac", .data = (uintptr_t)H3_EMAC },
-	{.compatible = "allwinner,sun50i-a64-emac",
-		.data = (uintptr_t)A64_EMAC },
-	{.compatible = "allwinner,sun8i-a83t-emac",
-		.data = (uintptr_t)A83T_EMAC },
-	{.compatible = "allwinner,sun8i-r40-gmac",
-		.data = (uintptr_t)R40_GMAC },
-	{.compatible = "allwinner,sun50i-h6-emac",
-		.data = (uintptr_t)H6_EMAC },
+	{ .compatible = "allwinner,sun8i-a83t-emac",
+	  .data = (ulong)&emac_variant_a83t },
+	{ .compatible = "allwinner,sun8i-h3-emac",
+	  .data = (ulong)&emac_variant_h3 },
+	{ .compatible = "allwinner,sun8i-r40-gmac",
+	  .data = (ulong)&emac_variant_r40 },
+	{ .compatible = "allwinner,sun8i-v3s-emac",
+	  .data = (ulong)&emac_variant_v3s },
+	{ .compatible = "allwinner,sun50i-a64-emac",
+	  .data = (ulong)&emac_variant_a64 },
+	{ .compatible = "allwinner,sun50i-h6-emac",
+	  .data = (ulong)&emac_variant_h6 },
 	{ }
 };
 

@@ -3,7 +3,6 @@
  * Copyright (C) 2012 Samsung Electronics
  */
 
-#include <common.h>
 #include <config.h>
 #include <init.h>
 #include <log.h>
@@ -141,7 +140,7 @@ static void exynos_spi_copy(unsigned int uboot_size, unsigned int uboot_addr)
 {
 	int upto, todo;
 	int i, timeout = 100;
-	struct exynos_spi *regs = (struct exynos_spi *)CONFIG_SYS_SPI_BASE;
+	struct exynos_spi *regs = (struct exynos_spi *)CFG_SYS_SPI_BASE;
 
 	set_spi_clk(PERIPH_ID_SPI1, 50000000); /* set spi clock to 50Mhz */
 	/* set the spi1 GPIO */
@@ -313,7 +312,7 @@ static void setup_global_data(gd_t *gdp)
 	memzero((void *)gd, sizeof(gd_t));
 	gd->flags |= GD_FLG_RELOC;
 	gd->baudrate = CONFIG_BAUDRATE;
-	gd->have_console = 1;
+	gd->flags |= GD_FLG_HAVE_CONSOLE;
 }
 
 void board_init_f(unsigned long bootflag)

@@ -147,8 +147,8 @@ struct cfi_pri_hdr {
 	u8	minor_version;
 } __attribute__((packed));
 
-#ifndef CONFIG_SYS_FLASH_BANKS_LIST
-#define CONFIG_SYS_FLASH_BANKS_LIST { CONFIG_SYS_FLASH_BASE }
+#ifndef CFG_SYS_FLASH_BANKS_LIST
+#define CFG_SYS_FLASH_BANKS_LIST { CFG_SYS_FLASH_BASE }
 #endif
 
 /*
@@ -163,7 +163,7 @@ struct cfi_pri_hdr {
 #if defined(CONFIG_SYS_MAX_FLASH_BANKS_DETECT)
 /* map to cfi_flash_num_flash_banks only when supported */
 #if IS_ENABLED(CONFIG_FLASH_CFI_DRIVER) && \
-    (!IS_ENABLED(CONFIG_SPL_BUILD) || IS_ENABLED(CONFIG_SPL_MTD_SUPPORT))
+    (!IS_ENABLED(CONFIG_XPL_BUILD) || IS_ENABLED(CONFIG_SPL_MTD))
 #define CFI_FLASH_BANKS		(cfi_flash_num_flash_banks)
 /* board code can update this variable before CFI detection */
 extern int cfi_flash_num_flash_banks;

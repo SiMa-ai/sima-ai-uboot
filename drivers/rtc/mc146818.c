@@ -8,12 +8,11 @@
  * Date & Time support for the MC146818 (PIXX4) RTC
  */
 
-#include <common.h>
 #include <command.h>
 #include <dm.h>
 #include <rtc.h>
 
-#if defined(CONFIG_X86) || defined(CONFIG_MALTA)
+#if defined(CONFIG_X86) || defined(CONFIG_TARGET_MALTA)
 #include <asm/io.h>
 #define in8(p) inb(p)
 #define out8(p, v) outb(v, p)

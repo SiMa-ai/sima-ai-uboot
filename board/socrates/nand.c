@@ -4,9 +4,9 @@
  * Sergei Poselenov, Emcraft Systems, sposelenov@emcraft.com.
  */
 
-#include <common.h>
+#include <config.h>
 
-#if defined(CONFIG_SYS_NAND_BASE)
+#if defined(CFG_SYS_NAND_BASE)
 #include <nand.h>
 #include <linux/errno.h>
 #include <linux/mtd/rawnand.h>
@@ -55,7 +55,6 @@ static void sc_nand_write_buf(struct mtd_info *mtd, const u_char *buf, int len)
 			 state | (buf[i] << FPGA_NAND_DATA_SHIFT));
 	}
 }
-
 
 /**
  * sc_nand_read_byte -  read one byte from the chip

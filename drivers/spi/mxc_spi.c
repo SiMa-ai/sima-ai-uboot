@@ -3,7 +3,7 @@
  * Copyright (C) 2008, Guennadi Liakhovetski <lg@denx.de>
  */
 
-#include <common.h>
+#include <config.h>
 #include <clk.h>
 #include <dm.h>
 #include <log.h>
@@ -19,6 +19,7 @@
 #include <asm/arch/imx-regs.h>
 #include <asm/arch/clock.h>
 #include <asm/mach-imx/spi.h>
+#include <linux/printk.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -91,14 +92,6 @@ struct cspi_regs {
 #define MXC_CSPICON_CTL		20 /* inactive state of SCLK */
 #endif
 
-#ifdef CONFIG_MX27
-/* i.MX27 has a completely wrong register layout and register definitions in the
- * datasheet, the correct one is in the Freescale's Linux driver */
-
-#error "i.MX27 CSPI not supported due to drastic differences in register definitions" \
-"See linux mxc_spi driver from Freescale for details."
-#endif
-
 __weak int board_spi_cs_gpio(unsigned bus, unsigned cs)
 {
 	return -1;
@@ -109,8 +102,8 @@ __weak int board_spi_cs_gpio(unsigned bus, unsigned cs)
 #define reg_read readl
 #define reg_write(a, v) writel(v, a)
 
-#if !defined(CONFIG_SYS_SPI_MXC_WAIT)
-#define CONFIG_SYS_SPI_MXC_WAIT		(CONFIG_SYS_HZ/100)	/* 10 ms */
+#if !defined(CFG_SYS_SPI_MXC_WAIT)
+#define CFG_SYS_SPI_MXC_WAIT		(CONFIG_SYS_HZ/100)	/* 10 ms */
 #endif
 
 #define MAX_CS_COUNT	4
@@ -142,7 +135,7 @@ static void mxc_spi_cs_activate(struct mxc_spi_slave *mxcs)
 	struct udevice *dev = mxcs->dev;
 	struct dm_spi_slave_plat *slave_plat = dev_get_parent_plat(dev);
 
-	u32 cs = slave_plat->cs;
+	u32 cs = slave_plat->cs[0];
 
 	if (!dm_gpio_is_valid(&mxcs->cs_gpios[cs]))
 		return;
@@ -160,7 +153,7 @@ static void mxc_spi_cs_deactivate(struct mxc_spi_slave *mxcs)
 	struct udevice *dev = mxcs->dev;
 	struct dm_spi_slave_plat *slave_plat = dev_get_parent_plat(dev);
 
-	u32 cs = slave_plat->cs;
+	u32 cs = slave_plat->cs[0];
 
 	if (!dm_gpio_is_valid(&mxcs->cs_gpios[cs]))
 		return;
@@ -379,7 +372,7 @@ int spi_xchg_single(struct mxc_spi_slave *mxcs, unsigned int bitlen,
 	status = reg_read(&regs->stat);
 	/* Wait until the TC (Transfer completed) bit is set */
 	while ((status & MXC_CSPICTRL_TC) == 0) {
-		if (get_timer(ts) > CONFIG_SYS_SPI_MXC_WAIT) {
+		if (get_timer(ts) > CFG_SYS_SPI_MXC_WAIT) {
 			printf("spi_xchg_single: Timeout!\n");
 			return -1;
 		}
@@ -629,7 +622,6 @@ static int mxc_spi_xfer(struct udevice *dev, unsigned int bitlen,
 {
 	struct mxc_spi_slave *mxcs = dev_get_plat(dev->parent);
 
-
 	return mxc_spi_xfer_internal(mxcs, bitlen, dout, din, flags);
 }
 
@@ -640,7 +632,7 @@ static int mxc_spi_claim_bus(struct udevice *dev)
 
 	mxcs->dev = dev;
 
-	return mxc_spi_claim_bus_internal(mxcs, slave_plat->cs);
+	return mxc_spi_claim_bus_internal(mxcs, slave_plat->cs[0]);
 }
 
 static int mxc_spi_release_bus(struct udevice *dev)
@@ -677,6 +669,7 @@ static const struct dm_spi_ops mxc_spi_ops = {
 
 static const struct udevice_id mxc_spi_ids[] = {
 	{ .compatible = "fsl,imx51-ecspi" },
+	{ .compatible = "fsl,imx6ul-ecspi" },
 	{ }
 };
 

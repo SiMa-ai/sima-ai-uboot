@@ -8,7 +8,6 @@
  * Copyright (C) 2018 Texas Instruments, Inc
  */
 
-#include <common.h>
 #include <dm.h>
 #include <log.h>
 #include <pci.h>
@@ -73,6 +72,8 @@ int pcie_dw_prog_outbound_atu_unroll(struct pcie_dw *pci, int index,
 				 upper_32_bits(cpu_addr));
 	dw_pcie_writel_ob_unroll(pci, index, PCIE_ATU_UNR_LIMIT,
 				 lower_32_bits(cpu_addr + size - 1));
+	dw_pcie_writel_ob_unroll(pci, index, PCIE_ATU_UNR_UPPER_LIMIT,
+				 upper_32_bits(cpu_addr + size - 1));
 	dw_pcie_writel_ob_unroll(pci, index, PCIE_ATU_UNR_LOWER_TARGET,
 				 lower_32_bits(pci_addr));
 	dw_pcie_writel_ob_unroll(pci, index, PCIE_ATU_UNR_UPPER_TARGET,
@@ -139,9 +140,9 @@ static uintptr_t set_cfg_address(struct pcie_dw *pcie,
 
 	/*
 	 * Not accessing root port configuration space?
-	 * Region #0 is used for Outbound CFG space access.
+	 * Region #1 is used for Outbound CFG space access.
 	 * Direction = Outbound
-	 * Region Index = 0
+	 * Region Index = 1
 	 */
 	d = PCI_MASK_BUS(d);
 	d = PCI_ADD_BUS(bus, d);
@@ -326,8 +327,10 @@ void pcie_dw_setup_host(struct pcie_dw *pci)
 			pci->prefetch.bus_start = hose->regions[ret].bus_start;  /* PREFETCH_bus_addr */
 			pci->prefetch.size = hose->regions[ret].size;	    /* PREFETCH size */
 		} else if (hose->regions[ret].flags == PCI_REGION_SYS_MEMORY) {
-			pci->cfg_base = (void *)(pci->io.phys_start - pci->io.size);
-			pci->cfg_size = pci->io.size;
+			if (!pci->cfg_base) {
+				pci->cfg_base = (void *)(pci->io.phys_start - pci->io.size);
+				pci->cfg_size = pci->io.size;
+			}
 		} else {
 			dev_err(pci->dev, "invalid flags type!\n");
 		}

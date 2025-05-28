@@ -8,7 +8,6 @@
  * Jagan Teki <jagan@amarulasolutions.com>
  */
 
-#include <common.h>
 #include <hang.h>
 #include <init.h>
 #include <log.h>
@@ -94,9 +93,6 @@ int power_init_board(void)
 	/* Set NVCC_DRAM to 1.2v for DDR4 */
 	pmic_reg_write(p, PCA9450_BUCK6OUT, 0x18);
 #endif
-
-	/* set WDOG_B_CFG to cold reset */
-	pmic_reg_write(p, PCA9450_RESET_CTRL, 0xA1);
 
 	return 0;
 }

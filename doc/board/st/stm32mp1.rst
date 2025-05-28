@@ -180,22 +180,41 @@ Each STMicroelectronics board is only configured with the associated device tree
 
 STM32MP15x device Tree Selection
 ````````````````````````````````
-The supported device trees for STM32MP15x (stm32mp15_trusted_defconfig and stm32mp15_basic_defconfig) are:
+The supported device trees for STM32MP15x (**stm32mp15_defconfig** for TF-A_
+with FIP support) are:
 
 + ev1: eval board with pmic stpmic1 (ev1 = mother board + daughter ed1)
 
+   + **stm32mp157c-ev1-scmi**
    + stm32mp157c-ev1
 
 + ed1: daughter board with pmic stpmic1
 
+   + **stm32mp157c-ed1-scmi**
    + stm32mp157c-ed1
 
 + dk1: Discovery board
 
+   + **stm32mp157a-dk1-scmi**
    + stm32mp157a-dk1
 
 + dk2: Discovery board = dk1 with a BT/WiFI combo and a DSI panel
 
+   + **stm32mp157c-dk2-scmi**
+   + stm32mp157c-dk2
+
+The scmi variant of each device tree is only supported with OP-TEE as secure
+monitor and it is the configuration **recommended** by STMicroelectronics for
+product, with secured system resources (RCC_TZCR.TZEN=1).
+
+The supported device trees for STM32MP15x (stm32mp15_trusted_defconfig
+TF-A without FIP support and stm32mp15_basic_defconfig with SPL) are:
+
++ the same STMicroelectronics boards with the no scmi device tree files:
+
+   + stm32mp157c-ev1
+   + stm32mp157c-ed1
+   + stm32mp157a-dk1
    + stm32mp157c-dk2
 
 + avenger96: Avenger96 board from Arrow Electronics based on DH Elec. DHCOR SoM
@@ -204,11 +223,11 @@ The supported device trees for STM32MP15x (stm32mp15_trusted_defconfig and stm32
 
 STM32MP13x device Tree Selection
 ````````````````````````````````
-The supported device trees for STM32MP13x (stm32mp13_defconfig) are:
+The supported device trees for STM32MP13x (**stm32mp13_defconfig**) are:
 
 + dk: Discovery board
 
-   + stm32mp135f-dk
+   + **stm32mp135f-dk**
 
 
 Build Procedure
@@ -345,7 +364,7 @@ Build Procedure
         - BL33=u-boot-nodtb.bin
         - BL33_CFG=u-boot.dtb
 
-     You can also update a existing FIP after U-boot compilation with fiptool,
+     You can also update a existing FIP after U-Boot compilation with fiptool,
      a tool provided by TF-A_::
 
      # fiptool update --nt-fw u-boot-nodtb.bin --hw-config u-boot.dtb fip-stm32mp157c-ev1.bin
@@ -478,7 +497,8 @@ or:
   +-------+--------+---------+------------------------+------------------------+
 
 And the 4th partition (Rootfs) is marked bootable with a file extlinux.conf
-following the Generic Distribution feature (doc/README.distro for use).
+following the Generic Distribution feature (see :doc:`../../develop/distro` for
+use).
 
 The size of fip or ssbl partition must be enough for the associated binary file,
 4MB and 2MB are default values.
@@ -620,7 +640,7 @@ Prerequisite: check if a MAC address isn't yet programmed in OTP
     STM32MP> env print ethaddr
     ## Error: "ethaddr" not defined
 
-3) check lock status of fuse 57 & 58 (at 0x39, 0=unlocked, 1=locked)::
+3) check lock status of fuse 57 & 58 (at 0x39, 0=unlocked, 0x40000000=locked)::
 
     STM32MP> fuse sense 0 0x10000039 2
     Sensing bank 0:
@@ -640,11 +660,11 @@ Example to set mac address "12:34:56:78:9a:bc"
 
 3) Lock OTP::
 
-    STM32MP> fuse prog 0 0x10000039 1 1
+    STM32MP> fuse prog 0 0x10000039 0x40000000 0x40000000
 
     STM32MP> fuse sense 0 0x10000039 2
     Sensing bank 0:
-       Word 0x10000039: 00000001 00000001
+       Word 0x10000039: 40000000 40000000
 
 4) next REBOOT, in the trace::
 

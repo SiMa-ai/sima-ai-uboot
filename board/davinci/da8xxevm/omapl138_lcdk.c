@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0+
 /*
- * Copyright (C) 2012 Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (C) 2012 Texas Instruments Incorporated - https://www.ti.com/
  *
  * Based on da850evm.c. Original Copyrights follow:
  *
@@ -8,7 +8,7 @@
  * Copyright (C) 2007 Sergey Kubushyn <ksi@koi8.net>
  */
 
-#include <common.h>
+#include <config.h>
 #include <env.h>
 #include <i2c.h>
 #include <init.h>
@@ -139,8 +139,8 @@ const struct lpsc_resource lpsc[] = {
 
 const int lpsc_size = ARRAY_SIZE(lpsc);
 
-#ifndef CONFIG_DA850_EVM_MAX_CPU_CLK
-#define CONFIG_DA850_EVM_MAX_CPU_CLK	456000000
+#ifndef CFG_DA850_EVM_MAX_CPU_CLK
+#define CFG_DA850_EVM_MAX_CPU_CLK	456000000
 #endif
 
 int board_early_init_f(void)
@@ -166,7 +166,6 @@ int board_init(void)
 
 	/* address of boot parameters */
 	gd->bd->bi_boot_params = LINUX_BOOT_PARAM_ADDR;
-
 
 	/* setup the SUSPSRC for ARM to control emulation suspend */
 	writel(readl(&davinci_syscfg_regs->suspsrc) &
@@ -194,7 +193,6 @@ int board_init(void)
 		DAVINCI_ABCR_ASIZE_16BIT),
 	       &davinci_emif_regs->ab2cr); /* CS3 */
 #endif
-
 
 #ifdef CONFIG_MMC_DAVINCI
 	if (davinci_configure_pin_mux(mmc0_pins, ARRAY_SIZE(mmc0_pins)) != 0)
@@ -313,7 +311,7 @@ int board_mmc_init(struct bd_info *bis)
 #endif
 #endif
 
-#ifdef CONFIG_SPL_BUILD
+#ifdef CONFIG_XPL_BUILD
 static const struct ns16550_plat serial_pdata = {
 	.base = DAVINCI_UART2_BASE,
 	.reg_shift = 2,

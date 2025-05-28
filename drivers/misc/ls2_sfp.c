@@ -12,7 +12,6 @@
  */
 
 #define LOG_CATEGORY UCLASS_MISC
-#include <common.h>
 #include <clk.h>
 #include <fuse.h>
 #include <misc.h>
@@ -229,7 +228,7 @@ static int ls2_sfp_probe(struct udevice *dev)
 		return -EINVAL;
 	}
 
-	ret = device_get_supply_regulator(dev, "ta-sfp-prog", &priv->supply);
+	ret = device_get_supply_regulator(dev, "ta-sfp-prog-supply", &priv->supply);
 	if (ret && ret != -ENODEV && ret != -ENOSYS) {
 		dev_dbg(dev, "problem getting supply (err %d)\n", ret);
 		return ret;
@@ -249,7 +248,6 @@ static int ls2_sfp_probe(struct udevice *dev)
 		}
 
 		rate = clk_get_rate(&clk);
-		clk_free(&clk);
 		if (!rate || IS_ERR_VALUE(rate)) {
 			ret = rate ? rate : -ENOENT;
 			dev_dbg(dev, "could not get clock rate (err %d)\n",

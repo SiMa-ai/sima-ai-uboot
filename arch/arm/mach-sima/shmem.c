@@ -7,7 +7,14 @@
 #include <net.h>
 #include <asm/arch/shmem.h>
 
+#if defined(CONFIG_TARGET_DAVINCI)
 #define SHMEM_OCM_ADDR 0x2F0000
+#elif defined(CONFIG_TARGET_MODALIX)
+#define SHMEM_OCM_ADDR 0x5F0000
+#elif
+#error Define addresh of shared structure
+#endif
+
 typedef struct __attribute__ ((packed)) {
     uint8_t factory_mac[6]; //6 bytes - 0x68, 0xE1, 0x54, 0xXX, 0xXX, 0xXX
     uint32_t hwid;

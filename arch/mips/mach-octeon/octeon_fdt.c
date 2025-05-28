@@ -30,9 +30,6 @@
 #ifdef CONFIG_PCF857X
 #include <pcf857x.h>
 #endif
-#ifdef CONFIG_PCA9698
-#include <pca9698.h>
-#endif
 #ifdef CONFIG_PCA9554
 #include <pca9554.h>
 #endif
@@ -56,13 +53,6 @@ static const char * const pca9555_gpio_list[] = {
 	"pca9535",    "nxp,pca9535", "pca9539", "nxp,pca9539", "pca9555",
 	"nxp,pca9555", "ti,pca9555", "max7312", "maxim,max7312", "max7313",
 	"maxim,max7313", "tca6416", "tca9539",    NULL,
-};
-#endif
-
-#ifdef CONFIG_PCA9698
-/** List of compatible strings supported by pca9698 driver */
-static const char * const pca9698_gpio_list[] = {
-	"nxp,pca9505", "pca9505", "nxp,pca9698", "pca9698", NULL,
 };
 #endif
 
@@ -697,13 +687,6 @@ int octeon_fdt_i2c_get_bus(const void *fdt, int node_offset)
 	while (node_offset > 0 &&
 	       !(found = !fdt_node_check_compatible(fdt, node_offset, compat))) {
 		node_offset = fdt_parent_offset(fdt, node_offset);
-#ifdef CONFIG_OCTEON_I2C_FDT
-		bus = i2c_get_bus_num_fdt(node_offset);
-		if (bus >= 0) {
-			debug("%s: Found bus 0x%x\n", __func__, bus);
-			return bus;
-		}
-#endif
 	}
 	if (!found) {
 		printf("Error: node %d in device tree is not a child of the I2C bus\n",
@@ -808,19 +791,6 @@ int octeon_fdt_read_gpio(const void *fdt, int phandle, int pin)
 		value = (value >> pin) & 1;
 		break;
 #endif
-#ifdef CONFIG_PCA9698
-	case CVMX_GPIO_PIN_PCA9698:
-		node = fdt_node_offset_by_phandle(fdt, phandle);
-		if (octeon_fdt_get_i2c_bus_addr(fdt, node, &bus, &addr)) {
-			printf("%s: Could not get gpio bus and/or address\n", __func__);
-			return -1;
-		}
-		old_bus = i2c_get_bus_num();
-		i2c_set_bus_num(bus);
-		value = pca9698_get_value(addr, pin);
-		i2c_set_bus_num(old_bus);
-		break;
-#endif
 	case CVMX_GPIO_PIN_OCTEON:
 		value = gpio_get_value(pin);
 		break;
@@ -881,18 +851,6 @@ int octeon_fdt_set_gpio(const void *fdt, int phandle, int pin, int val)
 		}
 		return pcf957x_set_val(bus, addr, 1 << pin, val << pin);
 #endif
-#ifdef CONFIG_PCA9698
-	case CVMX_GPIO_PIN_PCA9698:
-		if (octeon_fdt_get_i2c_bus_addr(fdt, node, &bus, &addr)) {
-			printf("%s: Could not get gpio bus and/or address\n", __func__);
-			return -1;
-		}
-		old_bus = i2c_get_bus_num();
-		i2c_set_bus_num(bus);
-		rc = pca9698_set_value(addr, pin, val);
-		i2c_set_bus_num(old_bus);
-		return rc;
-#endif
 	case CVMX_GPIO_PIN_OCTEON:
 		return gpio_set_value(pin, val);
 	default:
@@ -951,13 +909,7 @@ int octeon_fdt_get_gpio_info(int fdt_node, enum octeon_gpio_type *type,
 		*type = GPIO_TYPE_PCA953X;
 	}
 #endif
-#ifdef CONFIG_PCA9698
-	if (!octeon_fdt_node_check_compatible(fdt, fdt_node, pca9698_gpio_list)) {
-		debug("%s: Found PCA9698 compatible GPIO", __func__);
-		*type = GPIO_TYPE_PCA9698;
-	}
-#endif
-#if defined(CONFIG_PCA953X) || defined(CONFIG_PCA9698) || \
+#if defined(CONFIG_PCA953X) || \
 	defined(CONFIG_PCA9555) || defined(CONFIG_PCA9554)
 	if (!i2c_addr || !i2c_bus) {
 		printf("%s: Error: i2c_addr or i2c_bus is NULL\n", __func__);

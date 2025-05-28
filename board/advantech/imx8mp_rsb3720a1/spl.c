@@ -4,7 +4,7 @@
  * Copyright 2022 Linaro
  */
 
-#include <common.h>
+#include <config.h>
 #include <command.h>
 #include <cpu_func.h>
 #include <errno.h>
@@ -208,9 +208,6 @@ int power_init_board(void)
 	/* Kernel uses OD/OD freq for SOC */
 	/* To avoid timing risk from SOC to ARM,increase VDD_ARM to OD voltage 0.95v */
 	pmic_reg_write(pdev, PCA9450_BUCK2OUT_DVS0, 0x1C);
-
-	/* set WDOG_B_CFG to cold reset */
-	pmic_reg_write(pdev, PCA9450_RESET_CTRL, 0xA1);
 
 	/* Forced enable the I2C level translator*/
 	pmic_reg_write(pdev, PCA9450_CONFIG2, 0x03);

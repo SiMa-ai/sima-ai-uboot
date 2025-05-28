@@ -7,7 +7,6 @@
  *
  * Based loosely off of Linux's PHY Lib
  */
-#include <common.h>
 #include <console.h>
 #include <dm.h>
 #include <log.h>
@@ -18,6 +17,8 @@
 #include <phy.h>
 #include <errno.h>
 #include <asm/global_data.h>
+#include <asm-generic/gpio.h>
+#include <dm/device_compat.h>
 #include <dm/of_extra.h>
 #include <linux/bitops.h>
 #include <linux/delay.h>
@@ -148,6 +149,212 @@ static int genphy_setup_forced(struct phy_device *phydev)
 }
 
 /**
+ * genphy_c45_an_disable_aneg - disable auto-negotiation
+ * @phydev: target phy_device struct
+ *
+ * Disable auto-negotiation in the Clause 45 PHY. The link parameters
+ * are controlled through the PMA/PMD MMD registers.
+ *
+ * Returns zero on success, negative errno code on failure.
+ */
+int genphy_c45_an_disable_aneg(struct phy_device *phydev)
+{
+	u16 reg = MDIO_CTRL1;
+
+	return phy_clear_bits_mmd(phydev, MDIO_MMD_AN, reg,
+				  MDIO_AN_CTRL1_ENABLE | MDIO_AN_CTRL1_RESTART);
+}
+
+/**
+ * genphy_c45_restart_aneg - Enable and restart auto-negotiation
+ * @phydev: target phy_device struct
+ *
+ * This assumes that the auto-negotiation MMD is present.
+ *
+ * Enable and restart auto-negotiation.
+ */
+int genphy_c45_restart_aneg(struct phy_device *phydev)
+{
+	u16 reg = MDIO_CTRL1;
+
+	return phy_set_bits_mmd(phydev, MDIO_MMD_AN, reg,
+				MDIO_AN_CTRL1_ENABLE | MDIO_AN_CTRL1_RESTART);
+}
+
+/**
+ * genphy_c45_check_and_restart_aneg - Enable and restart auto-negotiation
+ * @phydev: target phy_device struct
+ * @restart: whether aneg restart is requested
+ *
+ * This assumes that the auto-negotiation MMD is present.
+ *
+ * Check, and restart auto-negotiation if needed.
+ */
+int genphy_c45_check_and_restart_aneg(struct phy_device *phydev, bool restart)
+{
+	u16 reg = MDIO_CTRL1;
+	int ret;
+
+	if (!restart) {
+		/* Configure and restart aneg if it wasn't set before */
+		ret = phy_read_mmd(phydev, MDIO_MMD_AN, reg);
+		if (ret < 0)
+			return ret;
+
+		if (!(ret & MDIO_AN_CTRL1_ENABLE))
+			restart = true;
+	}
+
+	if (restart)
+		return genphy_c45_restart_aneg(phydev);
+
+	return 0;
+}
+
+/**
+ * genphy_c45_pma_setup_forced - configures/forces speed/duplex from phydev
+ * @phydev: target phy_device struct
+ *
+ */
+int genphy_c45_pma_setup_forced(struct phy_device *phydev)
+{
+	int ctrl1, ctrl2, ret;
+
+	/* Half duplex is not supported */
+	if (phydev->duplex != DUPLEX_FULL)
+		return -EINVAL;
+
+	ctrl1 = phy_read_mmd(phydev, MDIO_MMD_PMAPMD, MDIO_CTRL1);
+	if (ctrl1 < 0)
+		return ctrl1;
+
+	ctrl2 = phy_read_mmd(phydev, MDIO_MMD_PMAPMD, MDIO_CTRL2);
+	if (ctrl2 < 0)
+		return ctrl2;
+
+	ctrl1 &= ~MDIO_CTRL1_SPEEDSEL;
+
+	/*
+	 * PMA/PMD type selection is 1.7.5:0 not 1.7.3:0.  See 45.2.1.6.1
+	 * in 802.3-2012 and 802.3-2015.
+	 */
+	ctrl2 &= ~(MDIO_PMA_CTRL2_TYPE | 0x30);
+
+	switch (phydev->speed) {
+	case SPEED_10:
+		ctrl2 |= MDIO_PMA_CTRL2_10BT;
+		break;
+	case SPEED_100:
+		ctrl1 |= MDIO_PMA_CTRL1_SPEED100;
+		ctrl2 |= MDIO_PMA_CTRL2_100BTX;
+		break;
+	case SPEED_1000:
+		ctrl1 |= MDIO_PMA_CTRL1_SPEED1000;
+		/* Assume 1000base-T */
+		ctrl2 |= MDIO_PMA_CTRL2_1000BT;
+		break;
+	case SPEED_2500:
+		ctrl1 |= MDIO_CTRL1_SPEED2_5G;
+		/* Assume 2.5Gbase-T */
+		ctrl2 |= MDIO_PMA_CTRL2_2_5GBT;
+		break;
+	case SPEED_10000:
+		ctrl1 |= MDIO_CTRL1_SPEED10G;
+		/* Assume 10Gbase-T */
+		ctrl2 |= MDIO_PMA_CTRL2_10GBT;
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	ret = phy_write_mmd(phydev, MDIO_MMD_PMAPMD, MDIO_CTRL1, ctrl1);
+	if (ret < 0)
+		return ret;
+
+	ret = phy_write_mmd(phydev, MDIO_MMD_PMAPMD, MDIO_CTRL2, ctrl2);
+	if (ret < 0)
+		return ret;
+
+	return genphy_c45_an_disable_aneg(phydev);
+}
+
+/**
+ * genphy_c45_an_config_aneg - configure advertisement registers
+ * @phydev: target phy_device struct
+ *
+ * Configure advertisement registers based on modes set in phydev->advertising
+ *
+ * Returns negative errno code on failure, 0 if advertisement didn't change,
+ * or 1 if advertised modes changed.
+ */
+int genphy_c45_an_config_aneg(struct phy_device *phydev)
+{
+	int changed, ret;
+	u32 adv;
+
+	phydev->advertising &= phydev->supported;
+
+	if (phydev->advertising & ADVERTISED_10baseT_Half)
+		adv |= ADVERTISE_10HALF;
+	if (phydev->advertising & ADVERTISED_10baseT_Full)
+		adv |= ADVERTISE_10FULL;
+	if (phydev->advertising & ADVERTISED_100baseT_Half)
+		adv |= ADVERTISE_100HALF;
+	if (phydev->advertising & ADVERTISED_100baseT_Full)
+		adv |= ADVERTISE_100FULL;
+	if (phydev->advertising & ADVERTISED_Pause)
+		adv |= ADVERTISE_PAUSE_CAP;
+	if (phydev->advertising & ADVERTISED_Asym_Pause)
+		adv |= ADVERTISE_PAUSE_ASYM;
+
+	ret = phy_modify_mmd_changed(phydev, MDIO_MMD_AN, MDIO_AN_ADVERTISE,
+				     ADVERTISE_ALL | ADVERTISE_100BASE4 |
+				     ADVERTISE_PAUSE_CAP | ADVERTISE_PAUSE_ASYM,
+				     adv);
+	if (ret < 0)
+		return ret;
+	if (ret > 0)
+		changed = 1;
+
+	adv = 0;
+	if (phydev->advertising & ADVERTISED_10000baseT_Full)
+		adv |= MDIO_AN_10GBT_CTRL_ADV10G;
+
+	ret = phy_modify_mmd_changed(phydev, MDIO_MMD_AN, MDIO_AN_10GBT_CTRL,
+				     MDIO_AN_10GBT_CTRL_ADV10G |
+				     MDIO_AN_10GBT_CTRL_ADV5G |
+				     MDIO_AN_10GBT_CTRL_ADV2_5G, adv);
+	if (ret < 0)
+		return ret;
+	if (ret > 0)
+		changed = 1;
+
+	return changed;
+}
+
+/**
+ * genphy_c45_read_link - read the overall link status from the MMDs
+ * @phydev: target phy_device struct
+ *
+ * Read the link status from the specified MMDs, and if they all indicate
+ * that the link is up, set phydev->link to 1.  If an error is encountered,
+ * a negative errno will be returned, otherwise zero.
+ */
+int genphy_c45_read_link(struct phy_device *phydev)
+{
+	int val = phy_read_mmd(phydev, MDIO_MMD_PMAPMD, MDIO_STAT1);
+	if (val < 0)
+		return val;
+
+	if (!(val & MDIO_STAT1_LSTATUS))
+		phydev->link = false;
+	else
+		phydev->link = true;
+
+	return 0;
+}
+
+/**
  * genphy_restart_aneg - Enable and Restart Autonegotiation
  * @phydev: target phy_device struct
  */
@@ -249,7 +456,7 @@ int genphy_update_link(struct phy_device *phydev)
 			/*
 			 * Timeout reached ?
 			 */
-			if (i > (PHY_ANEG_TIMEOUT / 50)) {
+			if (i > (CONFIG_PHY_ANEG_TIMEOUT / 50)) {
 				printf(" TIMEOUT !\n");
 				phydev->link = 0;
 				return -ETIMEDOUT;
@@ -451,7 +658,7 @@ int genphy_shutdown(struct phy_device *phydev)
 	return 0;
 }
 
-static struct phy_driver genphy_driver = {
+U_BOOT_PHY_DRIVER(genphy) = {
 	.uid		= 0xffffffff,
 	.mask		= 0xffffffff,
 	.name		= "Generic PHY",
@@ -462,145 +669,6 @@ static struct phy_driver genphy_driver = {
 	.startup	= genphy_startup,
 	.shutdown	= genphy_shutdown,
 };
-
-static int genphy_init(void)
-{
-	return phy_register(&genphy_driver);
-}
-
-static LIST_HEAD(phy_drivers);
-
-int phy_init(void)
-{
-#ifdef CONFIG_NEEDS_MANUAL_RELOC
-	/*
-	 * The pointers inside phy_drivers also needs to be updated incase of
-	 * manual reloc, without which these points to some invalid
-	 * pre reloc address and leads to invalid accesses, hangs.
-	 */
-	struct list_head *head = &phy_drivers;
-
-	head->next = (void *)head->next + gd->reloc_off;
-	head->prev = (void *)head->prev + gd->reloc_off;
-#endif
-
-#ifdef CONFIG_B53_SWITCH
-	phy_b53_init();
-#endif
-#ifdef CONFIG_MV88E61XX_SWITCH
-	phy_mv88e61xx_init();
-#endif
-#ifdef CONFIG_PHY_ADIN
-	phy_adin_init();
-#endif
-#ifdef CONFIG_PHY_AQUANTIA
-	phy_aquantia_init();
-#endif
-#ifdef CONFIG_PHY_ATHEROS
-	phy_atheros_init();
-#endif
-#ifdef CONFIG_PHY_BROADCOM
-	phy_broadcom_init();
-#endif
-#ifdef CONFIG_PHY_CORTINA
-	phy_cortina_init();
-#endif
-#ifdef CONFIG_PHY_CORTINA_ACCESS
-	phy_cortina_access_init();
-#endif
-#ifdef CONFIG_PHY_DAVICOM
-	phy_davicom_init();
-#endif
-#ifdef CONFIG_PHY_ET1011C
-	phy_et1011c_init();
-#endif
-#ifdef CONFIG_PHY_LXT
-	phy_lxt_init();
-#endif
-#ifdef CONFIG_PHY_MARVELL
-	phy_marvell_init();
-#endif
-#ifdef CONFIG_PHY_MICREL_KSZ8XXX
-	phy_micrel_ksz8xxx_init();
-#endif
-#ifdef CONFIG_PHY_MICREL_KSZ90X1
-	phy_micrel_ksz90x1_init();
-#endif
-#ifdef CONFIG_PHY_MESON_GXL
-	phy_meson_gxl_init();
-#endif
-#ifdef CONFIG_PHY_NATSEMI
-	phy_natsemi_init();
-#endif
-#ifdef CONFIG_NXP_C45_TJA11XX_PHY
-	phy_nxp_c45_tja11xx_init();
-#endif
-#ifdef CONFIG_PHY_NXP_TJA11XX
-	phy_nxp_tja11xx_init();
-#endif
-#ifdef CONFIG_PHY_REALTEK
-	phy_realtek_init();
-#endif
-#ifdef CONFIG_PHY_SMSC
-	phy_smsc_init();
-#endif
-#ifdef CONFIG_PHY_TERANETICS
-	phy_teranetics_init();
-#endif
-#ifdef CONFIG_PHY_TI
-	phy_ti_init();
-#endif
-#ifdef CONFIG_PHY_VITESSE
-	phy_vitesse_init();
-#endif
-#ifdef CONFIG_PHY_XILINX
-	phy_xilinx_init();
-#endif
-#ifdef CONFIG_PHY_XWAY
-	phy_xway_init();
-#endif
-#ifdef CONFIG_PHY_MSCC
-	phy_mscc_init();
-#endif
-#ifdef CONFIG_PHY_FIXED
-	phy_fixed_init();
-#endif
-#ifdef CONFIG_PHY_NCSI
-	phy_ncsi_init();
-#endif
-#ifdef CONFIG_PHY_XILINX_GMII2RGMII
-	phy_xilinx_gmii2rgmii_init();
-#endif
-	genphy_init();
-
-	return 0;
-}
-
-int phy_register(struct phy_driver *drv)
-{
-	INIT_LIST_HEAD(&drv->list);
-	list_add_tail(&drv->list, &phy_drivers);
-
-#ifdef CONFIG_NEEDS_MANUAL_RELOC
-	if (drv->probe)
-		drv->probe += gd->reloc_off;
-	if (drv->config)
-		drv->config += gd->reloc_off;
-	if (drv->startup)
-		drv->startup += gd->reloc_off;
-	if (drv->shutdown)
-		drv->shutdown += gd->reloc_off;
-	if (drv->readext)
-		drv->readext += gd->reloc_off;
-	if (drv->writeext)
-		drv->writeext += gd->reloc_off;
-	if (drv->read_mmd)
-		drv->read_mmd += gd->reloc_off;
-	if (drv->write_mmd)
-		drv->write_mmd += gd->reloc_off;
-#endif
-	return 0;
-}
 
 int phy_set_supported(struct phy_device *phydev, u32 max_speed)
 {
@@ -645,23 +713,23 @@ static struct phy_driver *generic_for_phy(struct phy_device *phydev)
 {
 #ifdef CONFIG_PHYLIB_10G
 	if (phydev->is_c45)
-		return &gen10g_driver;
+		return ll_entry_get(struct phy_driver, gen10g, phy_driver);
 #endif
 
-	return &genphy_driver;
+	return ll_entry_get(struct phy_driver, genphy, phy_driver);
 }
 
 static struct phy_driver *get_phy_driver(struct phy_device *phydev)
 {
-	struct list_head *entry;
+	const int ll_n_ents = ll_entry_count(struct phy_driver, phy_driver);
 	int phy_id = phydev->phy_id;
-	struct phy_driver *drv = NULL;
+	struct phy_driver *ll_entry;
+	struct phy_driver *drv;
 
-	list_for_each(entry, &phy_drivers) {
-		drv = list_entry(entry, struct phy_driver, list);
+	ll_entry = ll_entry_start(struct phy_driver, phy_driver);
+	for (drv = ll_entry; drv != ll_entry + ll_n_ents; drv++)
 		if ((drv->uid & drv->mask) == (phy_id & drv->mask))
 			return drv;
-	}
 
 	/* If we made it here, there's no driver for this PHY */
 	return generic_for_phy(phydev);
@@ -689,9 +757,7 @@ struct phy_device *phy_device_create(struct mii_dev *bus, int addr,
 	dev->link = 0;
 	dev->interface = PHY_INTERFACE_MODE_NA;
 
-#ifdef CONFIG_DM_ETH
 	dev->node = ofnode_null();
-#endif
 
 	dev->autoneg = AUTONEG_ENABLE;
 
@@ -707,7 +773,8 @@ struct phy_device *phy_device_create(struct mii_dev *bus, int addr,
 		return NULL;
 	}
 
-	if (addr >= 0 && addr < PHY_MAX_ADDR && phy_id != PHY_FIXED_ID)
+	if (addr >= 0 && addr < PHY_MAX_ADDR && phy_id != PHY_FIXED_ID &&
+	    phy_id != PHY_NCSI_ID)
 		bus->phymap[addr] = dev;
 
 	return dev;
@@ -783,12 +850,12 @@ static struct phy_device *search_for_existing_phy(struct mii_dev *bus,
 {
 	/* If we have one, return the existing device, with new interface */
 	while (phy_mask) {
-		int addr = ffs(phy_mask) - 1;
+		unsigned int addr = ffs(phy_mask) - 1;
 
 		if (bus->phymap[addr])
 			return bus->phymap[addr];
 
-		phy_mask &= ~(1 << addr);
+		phy_mask &= ~(1U << addr);
 	}
 	return NULL;
 }
@@ -909,6 +976,59 @@ int miiphy_reset(const char *devname, unsigned char addr)
 	return phy_reset(phydev);
 }
 
+#if CONFIG_IS_ENABLED(DM_GPIO) && CONFIG_IS_ENABLED(OF_REAL) && \
+    !IS_ENABLED(CONFIG_DM_ETH_PHY)
+int phy_gpio_reset(struct udevice *dev)
+{
+	struct ofnode_phandle_args phandle_args;
+	struct gpio_desc gpio;
+	u32 assert, deassert;
+	ofnode node;
+	int ret;
+
+	ret = dev_read_phandle_with_args(dev, "phy-handle", NULL, 0, 0,
+					 &phandle_args);
+	/* No PHY handle is OK */
+	if (ret)
+		return 0;
+
+	node = phandle_args.node;
+	if (!ofnode_valid(node))
+		return -EINVAL;
+
+	ret = gpio_request_by_name_nodev(node, "reset-gpios", 0, &gpio,
+					 GPIOD_IS_OUT | GPIOD_ACTIVE_LOW);
+	/* No PHY reset GPIO is OK */
+	if (ret)
+		return 0;
+
+	assert = ofnode_read_u32_default(node, "reset-assert-us", 20000);
+	deassert = ofnode_read_u32_default(node, "reset-deassert-us", 1000);
+	ret = dm_gpio_set_value(&gpio, 1);
+	if (ret) {
+		dev_err(dev, "Failed assert gpio, err: %d\n", ret);
+		return ret;
+	}
+
+	udelay(assert);
+
+	ret = dm_gpio_set_value(&gpio, 0);
+	if (ret) {
+		dev_err(dev, "Failed deassert gpio, err: %d\n", ret);
+		return ret;
+	}
+
+	udelay(deassert);
+
+	return 0;
+}
+#else
+int phy_gpio_reset(struct udevice *dev)
+{
+	return 0;
+}
+#endif
+
 struct phy_device *phy_find_by_mask(struct mii_dev *bus, uint phy_mask)
 {
 	/* Reset the bus */
@@ -922,13 +1042,8 @@ struct phy_device *phy_find_by_mask(struct mii_dev *bus, uint phy_mask)
 	return get_phy_device_by_mask(bus, phy_mask);
 }
 
-#ifdef CONFIG_DM_ETH
-void phy_connect_dev(struct phy_device *phydev, struct udevice *dev,
-		     phy_interface_t interface)
-#else
-void phy_connect_dev(struct phy_device *phydev, struct eth_device *dev,
-		     phy_interface_t interface)
-#endif
+static void phy_connect_dev(struct phy_device *phydev, struct udevice *dev,
+			    phy_interface_t interface)
 {
 	/* Soft Reset the PHY */
 	phy_reset(phydev);
@@ -953,7 +1068,10 @@ static struct phy_device *phy_connect_gmii2rgmii(struct mii_dev *bus,
 	ofnode_for_each_subnode(node, dev_ofnode(dev)) {
 		node = ofnode_by_compatible(node, "xlnx,gmii-to-rgmii-1.0");
 		if (ofnode_valid(node)) {
-			phydev = phy_device_create(bus, 0,
+			int gmiirgmii_phyaddr;
+
+			gmiirgmii_phyaddr = ofnode_read_u32_default(node, "reg", 0);
+			phydev = phy_device_create(bus, gmiirgmii_phyaddr,
 						   PHY_GMII2RGMII_ID, false);
 			if (phydev)
 				phydev->node = node;
@@ -1011,15 +1129,9 @@ static struct phy_device *phy_connect_fixed(struct mii_dev *bus,
 }
 #endif
 
-#ifdef CONFIG_DM_ETH
 struct phy_device *phy_connect(struct mii_dev *bus, int addr,
 			       struct udevice *dev,
 			       phy_interface_t interface)
-#else
-struct phy_device *phy_connect(struct mii_dev *bus, int addr,
-			       struct eth_device *dev,
-			       phy_interface_t interface)
-#endif
 {
 	struct phy_device *phydev = NULL;
 	uint mask = (addr >= 0) ? (1 << addr) : 0xffffffff;
@@ -1279,9 +1391,67 @@ int phy_clear_bits_mmd(struct phy_device *phydev, int devad, u32 regnum, u16 val
 	return 0;
 }
 
+/**
+ * phy_modify_mmd_changed - Function for modifying a register on MMD
+ * @phydev: the phy_device struct
+ * @devad: the MMD containing register to modify
+ * @regnum: register number to modify
+ * @mask: bit mask of bits to clear
+ * @set: new value of bits set in mask to write to @regnum
+ *
+ * NOTE: MUST NOT be called from interrupt context,
+ * because the bus read/write functions may wait for an interrupt
+ * to conclude the operation.
+ *
+ * Returns negative errno, 0 if there was no change, and 1 in case of change
+ */
+int phy_modify_mmd_changed(struct phy_device *phydev, int devad, u32 regnum,
+			   u16 mask, u16 set)
+{
+	int new, ret;
+
+	ret = phy_read_mmd(phydev, devad, regnum);
+	if (ret < 0)
+		return ret;
+
+	new = (ret & ~mask) | set;
+	if (new == ret)
+		return 0;
+
+	ret = phy_write_mmd(phydev, devad, regnum, new);
+
+	return ret < 0 ? ret : 1;
+}
+
+/**
+ * phy_modify_mmd - Convenience function for modifying a register on MMD
+ * @phydev: the phy_device struct
+ * @devad: the MMD containing register to modify
+ * @regnum: register number to modify
+ * @mask: bit mask of bits to clear
+ * @set: new value of bits set in mask to write to @regnum
+ *
+ * NOTE: MUST NOT be called from interrupt context,
+ * because the bus read/write functions may wait for an interrupt
+ * to conclude the operation.
+ */
+int phy_modify_mmd(struct phy_device *phydev, int devad, u32 regnum,
+		   u16 mask, u16 set)
+{
+	int ret;
+
+	ret = phy_modify_mmd_changed(phydev, devad, regnum, mask, set);
+
+	return ret < 0 ? ret : 0;
+}
+
 bool phy_interface_is_ncsi(void)
 {
+#ifdef CONFIG_PHY_NCSI
 	struct eth_pdata *pdata = dev_get_plat(eth_get_dev());
 
 	return pdata->phy_interface == PHY_INTERFACE_MODE_NCSI;
+#else
+	return 0;
+#endif
 }

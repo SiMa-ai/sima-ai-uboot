@@ -7,9 +7,10 @@
  */
 
 #include <clk.h>
-#include <common.h>
+#include <config.h>
 #include <div64.h>
 #include <dm.h>
+#include <dm/device.h>
 #include <dm/device_compat.h>
 #include <errno.h>
 #include <log.h>
@@ -19,6 +20,7 @@
 #include <asm/io.h>
 #include <asm/types.h>
 #include <linux/err.h>
+#include <linux/printk.h>
 
 struct mtk_serial_regs {
 	u32 rbr;
@@ -75,15 +77,19 @@ struct mtk_serial_regs {
  *				driver
  * @regs:			Register base of the serial port
  * @clk:			The baud clock device
+ * @clk_bus:			The bus clock device
  * @fixed_clk_rate:		Fallback fixed baud clock rate if baud clock
  *				device is not specified
  * @force_highspeed:		Force using high-speed mode
+ * @upstream_highspeed_logic:	Apply upstream high-speed logic
  */
 struct mtk_serial_priv {
 	struct mtk_serial_regs __iomem *regs;
 	struct clk clk;
+	struct clk clk_bus;
 	u32 fixed_clk_rate;
 	bool force_highspeed;
+	bool upstream_highspeed_logic;
 };
 
 static void _mtk_serial_setbrg(struct mtk_serial_priv *priv, int baud,
@@ -110,7 +116,12 @@ static void _mtk_serial_setbrg(struct mtk_serial_priv *priv, int baud,
 		goto set_baud;
 	}
 
-	if (priv->force_highspeed)
+	/*
+	 * Upstream linux use highspeed for anything >= 115200 and lowspeed
+	 * for < 115200. Simulate this if we are using the upstream compatible.
+	 */
+	if (priv->force_highspeed ||
+	    (priv->upstream_highspeed_logic && baud >= 115200))
 		goto use_hs3;
 
 	if (baud <= 115200) {
@@ -173,8 +184,7 @@ static int _mtk_serial_pending(struct mtk_serial_priv *priv, bool input)
 		return (readl(&priv->regs->lsr) & UART_LSR_THRE) ? 0 : 1;
 }
 
-#if defined(CONFIG_DM_SERIAL) && \
-	(!defined(CONFIG_SPL_BUILD) || defined(CONFIG_SPL_DM))
+#if CONFIG_IS_ENABLED(DM_SERIAL)
 static int mtk_serial_setbrg(struct udevice *dev, int baudrate)
 {
 	struct mtk_serial_priv *priv = dev_get_priv(dev);
@@ -220,6 +230,10 @@ static int mtk_serial_probe(struct udevice *dev)
 	writel(UART_MCRVAL, &priv->regs->mcr);
 	writel(UART_FCRVAL, &priv->regs->fcr);
 
+	clk_enable(&priv->clk);
+	if (priv->clk_bus.dev)
+		clk_enable(&priv->clk_bus);
+
 	return 0;
 }
 
@@ -250,7 +264,11 @@ static int mtk_serial_of_to_plat(struct udevice *dev)
 		}
 	}
 
+	clk_get_by_name(dev, "bus", &priv->clk_bus);
+
 	priv->force_highspeed = dev_read_bool(dev, "mediatek,force-highspeed");
+	priv->upstream_highspeed_logic =
+		device_is_compatible(dev, "mediatek,mt6577-uart");
 
 	return 0;
 }
@@ -284,8 +302,8 @@ DECLARE_GLOBAL_DATA_PTR;
 
 #define DECLARE_HSUART_PRIV(port) \
 	static struct mtk_serial_priv mtk_hsuart##port = { \
-	.regs = (struct mtk_serial_regs *)CONFIG_SYS_NS16550_COM##port, \
-	.fixed_clk_rate = CONFIG_SYS_NS16550_CLK \
+	.regs = (struct mtk_serial_regs *)CFG_SYS_NS16550_COM##port, \
+	.fixed_clk_rate = CFG_SYS_NS16550_CLK \
 };
 
 #define DECLARE_HSUART_FUNCTIONS(port) \
@@ -356,36 +374,36 @@ DECLARE_GLOBAL_DATA_PTR;
 #error	"Invalid console index value."
 #endif
 
-#if CONFIG_CONS_INDEX == 1 && !defined(CONFIG_SYS_NS16550_COM1)
+#if CONFIG_CONS_INDEX == 1 && !defined(CFG_SYS_NS16550_COM1)
 #error	"Console port 1 defined but not configured."
-#elif CONFIG_CONS_INDEX == 2 && !defined(CONFIG_SYS_NS16550_COM2)
+#elif CONFIG_CONS_INDEX == 2 && !defined(CFG_SYS_NS16550_COM2)
 #error	"Console port 2 defined but not configured."
-#elif CONFIG_CONS_INDEX == 3 && !defined(CONFIG_SYS_NS16550_COM3)
+#elif CONFIG_CONS_INDEX == 3 && !defined(CFG_SYS_NS16550_COM3)
 #error	"Console port 3 defined but not configured."
-#elif CONFIG_CONS_INDEX == 4 && !defined(CONFIG_SYS_NS16550_COM4)
+#elif CONFIG_CONS_INDEX == 4 && !defined(CFG_SYS_NS16550_COM4)
 #error	"Console port 4 defined but not configured."
-#elif CONFIG_CONS_INDEX == 5 && !defined(CONFIG_SYS_NS16550_COM5)
+#elif CONFIG_CONS_INDEX == 5 && !defined(CFG_SYS_NS16550_COM5)
 #error	"Console port 5 defined but not configured."
-#elif CONFIG_CONS_INDEX == 6 && !defined(CONFIG_SYS_NS16550_COM6)
+#elif CONFIG_CONS_INDEX == 6 && !defined(CFG_SYS_NS16550_COM6)
 #error	"Console port 6 defined but not configured."
 #endif
 
-#if defined(CONFIG_SYS_NS16550_COM1)
+#if defined(CFG_SYS_NS16550_COM1)
 DECLARE_HSUART(1, "mtk-hsuart0");
 #endif
-#if defined(CONFIG_SYS_NS16550_COM2)
+#if defined(CFG_SYS_NS16550_COM2)
 DECLARE_HSUART(2, "mtk-hsuart1");
 #endif
-#if defined(CONFIG_SYS_NS16550_COM3)
+#if defined(CFG_SYS_NS16550_COM3)
 DECLARE_HSUART(3, "mtk-hsuart2");
 #endif
-#if defined(CONFIG_SYS_NS16550_COM4)
+#if defined(CFG_SYS_NS16550_COM4)
 DECLARE_HSUART(4, "mtk-hsuart3");
 #endif
-#if defined(CONFIG_SYS_NS16550_COM5)
+#if defined(CFG_SYS_NS16550_COM5)
 DECLARE_HSUART(5, "mtk-hsuart4");
 #endif
-#if defined(CONFIG_SYS_NS16550_COM6)
+#if defined(CFG_SYS_NS16550_COM6)
 DECLARE_HSUART(6, "mtk-hsuart5");
 #endif
 
@@ -410,22 +428,22 @@ __weak struct serial_device *default_serial_console(void)
 
 void mtk_serial_initialize(void)
 {
-#if defined(CONFIG_SYS_NS16550_COM1)
+#if defined(CFG_SYS_NS16550_COM1)
 	serial_register(&mtk_hsuart1_device);
 #endif
-#if defined(CONFIG_SYS_NS16550_COM2)
+#if defined(CFG_SYS_NS16550_COM2)
 	serial_register(&mtk_hsuart2_device);
 #endif
-#if defined(CONFIG_SYS_NS16550_COM3)
+#if defined(CFG_SYS_NS16550_COM3)
 	serial_register(&mtk_hsuart3_device);
 #endif
-#if defined(CONFIG_SYS_NS16550_COM4)
+#if defined(CFG_SYS_NS16550_COM4)
 	serial_register(&mtk_hsuart4_device);
 #endif
-#if defined(CONFIG_SYS_NS16550_COM5)
+#if defined(CFG_SYS_NS16550_COM5)
 	serial_register(&mtk_hsuart5_device);
 #endif
-#if defined(CONFIG_SYS_NS16550_COM6)
+#if defined(CFG_SYS_NS16550_COM6)
 	serial_register(&mtk_hsuart6_device);
 #endif
 }
@@ -440,6 +458,7 @@ static inline void _debug_uart_init(void)
 {
 	struct mtk_serial_priv priv;
 
+	memset(&priv, 0, sizeof(struct mtk_serial_priv));
 	priv.regs = (void *) CONFIG_VAL(DEBUG_UART_BASE);
 	priv.fixed_clk_rate = CONFIG_DEBUG_UART_CLOCK;
 

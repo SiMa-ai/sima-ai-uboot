@@ -8,7 +8,6 @@
 #define __DDR_PHY_DEBUG_H__
 
 #include <stdint.h>
-#include <common.h>
 
 int32_t get_ddr_phy_debug_string(uint32_t firmware, uint32_t value, char ** str);
 

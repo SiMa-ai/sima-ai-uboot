@@ -5,15 +5,16 @@
  * Copyright (C) 2008 Atmel Corporation
  */
 
-#include <common.h>
 #include <command.h>
 #include <display_options.h>
 #include <div64.h>
 #include <dm.h>
 #include <log.h>
+#include <lmb.h>
 #include <malloc.h>
 #include <mapmem.h>
 #include <spi.h>
+#include <time.h>
 #include <spi_flash.h>
 #include <asm/cache.h>
 #include <jffs2/jffs2.h>
@@ -135,8 +136,9 @@ static int do_spi_flash_probe(int argc, char *const argv[])
 	}
 	flash = NULL;
 	if (use_dt) {
-		spi_flash_probe_bus_cs(bus, cs, &new);
-		flash = dev_get_uclass_priv(new);
+		ret = spi_flash_probe_bus_cs(bus, cs, &new);
+		if (!ret)
+			flash = dev_get_uclass_priv(new);
 	} else {
 		flash = spi_flash_probe(bus, cs, speed, mode);
 	}
@@ -281,33 +283,33 @@ static int do_spi_flash_read_write(int argc, char *const argv[])
 	loff_t offset, len, maxsize;
 
 	if (argc < 3)
-		return -1;
+		return CMD_RET_USAGE;
 
 	addr = hextoul(argv[1], &endp);
 	if (*argv[1] == 0 || *endp != 0)
-		return -1;
+		return CMD_RET_USAGE;
 
 	if (mtd_arg_off_size(argc - 2, &argv[2], &dev, &offset, &len,
 			     &maxsize, MTD_DEV_TYPE_NOR, flash->size))
-		return -1;
+		return CMD_RET_FAILURE;
 
 	/* Consistency checking */
 	if (offset + len > flash->size) {
 		printf("ERROR: attempting %s past flash size (%#x)\n",
 		       argv[0], flash->size);
-		return 1;
+		return CMD_RET_FAILURE;
 	}
 
 	if (strncmp(argv[0], "read", 4) != 0 && flash->flash_is_unlocked &&
 	    !flash->flash_is_unlocked(flash, offset, len)) {
 		printf("ERROR: flash area is locked\n");
-		return 1;
+		return CMD_RET_FAILURE;
 	}
 
 	buf = map_physmem(addr, len, MAP_WRBACK);
 	if (!buf && addr) {
 		puts("Failed to map physical memory\n");
-		return 1;
+		return CMD_RET_FAILURE;
 	}
 
 	if (strcmp(argv[0], "update") == 0) {
@@ -315,6 +317,13 @@ static int do_spi_flash_read_write(int argc, char *const argv[])
 	} else if (strncmp(argv[0], "read", 4) == 0 ||
 			strncmp(argv[0], "write", 5) == 0) {
 		int read;
+
+		if (CONFIG_IS_ENABLED(LMB)) {
+			if (lmb_read_check(addr, len)) {
+				printf("ERROR: trying to overwrite reserved memory...\n");
+				return CMD_RET_FAILURE;
+			}
+		}
 
 		read = strncmp(argv[0], "read", 4) == 0;
 		if (read)
@@ -332,7 +341,7 @@ static int do_spi_flash_read_write(int argc, char *const argv[])
 
 	unmap_physmem(buf, len);
 
-	return ret == 0 ? 0 : 1;
+	return ret ? CMD_RET_FAILURE : CMD_RET_SUCCESS;
 }
 
 static int do_spi_flash_erase(int argc, char *const argv[])
@@ -343,27 +352,32 @@ static int do_spi_flash_erase(int argc, char *const argv[])
 	ulong size;
 
 	if (argc < 3)
-		return -1;
+		return CMD_RET_USAGE;
 
 	if (mtd_arg_off(argv[1], &dev, &offset, &len, &maxsize,
 			MTD_DEV_TYPE_NOR, flash->size))
-		return -1;
+		return CMD_RET_FAILURE;
 
 	ret = sf_parse_len_arg(argv[2], &size);
 	if (ret != 1)
-		return -1;
+		return CMD_RET_USAGE;
+
+	if (size == 0) {
+		debug("ERROR: Invalid size 0\n");
+		return CMD_RET_FAILURE;
+	}
 
 	/* Consistency checking */
 	if (offset + size > flash->size) {
 		printf("ERROR: attempting %s past flash size (%#x)\n",
 		       argv[0], flash->size);
-		return 1;
+		return CMD_RET_FAILURE;
 	}
 
 	if (flash->flash_is_unlocked &&
-	    !flash->flash_is_unlocked(flash, offset, len)) {
+	    !flash->flash_is_unlocked(flash, offset, size)) {
 		printf("ERROR: flash area is locked\n");
-		return 1;
+		return CMD_RET_FAILURE;
 	}
 
 	ret = spi_flash_erase(flash, offset, size);
@@ -373,7 +387,7 @@ static int do_spi_flash_erase(int argc, char *const argv[])
 	else
 		printf("OK\n");
 
-	return ret == 0 ? 0 : 1;
+	return ret ? CMD_RET_FAILURE : CMD_RET_SUCCESS;
 }
 
 static int do_spi_protect(int argc, char *const argv[])
@@ -579,21 +593,19 @@ static int do_spi_flash(struct cmd_tbl *cmdtp, int flag, int argc,
 
 	/* need at least two arguments */
 	if (argc < 2)
-		goto usage;
+		return CMD_RET_USAGE;
 
 	cmd = argv[1];
 	--argc;
 	++argv;
 
-	if (strcmp(cmd, "probe") == 0) {
-		ret = do_spi_flash_probe(argc, argv);
-		goto done;
-	}
+	if (strcmp(cmd, "probe") == 0)
+		return do_spi_flash_probe(argc, argv);
 
 	/* The remaining commands require a selected device */
 	if (!flash) {
 		puts("No SPI flash selected. Please run `sf probe'\n");
-		return 1;
+		return CMD_RET_FAILURE;
 	}
 
 	if (strcmp(cmd, "read") == 0 || strcmp(cmd, "write") == 0 ||
@@ -601,23 +613,17 @@ static int do_spi_flash(struct cmd_tbl *cmdtp, int flag, int argc,
 		ret = do_spi_flash_read_write(argc, argv);
 	else if (strcmp(cmd, "erase") == 0)
 		ret = do_spi_flash_erase(argc, argv);
-	else if (strcmp(cmd, "protect") == 0)
+	else if (IS_ENABLED(CONFIG_SPI_FLASH_LOCK) && strcmp(cmd, "protect") == 0)
 		ret = do_spi_protect(argc, argv);
 	else if (IS_ENABLED(CONFIG_CMD_SF_TEST) && !strcmp(cmd, "test"))
 		ret = do_spi_flash_test(argc, argv);
 	else
-		ret = -1;
+		ret = CMD_RET_USAGE;
 
-done:
-	if (ret != -1)
-		return ret;
-
-usage:
-	return CMD_RET_USAGE;
+	return ret;
 }
 
-#ifdef CONFIG_SYS_LONGHELP
-static const char long_help[] =
+U_BOOT_LONGHELP(sf,
 	"probe [[bus:]cs] [hz] [mode]	- init flash device on given SPI bus\n"
 	"				  and chip select\n"
 	"sf read addr offset|partition len	- read `len' bytes starting at\n"
@@ -632,15 +638,16 @@ static const char long_help[] =
 	"sf update addr offset|partition len	- erase and write `len' bytes from memory\n"
 	"					  at `addr' to flash at `offset'\n"
 	"					  or to start of mtd `partition'\n"
+#ifdef CONFIG_SPI_FLASH_LOCK
 	"sf protect lock/unlock sector len	- protect/unprotect 'len' bytes starting\n"
 	"					  at address 'sector'"
+#endif
 #ifdef CONFIG_CMD_SF_TEST
 	"\nsf test offset len		- run a very basic destructive test"
 #endif
-#endif /* CONFIG_SYS_LONGHELP */
-	;
+	);
 
 U_BOOT_CMD(
 	sf,	5,	1,	do_spi_flash,
-	"SPI flash sub-system", long_help
+	"SPI flash sub-system", sf_help_text
 );

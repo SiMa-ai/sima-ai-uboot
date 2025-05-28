@@ -6,7 +6,6 @@
  * Copyright (C) 2015 Cogent Embedded, Inc.
  */
 
-#include <common.h>
 #include <clock_legacy.h>
 #include <cpu_func.h>
 #include <env.h>
@@ -25,9 +24,8 @@
 #include <linux/errno.h>
 #include <asm/arch/sys_proto.h>
 #include <asm/gpio.h>
-#include <asm/arch/rmobile.h>
+#include <asm/arch/renesas.h>
 #include <asm/arch/rcar-mstp.h>
-#include <asm/arch/sh_sdhi.h>
 #include <netdev.h>
 #include <miiphy.h>
 #include <i2c.h>
@@ -78,7 +76,7 @@ int board_early_init_f(void)
 int board_init(void)
 {
 	/* adress of boot parameters */
-	gd->bd->bi_boot_params = CONFIG_SYS_SDRAM_BASE + 0x100;
+	gd->bd->bi_boot_params = CFG_SYS_SDRAM_BASE + 0x100;
 
 	/* Force ethernet PHY out of reset */
 	gpio_request(ETHERNET_PHY_RESET, "phy_reset");

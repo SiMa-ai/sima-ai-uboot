@@ -4,10 +4,10 @@
 # SPDX-License-Identifier:      GPL-2.0+
 #
 
-ifdef CONFIG_SPL_BUILD
+ifdef CONFIG_XPL_BUILD
 obj-y += spl.o lpddr4_timing_2G_32.o lpddr4_timing_4G_32.o
 else
 obj-y += imx8mm_data_modul_edm_sbc.o
 endif
 
-obj-y += common.o
+obj-y += ../common/common.o

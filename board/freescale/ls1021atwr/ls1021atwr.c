@@ -4,7 +4,6 @@
  * Copyright 2019, 2021-2022 NXP
  */
 
-#include <common.h>
 #include <clock_legacy.h>
 #include <command.h>
 #include <fdt_support.h>
@@ -18,6 +17,7 @@
 #include <asm/arch/fsl_serdes.h>
 #include <asm/arch/ls102xa_devdis.h>
 #include <asm/arch/ls102xa_soc.h>
+#include <asm/sections.h>
 #include <hwconfig.h>
 #include <mmc.h>
 #include <fsl_csu.h>
@@ -98,7 +98,7 @@ struct cpld_data {
 #if !defined(CONFIG_QSPI_BOOT) && !defined(CONFIG_SD_BOOT_QSPI)
 static void cpld_show(void)
 {
-	struct cpld_data *cpld_data = (void *)(CONFIG_SYS_CPLD_BASE);
+	struct cpld_data *cpld_data = (void *)(CFG_SYS_CPLD_BASE);
 
 	printf("CPLD:  V%x.%x\nPCBA:  V%x.0\nVBank: %d\n",
 	       in_8(&cpld_data->cpld_ver) & VERSION_MASK,
@@ -162,7 +162,7 @@ void ddrmc_init(void)
 	if (is_warm_boot()) {
 		out_be32(&ddr->sdram_cfg_2,
 			 DDR_SDRAM_CFG_2 & ~SDRAM_CFG2_D_INIT);
-		out_be32(&ddr->init_addr, CONFIG_SYS_SDRAM_BASE);
+		out_be32(&ddr->init_addr, CFG_SYS_SDRAM_BASE);
 		out_be32(&ddr->init_ext_addr, (1 << 31));
 
 		/* DRAM VRef will not be trained */
@@ -224,7 +224,7 @@ void ddrmc_init(void)
 
 int dram_init(void)
 {
-#if (!defined(CONFIG_SPL) || defined(CONFIG_SPL_BUILD))
+#if (!defined(CONFIG_SPL) || defined(CONFIG_XPL_BUILD))
 	ddrmc_init();
 #endif
 
@@ -232,7 +232,7 @@ int dram_init(void)
 
 	gd->ram_size = get_ram_size((void *)PHYS_SDRAM, PHYS_SDRAM_SIZE);
 
-#if defined(CONFIG_DEEP_SLEEP) && !defined(CONFIG_SPL_BUILD)
+#if defined(CONFIG_DEEP_SLEEP) && !defined(CONFIG_XPL_BUILD)
 	fsl_dp_resume();
 #endif
 
@@ -248,7 +248,7 @@ int board_eth_init(struct bd_info *bis)
 static void convert_serdes_mux(int type, int need_reset)
 {
 	char current_serdes;
-	struct cpld_data *cpld_data = (void *)(CONFIG_SYS_CPLD_BASE);
+	struct cpld_data *cpld_data = (void *)(CFG_SYS_CPLD_BASE);
 
 	current_serdes = cpld_data->serdes_mux;
 
@@ -322,7 +322,7 @@ int config_serdes_mux(void)
 #if !defined(CONFIG_QSPI_BOOT) && !defined(CONFIG_SD_BOOT_QSPI)
 int config_board_mux(void)
 {
-	struct cpld_data *cpld_data = (void *)(CONFIG_SYS_CPLD_BASE);
+	struct cpld_data *cpld_data = (void *)(CFG_SYS_CPLD_BASE);
 	int conflict_flag;
 
 	conflict_flag = 0;
@@ -407,7 +407,7 @@ int board_early_init_f(void)
 	return 0;
 }
 
-#ifdef CONFIG_SPL_BUILD
+#ifdef CONFIG_XPL_BUILD
 void board_init_f(ulong dummy)
 {
 	void (*second_uboot)(void);
@@ -527,7 +527,7 @@ int board_init(void)
 	return 0;
 }
 
-#if defined(CONFIG_SPL_BUILD)
+#if defined(CONFIG_XPL_BUILD)
 void spl_board_init(void)
 {
 	if (IS_ENABLED(CONFIG_FSL_CAAM)) {
@@ -607,10 +607,10 @@ u16 flash_read16(void *addr)
 }
 
 #if !defined(CONFIG_QSPI_BOOT) && !defined(CONFIG_SD_BOOT_QSPI) \
-	&& !defined(CONFIG_SPL_BUILD)
+	&& !defined(CONFIG_XPL_BUILD)
 static void convert_flash_bank(char bank)
 {
-	struct cpld_data *cpld_data = (void *)(CONFIG_SYS_CPLD_BASE);
+	struct cpld_data *cpld_data = (void *)(CFG_SYS_CPLD_BASE);
 
 	printf("Now switch to boot from flash bank %d.\n", bank);
 	cpld_data->soft_mux_on = CPLD_SET_BOOT_BANK;
@@ -644,7 +644,7 @@ U_BOOT_CMD(
 static int cpld_reset_cmd(struct cmd_tbl *cmdtp, int flag, int argc,
 			  char *const argv[])
 {
-	struct cpld_data *cpld_data = (void *)(CONFIG_SYS_CPLD_BASE);
+	struct cpld_data *cpld_data = (void *)(CFG_SYS_CPLD_BASE);
 
 	if (argc > 2)
 		return CMD_RET_USAGE;
@@ -671,7 +671,7 @@ U_BOOT_CMD(
 static void print_serdes_mux(void)
 {
 	char current_serdes;
-	struct cpld_data *cpld_data = (void *)(CONFIG_SYS_CPLD_BASE);
+	struct cpld_data *cpld_data = (void *)(CFG_SYS_CPLD_BASE);
 
 	current_serdes = cpld_data->serdes_mux;
 

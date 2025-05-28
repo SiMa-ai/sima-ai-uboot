@@ -5,11 +5,11 @@
  * (C) Copyright 2012-2014
  *     Texas Instruments Incorporated, <www.ti.com>
  */
-#include <common.h>
 #include <command.h>
 #include <console.h>
 #include <asm/global_data.h>
 #include <linux/delay.h>
+#include <linux/printk.h>
 
 #include <dm.h>
 #include <dm/lists.h>
@@ -82,7 +82,6 @@ enum link_type {
 					 (x) * 0x1000)
 
 #endif
-
 
 struct ks2_eth_priv {
 	struct udevice			*dev;
@@ -207,7 +206,6 @@ int keystone_sgmii_config(struct phy_device *phy_dev, int port, int interface)
 
 	__raw_writel(mr_adv_ability, SGMII_MRADV_REG(port));
 	__raw_writel(control, SGMII_CTL_REG(port));
-
 
 	mask = SGMII_REG_STATUS_LINK;
 
@@ -370,14 +368,14 @@ struct ks2_serdes ks2_serdes_sgmii_156p25mhz = {
 #ifndef CONFIG_SOC_K2G
 static void keystone2_net_serdes_setup(void)
 {
-	ks2_serdes_init(CONFIG_KSNET_SERDES_SGMII_BASE,
+	ks2_serdes_init(CFG_KSNET_SERDES_SGMII_BASE,
 			&ks2_serdes_sgmii_156p25mhz,
-			CONFIG_KSNET_SERDES_LANES_PER_SGMII);
+			CFG_KSNET_SERDES_LANES_PER_SGMII);
 
 #if defined(CONFIG_SOC_K2E) || defined(CONFIG_SOC_K2L)
-	ks2_serdes_init(CONFIG_KSNET_SERDES_SGMII2_BASE,
+	ks2_serdes_init(CFG_KSNET_SERDES_SGMII2_BASE,
 			&ks2_serdes_sgmii_156p25mhz,
-			CONFIG_KSNET_SERDES_LANES_PER_SGMII);
+			CFG_KSNET_SERDES_LANES_PER_SGMII);
 #endif
 
 	/* wait till setup */
@@ -592,10 +590,8 @@ static int ks2_eth_probe(struct udevice *dev)
 	if (priv->has_mdio) {
 		priv->phydev = phy_connect(priv->mdio_bus, priv->phy_addr,
 					   dev, priv->phy_if);
-#ifdef CONFIG_DM_ETH
-	if (ofnode_valid(priv->phy_ofnode))
-		priv->phydev->node = priv->phy_ofnode;
-#endif
+		if (ofnode_valid(priv->phy_ofnode))
+			priv->phydev->node = priv->phy_ofnode;
 		phy_config(priv->phydev);
 	}
 

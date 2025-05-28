@@ -23,18 +23,13 @@ int board_early_init_f(void)
 
 int board_early_init_r(void)
 {
-	if (CONFIG_IS_ENABLED(DM_REGULATOR)) {
-		/* Check if any existing regulator should be turned down */
-		regulators_enable_boot_off(false);
-	}
-
 	return 0;
 }
 
 int board_init(void)
 {
 	/* address of boot parameters */
-	gd->bd->bi_boot_params = CONFIG_SYS_SDRAM_BASE + 0x100;
+	gd->bd->bi_boot_params = CFG_SYS_SDRAM_BASE + 0x100;
 
 	return 0;
 }

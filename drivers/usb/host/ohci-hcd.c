@@ -27,7 +27,7 @@
  *     to activate workaround for bug #41 or this driver will NOT work!
  */
 
-#include <common.h>
+#include <config.h>
 #include <cpu_func.h>
 #include <asm/byteorder.h>
 #include <dm.h>
@@ -1993,7 +1993,7 @@ int usb_lowlevel_init(int index, enum usb_init_type init, void **controller)
 	gohci.disabled = 1;
 	gohci.sleeping = 0;
 	gohci.irq = -1;
-	gohci.regs = (struct ohci_regs *)CONFIG_SYS_USB_OHCI_REGS_BASE;
+	gohci.regs = (struct ohci_regs *)CFG_SYS_USB_OHCI_REGS_BASE;
 
 	gohci.flags = 0;
 	gohci.slot_name = CONFIG_SYS_USB_OHCI_SLOT_NAME;

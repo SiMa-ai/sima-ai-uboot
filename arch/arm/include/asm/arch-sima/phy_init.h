@@ -6,16 +6,31 @@
 #ifndef __PHY_INIT_H__
 #define __PHY_INIT_H__
 
-#include <stdint.h>
-#include <common.h>
+#include <linux/types.h>
 
 #define DIAGNOSTIC_TEST 0
+#ifdef CONFIG_CMD_DDR
+#define PRINT_PHY_TRAINING_MESSAGES 1
+#endif
+
+typedef enum ddr_freq_t_ {
+	PHY_DDR_FREQ_533MHz,
+	PHY_DDR_FREQ_800MHz,
+	PHY_DDR_FREQ_933MHz,
+	PHY_DDR_FREQ_3200_8,
+	PHY_DDR_FREQ_3200_16,
+	PHY_DDR_FREQ_6400_8,
+	PHY_DDR_FREQ_6400_16,
+	PHY_DDR_FREQ_NUM,
+} ddr_freq_t;
 
 typedef enum init_type_t_ {
 	PHY_INIT_TYPE_WRITE,
+	PHY_INIT_TYPE_WRITE_FREQ,
 	PHY_INIT_TYPE_READ,
 	PHY_INIT_TYPE_POLL,
 	PHY_INIT_TYPE_PHY,
+	PHY_INIT_TYPE_PHY_FREQ,
 	PHY_INIT_TYPE_FIRMWARE,
 	PHY_INIT_TYPE_RUN,
 	PHY_INIT_TYPE_DEBUG,
@@ -23,6 +38,7 @@ typedef enum init_type_t_ {
 	PHY_INIT_TYPE_PHYPOLL,
 	PHY_INIT_TYPE_DDRCSETTINGS,
 	PHY_INIT_TYPE_PHYSETTINGS,
+	PHY_INIT_TYPE_DEBUG_RANGE,
 	PHY_INIT_TYPE_NUM
 } init_type_t;
 
@@ -34,9 +50,15 @@ typedef struct init_element_t_ {
 
 typedef uint16_t firmware_value_t;
 
+typedef struct unique_sequence_t_ {
+	init_element_t * elements;
+	uint32_t size;
+} unique_sequence_t;
+
 typedef struct init_sequence_t_ {
 	init_element_t * elements;
 	uint32_t size;
+	unique_sequence_t unique_vals[PHY_DDR_FREQ_NUM];
 } init_sequence_t;
 
 typedef struct firmware_t_ {
@@ -57,6 +79,9 @@ typedef enum phy_init_sequnence_t_ {
 	PHY_INIT_DDR_PREPARE_MAILBOX,
 	PHY_INIT_ETH_PREVRRESET,
 	PHY_INIT_ETH_POSTVRRESET,
+	PHY_INIT_ETH_SGMII,
+	PHY_INIT_ETH_USXGMII,
+	PHY_INIT_ETH_10GBASER,
 	PHY_INIT_NUM,
 } phy_init_sequnence_t;
 
@@ -122,21 +147,37 @@ typedef enum ddr_txodt_t_ {
 } ddr_txodt_t;
 
 typedef enum ddr_memimp_t_ {
+	PHY_DDR_MEMIMP_DISABLE = 0x0,
 	PHY_DDR_MEMIMP_240_OHM = 0x1,
 	PHY_DDR_MEMIMP_120_OHM = 0x2,
 	PHY_DDR_MEMIMP_80_OHM = 0x3,
 	PHY_DDR_MEMIMP_60_OHM = 0x4,
 	PHY_DDR_MEMIMP_48_OHM = 0x5,
 	PHY_DDR_MEMIMP_40_OHM = 0x6,
+	PHY_DDR_MEMIMP_RFU = 0x7,
 } ddr_memimp_t;
 
-typedef enum ddr_freq_t_ {
-	PHY_DDR_FREQ_533MHz,
-	PHY_DDR_FREQ_800MHz,
-	PHY_DDR_FREQ_933MHz,
-	PHY_DDR_FREQ_ZEBU,
-	PHY_DDR_FREQ_NUM,
-} ddr_freq_t;
+typedef enum ddr_memimpcs_t_ {
+	PHY_DDR_MEMIMPCS_80_OHM = 0x0,
+	PHY_DDR_MEMIMPCS_120_OHM = 0x1,
+	PHY_DDR_MEMIMPCS_240_OHM = 0x2,
+	PHY_DDR_MEMIMPCS_RFU = 0x3,
+} ddr_memimpcs_t;
+
+typedef enum ddr5_socimp_t_ {
+	PHY_DDR_SOCIMP_HIGHIMP = 0x000,
+	PHY_DDR_SOCIMP_120_OHM = 0x808,
+	PHY_DDR_SOCIMP_60_OHM = 0xC0C,
+	PHY_DDR_SOCIMP_40_OHM = 0xE0E,
+	PHY_DDR_SOCIMP_30_OHM = 0xF0F,
+} ddr5_socimp_t;
+
+typedef enum ddr5_cmosimp_t_ {
+	PHY_DDR_CMOSIMP_400_OHM = 0x00,
+	PHY_DDR_CMOSIMP_100_OHM = 0x11,
+	PHY_DDR_CMOSIMP_66_OHM = 0x22,
+	PHY_DDR_CMOSIMP_50_OHM = 0x33,
+} ddr5_cmosimp_t;
 
 #define VREFGLOBAL(v) (0x4 & 0xfc07) | ((((v * 100000)/(128 * 500)) + 1) << 3)
 
@@ -155,15 +196,32 @@ typedef struct chip_settings_t_ {
 	ddr_tximp_t tximp;
 	ddr_atximp_t atximp;
 	ddr_txodt_t txodt;
-	ddr_memimp_t mempdds;
-	ddr_memimp_t memcaodt;
-	ddr_memimp_t memdqodt;
+	ddr5_socimp_t tximpse;		// TxImpedanceSE
+	ddr5_socimp_t tximpdiff;	// TxImpedanceDIFF
+	ddr5_socimp_t atximpse;		// ATxImpedanceSE
+	ddr5_socimp_t atximpdiff;	// ATxImpedanceDIFF
+	ddr5_cmosimp_t atximpcmos;	// ATxImpedanceCMOS
+	ddr5_socimp_t odtimpse;		// OdtImpedanceSE
+	ddr5_socimp_t odtimpdiff;	// OdtImpedanceDIFF
+	ddr_memimp_t odtdq;		// ODT DQ
+	ddr_memimp_t odtwck;		// ODT WCK
+	ddr_memimp_t mempdds;		// PDDS
+	ddr_memimp_t memcaodt;		// ODT CA/CK
+	ddr_memimpcs_t memcsodt;	// ODT CS
+	ddr_memimp_t memdqodt;		// SoC ODT
+	ddr_memimp_t memodtnt;		// ODT NT
 	int8_t memcavref;
 	int8_t memdqvref;
 	uint32_t phyvref;
+	uint8_t dqa_map[16];
+	uint8_t dqb_map[16];
+	uint8_t caa_map[7];
+	uint8_t cab_map[7];
 } chip_settings_t;
 
-int32_t run_sequence(uint32_t ddrcbase, uint32_t ddrcphybase, init_sequence_t s, firmware_t *f, int32_t fs, chip_settings_t *sets);
-int32_t wait_training_completion(uint32_t ddrcbase, uint32_t ddrcphybase, init_sequence_t s, firmware_t *f, int32_t fs);
+int32_t run_sequence(uint32_t cbase, uint32_t phybase, init_sequence_t s,
+		firmware_t *f, int32_t fs, chip_settings_t *sets, unique_sequence_t *u);
+int32_t wait_training_completion(uint32_t ddrcbase, uint32_t ddrcphybase,
+		init_sequence_t s, firmware_t *f, int32_t fs);
 
 #endif /* __PHY_INIT_H__ */

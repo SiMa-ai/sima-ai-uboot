@@ -120,6 +120,11 @@ Unrecognized commands are ignored.
 default <label>	    - the label named here is treated as the default and is
 		      the first label 'pxe boot' attempts to boot.
 
+fallback <label>    - the label named here is treated as a fallback option that
+		      may be attempted should it be detected that booting of
+		      the default has failed to complete, for example via
+		      U-Boot's boot count limit functionality.
+
 menu title <string> - sets a title for the menu of labels being displayed.
 
 menu include <path> - use tftp to retrieve the pxe file at <path>, which
@@ -179,11 +184,19 @@ initrd <path>	    - if this label is chosen, use tftp to retrieve the initrd
 		      at <path>. it will be stored at the address indicated in
 		      the initrd_addr_r environment variable, and that address
 		      will be passed to bootm.
+		      For FIT image, the initrd can be provided with the same value than
+		      kernel, including configuration:
+		        <path>#<conf>[#<extra-conf[#...]]
+		      In this case, kernel_addr_r is passed to bootm.
 
 fdt <path>	    - if this label is chosen, use tftp to retrieve the fdt blob
 		      at <path>. it will be stored at the address indicated in
 		      the fdt_addr_r environment variable, and that address will
 		      be passed to bootm.
+		      For FIT image, the device tree can be provided with the same value
+		      than kernel, including configuration:
+		        <path>#<conf>[#<extra-conf[#...]]
+		      In this case, kernel_addr_r is passed to bootm.
 
 devicetree <path>   - if this label is chosen, use tftp to retrieve the fdt blob
 		      at <path>. it will be stored at the address indicated in

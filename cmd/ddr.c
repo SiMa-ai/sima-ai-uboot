@@ -7,7 +7,7 @@
 	             configuration
  *
  *************************************************************************/
-#include <common.h>
+
 #include <command.h>
 #include <asm/global_data.h>
 #include <asm/arch/simaai_ddr_utils.h>
@@ -31,6 +31,17 @@ static const char supported_settings[][16] = {
 	"memcavref",
 	"memdqvref",
 	"phyvref",
+	"tximpse",
+	"tximpdiff",
+	"atximpse",
+	"atximpdiff",
+	"atximpcmos",
+	"odtimpse",
+	"odtimpdiff",
+	"odtdq",
+	"odtwck",
+	"memcsodt",
+	"memodtnt",
 };
 
 static int do_ddrreg(struct cmd_tbl *cmdtp, int flag, int argc,
@@ -142,7 +153,9 @@ U_BOOT_CMD(
 	"index setting value\n"
 	"  - with 0 arguments: dump DDR controller/PHY settings\n"
 	"  - with 3 arguments: set [setting] in DDR controller [index] to value\n"
-	"           supported settings: tximp, atximp, txodt, mempdds, memcaodt, memdqodt, memcavref, memdqvref, phyvref\n"
+	"           supported settings: tximp, atximp, txodt, mempdds, memcaodt, memdqodt, memcavref,\n"
+	"                               memdqvref, phyvref, tximpse, tximpdiff, atximpse, atximpdiff,\n"
+	"                               atximpcmos, odtimpse, odtimpdiff, odtdq, odtwck, memcsodt, memodtnt\n"
 );
 
 U_BOOT_CMD(

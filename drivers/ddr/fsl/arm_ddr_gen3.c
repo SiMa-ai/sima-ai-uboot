@@ -5,7 +5,7 @@
  * Derived from mpc85xx_ddr_gen3.c, removed all workarounds
  */
 
-#include <common.h>
+#include <config.h>
 #include <log.h>
 #include <asm/io.h>
 #include <fsl_ddr_sdram.h>
@@ -18,7 +18,6 @@
 #if (CONFIG_CHIP_SELECTS_PER_CTRL > 4)
 #error Invalid setting for CONFIG_CHIP_SELECTS_PER_CTRL
 #endif
-
 
 /*
  * regs has the to-be-set values for DDR controller registers
@@ -130,7 +129,7 @@ void fsl_ddr_set_memctl_regs(const fsl_ddr_cfg_regs_t *regs,
 	if (is_warm_boot()) {
 		ddr_out32(&ddr->sdram_cfg_2,
 			  regs->ddr_sdram_cfg_2 & ~SDRAM_CFG2_D_INIT);
-		ddr_out32(&ddr->init_addr, CONFIG_SYS_SDRAM_BASE);
+		ddr_out32(&ddr->init_addr, CFG_SYS_SDRAM_BASE);
 		ddr_out32(&ddr->init_ext_addr, DDR_INIT_ADDR_EXT_UIA);
 
 		/* DRAM VRef will not be trained */

@@ -5,14 +5,13 @@
  * Based on initial code from Maxime Ripard
  */
 
-#include <common.h>
 #include <malloc.h>
 #include <dm.h>
 #include <w1.h>
 #include <w1-eeprom.h>
 #include <dm/device-internal.h>
 
-#include <asm/arch/gpio.h>
+#include <sunxi_gpio.h>
 
 #include <extension_board.h>
 

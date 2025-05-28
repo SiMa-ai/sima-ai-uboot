@@ -6,11 +6,12 @@
  *	Peng Fan <Peng.Fan@freescale.com>
  */
 
-#include <common.h>
+#include <config.h>
 #include <clock_legacy.h>
 #include <command.h>
 #include <div64.h>
 #include <log.h>
+#include <time.h>
 #include <asm/global_data.h>
 #include <asm/io.h>
 #include <linux/errno.h>
@@ -502,7 +503,7 @@ unsigned int mxc_get_clock(enum mxc_clock clk)
 	case MXC_IPG_CLK:
 		return get_ipg_clk();
 	case MXC_I2C_CLK:
-		return get_root_clk(I2C1_CLK_ROOT);
+		return 60000000;
 	case MXC_UART_CLK:
 		return get_root_clk(UART1_CLK_ROOT);
 	case MXC_CSPI_CLK:
@@ -1099,7 +1100,7 @@ void epdc_clock_disable(void)
 }
 #endif
 
-#ifndef CONFIG_SPL_BUILD
+#ifndef CONFIG_XPL_BUILD
 /*
  * Dump some core clockes.
  */

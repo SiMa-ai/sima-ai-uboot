@@ -4,7 +4,6 @@
  * Copyright 2019, 2021 NXP
  */
 
-#include <common.h>
 #include <clock_legacy.h>
 #include <fdt_support.h>
 #include <i2c.h>
@@ -16,6 +15,7 @@
 #include <asm/arch/fsl_serdes.h>
 #include <asm/arch/ls102xa_soc.h>
 #include <asm/arch/ls102xa_devdis.h>
+#include <asm/sections.h>
 #include <hwconfig.h>
 #include <mmc.h>
 #include <fsl_csu.h>
@@ -181,7 +181,7 @@ int board_early_init_f(void)
 	return 0;
 }
 
-#ifdef CONFIG_SPL_BUILD
+#ifdef CONFIG_XPL_BUILD
 void board_init_f(ulong dummy)
 {
 #ifdef CONFIG_NAND_BOOT
@@ -196,7 +196,7 @@ void board_init_f(ulong dummy)
 	porsr1 = in_be32(&gur->porsr1);
 	pinctl = ((porsr1 & ~(DCFG_CCSR_PORSR1_RCW_MASK)) |
 		 DCFG_CCSR_PORSR1_RCW_SRC_I2C);
-	out_be32((unsigned int *)(CONFIG_SYS_DCSR_DCFG_ADDR + DCFG_DCSR_PORCR1),
+	out_be32((unsigned int *)(CFG_SYS_DCSR_DCFG_ADDR + DCFG_DCSR_PORCR1),
 		 pinctl);
 #endif
 

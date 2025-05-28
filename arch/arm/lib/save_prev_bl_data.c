@@ -10,7 +10,6 @@
 #include <fdtdec.h>
 #include <fdt_support.h>
 #include <fdt.h>
-#include <common.h>
 #include <linux/errno.h>
 #include <asm/system.h>
 #include <asm/armv8/mmu.h>
@@ -45,6 +44,11 @@ bool is_addr_accessible(phys_addr_t addr)
 	return false;
 }
 
+phys_addr_t get_prev_bl_fdt_addr(void)
+{
+	return reg0;
+}
+
 int save_prev_bl_data(void)
 {
 	struct fdt_header *fdt_blob;
@@ -60,9 +64,9 @@ int save_prev_bl_data(void)
 		return -ENODATA;
 	}
 
-	if (CONFIG_IS_ENABLED(SAVE_PREV_BL_FDT_ADDR))
+	if (IS_ENABLED(CONFIG_SAVE_PREV_BL_FDT_ADDR))
 		env_set_addr("prevbl_fdt_addr", (void *)reg0);
-	if (!CONFIG_IS_ENABLED(SAVE_PREV_BL_INITRAMFS_START_ADDR))
+	if (!IS_ENABLED(CONFIG_SAVE_PREV_BL_INITRAMFS_START_ADDR))
 		return 0;
 
 	node = fdt_path_offset(fdt_blob, "/chosen");

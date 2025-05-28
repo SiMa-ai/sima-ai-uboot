@@ -6,7 +6,7 @@
  *     Texas Instruments Incorporated, <www.ti.com>
  */
 
-#include <common.h>
+#include <config.h>
 #include <command.h>
 #include <image.h>
 #include <mach/mon.h>
@@ -23,7 +23,7 @@ static int do_mon_install(struct cmd_tbl *cmdtp, int flag, int argc,
 	if (argc < 2)
 		return CMD_RET_USAGE;
 
-	freq = CONFIG_SYS_HZ_CLOCK;
+	freq = CFG_SYS_HZ_CLOCK;
 
 	addr = hextoul(argv[1], NULL);
 

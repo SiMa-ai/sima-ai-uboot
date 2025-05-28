@@ -7,7 +7,7 @@
 #ifndef	__ASM_GBL_DATA_H
 #define __ASM_GBL_DATA_H
 
-#include <config.h>
+#include <asm/u-boot.h>
 
 /* Architecture-specific global data */
 struct arch_global_data {
@@ -23,6 +23,11 @@ struct arch_global_data {
 #ifdef CONFIG_MCF5441x
 	unsigned long sdhc_clk;
 #endif
+#if defined(CONFIG_FSL_ESDHC)
+	unsigned long sdhc_per_clk;
+#endif
+	/** @pci_clk: PCI clock rate in Hz */
+	unsigned long pci_clk;
 };
 
 #include <asm-generic/global_data.h>

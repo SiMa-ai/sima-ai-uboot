@@ -4,7 +4,7 @@
  * Copyright 2020 Hitachi Power Grids. All rights reserved.
  */
 
-#include <common.h>
+#include <config.h>
 #include <fsl_ddr_sdram.h>
 #include <fsl_ddr_dimm_params.h>
 #include <asm/io.h>
@@ -84,7 +84,7 @@ int fsl_initdram(void)
 
 int dram_init_banksize(void)
 {
-	gd->bd->bi_dram[0].start = CONFIG_SYS_SDRAM_BASE;
+	gd->bd->bi_dram[0].start = CFG_SYS_SDRAM_BASE;
 	gd->bd->bi_dram[0].size = gd->ram_size;
 
 	return 0;
