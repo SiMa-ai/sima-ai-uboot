@@ -1,0 +1,12 @@
+if TARGET_MODALIX
+
+config SYS_BOARD
+	default "modalix"
+
+config SYS_VENDOR
+	default "sima"
+
+config SYS_CONFIG_NAME
+	default "modalix"
+
+endif

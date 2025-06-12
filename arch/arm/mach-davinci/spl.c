@@ -3,12 +3,10 @@
  * Copyright (C) 2011
  * Heiko Schocher, DENX Software Engineering, hs@denx.de.
  */
-#include <common.h>
 #include <config.h>
 #include <hang.h>
 #include <init.h>
 #include <spl.h>
-#include <asm/u-boot.h>
 #include <asm/utils.h>
 #include <nand.h>
 #include <asm/arch/dm365_lowlevel.h>
@@ -27,9 +25,9 @@ void puts(const char *str)
 void putc(char c)
 {
 	if (c == '\n')
-		ns16550_putc((struct ns16550 *)(CONFIG_SYS_NS16550_COM1), '\r');
+		ns16550_putc((struct ns16550 *)(CFG_SYS_NS16550_COM1), '\r');
 
-	ns16550_putc((struct ns16550 *)(CONFIG_SYS_NS16550_COM1), c);
+	ns16550_putc((struct ns16550 *)(CFG_SYS_NS16550_COM1), c);
 }
 #endif /* CONFIG_SPL_LIBCOMMON_SUPPORT */
 

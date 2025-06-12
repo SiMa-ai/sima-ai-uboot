@@ -3,7 +3,7 @@
  *  Copyright (C) 2012 Altera Corporation <www.altera.com>
  */
 
-#include <common.h>
+#include <config.h>
 #include <eeprom.h>
 #include <env.h>
 #include <init.h>
@@ -30,7 +30,7 @@ int board_late_init(void)
 	status_led_set(2, CONFIG_LED_STATUS_ON);
 
 	/* Address of boot parameters for ATAG (if ATAG is used) */
-	gd->bd->bi_boot_params = CONFIG_SYS_SDRAM_BASE + 0x100;
+	gd->bd->bi_boot_params = CFG_SYS_SDRAM_BASE + 0x100;
 
 	ret = gpio_request(usb_nrst_gpio, "usb_nrst_gpio");
 	if (!ret)
@@ -43,7 +43,7 @@ int board_late_init(void)
 	return 0;
 }
 
-#ifndef CONFIG_SPL_BUILD
+#ifndef CONFIG_XPL_BUILD
 int misc_init_r(void)
 {
 	uchar data[128];

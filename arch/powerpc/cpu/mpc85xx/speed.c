@@ -9,7 +9,6 @@
  * Wolfgang Denk, DENX Software Engineering, wd@denx.de.
  */
 
-#include <common.h>
 #include <cpu_func.h>
 #include <clock_legacy.h>
 #include <ppc_asm.tmpl>
@@ -67,7 +66,7 @@ void get_sys_info(sys_info_t *sys_info)
 		[14] = 4,	/* CC4 PPL / 4 */
 	};
 	uint i, freq_c_pll[CONFIG_SYS_FSL_NUM_CC_PLLS];
-#if !defined(CONFIG_FM_PLAT_CLK_DIV) || !defined(CONFIG_PME_PLAT_CLK_DIV)
+#if !defined(CFG_FM_PLAT_CLK_DIV) || !defined(CFG_PME_PLAT_CLK_DIV)
 	uint rcw_tmp;
 #endif
 	uint ratio[CONFIG_SYS_FSL_NUM_CC_PLLS];
@@ -206,7 +205,7 @@ void get_sys_info(sys_info_t *sys_info)
 #define FM1_CLK_SEL	0x1c000000
 #define FM1_CLK_SHIFT	26
 #endif
-#if !defined(CONFIG_FM_PLAT_CLK_DIV) || !defined(CONFIG_PME_PLAT_CLK_DIV)
+#if !defined(CFG_FM_PLAT_CLK_DIV) || !defined(CFG_PME_PLAT_CLK_DIV)
 #if defined(CONFIG_ARCH_T1024)
 	rcw_tmp = in_be32(&gur->rcwsr[15]) - 4;
 #else
@@ -215,25 +214,25 @@ void get_sys_info(sys_info_t *sys_info)
 #endif
 
 #ifdef CONFIG_SYS_DPAA_PME
-#ifndef CONFIG_PME_PLAT_CLK_DIV
+#ifndef CFG_PME_PLAT_CLK_DIV
 	switch ((rcw_tmp & PME_CLK_SEL) >> PME_CLK_SHIFT) {
 	case 1:
-		sys_info->freq_pme = freq_c_pll[CONFIG_SYS_PME_CLK];
+		sys_info->freq_pme = freq_c_pll[CFG_SYS_PME_CLK];
 		break;
 	case 2:
-		sys_info->freq_pme = freq_c_pll[CONFIG_SYS_PME_CLK] / 2;
+		sys_info->freq_pme = freq_c_pll[CFG_SYS_PME_CLK] / 2;
 		break;
 	case 3:
-		sys_info->freq_pme = freq_c_pll[CONFIG_SYS_PME_CLK] / 3;
+		sys_info->freq_pme = freq_c_pll[CFG_SYS_PME_CLK] / 3;
 		break;
 	case 4:
-		sys_info->freq_pme = freq_c_pll[CONFIG_SYS_PME_CLK] / 4;
+		sys_info->freq_pme = freq_c_pll[CFG_SYS_PME_CLK] / 4;
 		break;
 	case 6:
-		sys_info->freq_pme = freq_c_pll[CONFIG_SYS_PME_CLK + 1] / 2;
+		sys_info->freq_pme = freq_c_pll[CFG_SYS_PME_CLK + 1] / 2;
 		break;
 	case 7:
-		sys_info->freq_pme = freq_c_pll[CONFIG_SYS_PME_CLK + 1] / 3;
+		sys_info->freq_pme = freq_c_pll[CFG_SYS_PME_CLK + 1] / 3;
 		break;
 	default:
 		printf("Error: Unknown PME clock select!\n");
@@ -243,16 +242,16 @@ void get_sys_info(sys_info_t *sys_info)
 
 	}
 #else
-	sys_info->freq_pme = sys_info->freq_systembus / CONFIG_SYS_PME_CLK;
+	sys_info->freq_pme = sys_info->freq_systembus / CFG_SYS_PME_CLK;
 
 #endif
 #endif
 
 #ifdef CONFIG_SYS_DPAA_QBMAN
-#ifndef CONFIG_QBMAN_CLK_DIV
-#define CONFIG_QBMAN_CLK_DIV	2
+#ifndef CFG_QBMAN_CLK_DIV
+#define CFG_QBMAN_CLK_DIV	2
 #endif
-	sys_info->freq_qman = sys_info->freq_systembus / CONFIG_QBMAN_CLK_DIV;
+	sys_info->freq_qman = sys_info->freq_systembus / CFG_QBMAN_CLK_DIV;
 #endif
 
 #if defined(CONFIG_SYS_MAPLE)
@@ -377,28 +376,28 @@ void get_sys_info(sys_info_t *sys_info)
 #endif
 
 #ifdef CONFIG_SYS_DPAA_FMAN
-#ifndef CONFIG_FM_PLAT_CLK_DIV
+#ifndef CFG_FM_PLAT_CLK_DIV
 	switch ((rcw_tmp & FM1_CLK_SEL) >> FM1_CLK_SHIFT) {
 	case 1:
-		sys_info->freq_fman[0] = freq_c_pll[CONFIG_SYS_FM1_CLK];
+		sys_info->freq_fman[0] = freq_c_pll[CFG_SYS_FM1_CLK];
 		break;
 	case 2:
-		sys_info->freq_fman[0] = freq_c_pll[CONFIG_SYS_FM1_CLK] / 2;
+		sys_info->freq_fman[0] = freq_c_pll[CFG_SYS_FM1_CLK] / 2;
 		break;
 	case 3:
-		sys_info->freq_fman[0] = freq_c_pll[CONFIG_SYS_FM1_CLK] / 3;
+		sys_info->freq_fman[0] = freq_c_pll[CFG_SYS_FM1_CLK] / 3;
 		break;
 	case 4:
-		sys_info->freq_fman[0] = freq_c_pll[CONFIG_SYS_FM1_CLK] / 4;
+		sys_info->freq_fman[0] = freq_c_pll[CFG_SYS_FM1_CLK] / 4;
 		break;
 	case 5:
 		sys_info->freq_fman[0] = sys_info->freq_systembus;
 		break;
 	case 6:
-		sys_info->freq_fman[0] = freq_c_pll[CONFIG_SYS_FM1_CLK + 1] / 2;
+		sys_info->freq_fman[0] = freq_c_pll[CFG_SYS_FM1_CLK + 1] / 2;
 		break;
 	case 7:
-		sys_info->freq_fman[0] = freq_c_pll[CONFIG_SYS_FM1_CLK + 1] / 3;
+		sys_info->freq_fman[0] = freq_c_pll[CFG_SYS_FM1_CLK + 1] / 3;
 		break;
 	default:
 		printf("Error: Unknown FMan1 clock select!\n");
@@ -406,32 +405,32 @@ void get_sys_info(sys_info_t *sys_info)
 		sys_info->freq_fman[0] = sys_info->freq_systembus / 2;
 		break;
 	}
-#if (CONFIG_SYS_NUM_FMAN) == 2
-#ifdef CONFIG_SYS_FM2_CLK
+#if (CFG_SYS_NUM_FMAN) == 2
+#ifdef CFG_SYS_FM2_CLK
 #define FM2_CLK_SEL	0x00000038
 #define FM2_CLK_SHIFT	3
 	rcw_tmp = in_be32(&gur->rcwsr[15]);
 	switch ((rcw_tmp & FM2_CLK_SEL) >> FM2_CLK_SHIFT) {
 	case 1:
-		sys_info->freq_fman[1] = freq_c_pll[CONFIG_SYS_FM2_CLK + 1];
+		sys_info->freq_fman[1] = freq_c_pll[CFG_SYS_FM2_CLK + 1];
 		break;
 	case 2:
-		sys_info->freq_fman[1] = freq_c_pll[CONFIG_SYS_FM2_CLK + 1] / 2;
+		sys_info->freq_fman[1] = freq_c_pll[CFG_SYS_FM2_CLK + 1] / 2;
 		break;
 	case 3:
-		sys_info->freq_fman[1] = freq_c_pll[CONFIG_SYS_FM2_CLK + 1] / 3;
+		sys_info->freq_fman[1] = freq_c_pll[CFG_SYS_FM2_CLK + 1] / 3;
 		break;
 	case 4:
-		sys_info->freq_fman[1] = freq_c_pll[CONFIG_SYS_FM2_CLK + 1] / 4;
+		sys_info->freq_fman[1] = freq_c_pll[CFG_SYS_FM2_CLK + 1] / 4;
 		break;
 	case 5:
 		sys_info->freq_fman[1] = sys_info->freq_systembus;
 		break;
 	case 6:
-		sys_info->freq_fman[1] = freq_c_pll[CONFIG_SYS_FM2_CLK] / 2;
+		sys_info->freq_fman[1] = freq_c_pll[CFG_SYS_FM2_CLK] / 2;
 		break;
 	case 7:
-		sys_info->freq_fman[1] = freq_c_pll[CONFIG_SYS_FM2_CLK] / 3;
+		sys_info->freq_fman[1] = freq_c_pll[CFG_SYS_FM2_CLK] / 3;
 		break;
 	default:
 		printf("Error: Unknown FMan2 clock select!\n");
@@ -440,9 +439,9 @@ void get_sys_info(sys_info_t *sys_info)
 		break;
 	}
 #endif
-#endif	/* CONFIG_SYS_NUM_FMAN == 2 */
+#endif	/* CFG_SYS_NUM_FMAN == 2 */
 #else
-	sys_info->freq_fman[0] = sys_info->freq_systembus / CONFIG_SYS_FM1_CLK;
+	sys_info->freq_fman[0] = sys_info->freq_systembus / CFG_SYS_FM1_CLK;
 #endif
 #endif
 
@@ -491,7 +490,7 @@ void get_sys_info(sys_info_t *sys_info)
 	} else {
 		sys_info->freq_fman[0] = sys_info->freq_systembus / 2;
 	}
-#if (CONFIG_SYS_NUM_FMAN) == 2
+#if (CFG_SYS_NUM_FMAN) == 2
 	if (rcw_tmp & FM2_CLK_SEL) {
 		if (rcw_tmp & HWA_ASYNC_DIV)
 			sys_info->freq_fman[1] = freq_c_pll[HWA_CC_PLL] / 4;
@@ -625,7 +624,6 @@ int get_clocks(void)
 	if(gd->cpu_clk != 0) return (0);
 	else return (1);
 }
-
 
 /********************************************
  * get_bus_freq

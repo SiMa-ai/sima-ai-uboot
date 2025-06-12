@@ -16,7 +16,7 @@
 #define V_OSCK				24000000  /* Clock output from T2 */
 #define V_SCLK				(V_OSCK)
 
-#ifndef CONFIG_SPL_BUILD
+#ifndef CONFIG_XPL_BUILD
 
 #define MEM_LAYOUT_ENV_SETTINGS \
 	"scriptaddr=0x80000000\0" \
@@ -45,7 +45,7 @@
 	"main_pcba_aux_3=0\0" \
 	"main_pcba_aux_4=0\0" \
 
-#define CONFIG_EXTRA_ENV_SETTINGS \
+#define CFG_EXTRA_ENV_SETTINGS \
 	AM335XX_BOARD_FDTFILE \
 	MEM_LAYOUT_ENV_SETTINGS \
 	BOOTENV \
@@ -70,7 +70,7 @@
 		"setenv boot_syslinux_conf \"extlinux/extlinux.conf\"; " \
 		"run bootcmd_ubifs0;\0"
 
-#endif /* ! CONFIG_SPL_BUILD */
+#endif /* ! CONFIG_XPL_BUILD */
 
 #define SPLASH_SCREEN_NAND_PART "nand0,10"
 #define SPLASH_SCREEN_BMP_FILE_SIZE 0x26000
@@ -83,15 +83,15 @@
 #define CONSOLE_COLOR_RED 0x001F
 
 /* NS16550 Configuration */
-#define CONFIG_SYS_NS16550_COM1		0x44e09000	/* UART0 */
-#define CONFIG_SYS_NS16550_COM2		0x48022000	/* UART1 */
-#define CONFIG_SYS_NS16550_COM3		0x48024000	/* UART2 */
-#define CONFIG_SYS_NS16550_COM4		0x481a6000	/* UART3 */
-#define CONFIG_SYS_NS16550_COM5		0x481a8000	/* UART4 */
-#define CONFIG_SYS_NS16550_COM6		0x481aa000	/* UART5 */
+#define CFG_SYS_NS16550_COM1		0x44e09000	/* UART0 */
+#define CFG_SYS_NS16550_COM2		0x48022000	/* UART1 */
+#define CFG_SYS_NS16550_COM3		0x48024000	/* UART2 */
+#define CFG_SYS_NS16550_COM4		0x481a6000	/* UART3 */
+#define CFG_SYS_NS16550_COM5		0x481a8000	/* UART4 */
+#define CFG_SYS_NS16550_COM6		0x481aa000	/* UART5 */
 
 #ifdef CONFIG_MTD_RAW_NAND
-#define CONFIG_SYS_NAND_ECCPOS  {   2,   3,   4,   5,   6,   7,   8,   9, \
+#define CFG_SYS_NAND_ECCPOS  {   2,   3,   4,   5,   6,   7,   8,   9, \
 			 10,  11,  12,  13,  14,  15,  16,  17,  18,  19, \
 			 20,  21,  22,  23,  24,  25,  26,  27,  28,  29, \
 			 30,  31,  32,  33,  34,  35,  36,  37,  38,  39, \
@@ -113,9 +113,8 @@
 			190, 191, 192, 193, 194, 195, 196, 197, 198, 199, \
 			200, 201, 202, 203, 204, 205, 206, 207, 208, 209, \
 			}
-#define CONFIG_SYS_NAND_ECCSIZE         512
-#define CONFIG_SYS_NAND_ECCBYTES        26
-#define MTDIDS_DEFAULT                  "nand0=nand.0"
+#define CFG_SYS_NAND_ECCSIZE         512
+#define CFG_SYS_NAND_ECCBYTES        26
 
 #endif /* CONFIG_MTD_RAW_NAND */
 

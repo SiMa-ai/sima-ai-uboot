@@ -3,7 +3,7 @@
  * Copyright 2015 Freescale Semiconductor, Inc.
  */
 
-#include <common.h>
+#include <config.h>
 #include <log.h>
 #include <asm/arch/clock.h>
 #include <asm/io.h>
@@ -170,7 +170,7 @@ int arch_soc_init(void)
 	enable_layerscape_ns_access();
 #endif
 
-#ifdef CONFIG_FSL_QSPI
+#if defined(CONFIG_FSL_QSPI) && !defined(CONFIG_SYS_FSL_QSPI_SKIP_CLKSEL)
 	out_be32(&scfg->qspi_cfg, SCFG_QSPI_CLKSEL);
 #endif
 

@@ -6,7 +6,6 @@
  * Copyright 2018, 2021 NXP
  */
 #include <config.h>
-#include <common.h>
 #include <dm.h>
 #include <log.h>
 #include <net.h>
@@ -338,7 +337,6 @@ static int aquantia_set_proto(struct phy_device *phydev,
 
 static int aquantia_dts_config(struct phy_device *phydev)
 {
-#ifdef CONFIG_DM_ETH
 	ofnode node = phydev->node;
 	u32 prop;
 	u16 reg;
@@ -374,7 +372,6 @@ static int aquantia_dts_config(struct phy_device *phydev)
 			  (u16)(prop << 1));
 	}
 
-#endif
 	return 0;
 }
 
@@ -569,9 +566,9 @@ int aquantia_startup(struct phy_device *phydev)
 			if ((i++ % 500) == 0)
 				printf(".");
 		} while (!aquantia_link_is_up(phydev) &&
-			 i < (4 * PHY_ANEG_TIMEOUT));
+			 i < (4 * CONFIG_PHY_ANEG_TIMEOUT));
 
-		if (i > PHY_ANEG_TIMEOUT)
+		if (i > CONFIG_PHY_ANEG_TIMEOUT)
 			printf(" TIMEOUT !\n");
 	}
 
@@ -600,7 +597,7 @@ int aquantia_startup(struct phy_device *phydev)
 	return 0;
 }
 
-struct phy_driver aq1202_driver = {
+U_BOOT_PHY_DRIVER(aq1202) = {
 	.name = "Aquantia AQ1202",
 	.uid = 0x3a1b445,
 	.mask = 0xfffffff0,
@@ -613,7 +610,7 @@ struct phy_driver aq1202_driver = {
 	.shutdown = &gen10g_shutdown,
 };
 
-struct phy_driver aq2104_driver = {
+U_BOOT_PHY_DRIVER(aq2104) = {
 	.name = "Aquantia AQ2104",
 	.uid = 0x3a1b460,
 	.mask = 0xfffffff0,
@@ -626,7 +623,7 @@ struct phy_driver aq2104_driver = {
 	.shutdown = &gen10g_shutdown,
 };
 
-struct phy_driver aqr105_driver = {
+U_BOOT_PHY_DRIVER(aqr105) = {
 	.name = "Aquantia AQR105",
 	.uid = 0x3a1b4a2,
 	.mask = 0xfffffff0,
@@ -640,7 +637,7 @@ struct phy_driver aqr105_driver = {
 	.data = AQUANTIA_GEN1,
 };
 
-struct phy_driver aqr106_driver = {
+U_BOOT_PHY_DRIVER(aqr106) = {
 	.name = "Aquantia AQR106",
 	.uid = 0x3a1b4d0,
 	.mask = 0xfffffff0,
@@ -653,7 +650,7 @@ struct phy_driver aqr106_driver = {
 	.shutdown = &gen10g_shutdown,
 };
 
-struct phy_driver aqr107_driver = {
+U_BOOT_PHY_DRIVER(aqr107) = {
 	.name = "Aquantia AQR107",
 	.uid = 0x3a1b4e0,
 	.mask = 0xfffffff0,
@@ -667,7 +664,7 @@ struct phy_driver aqr107_driver = {
 	.data = AQUANTIA_GEN2,
 };
 
-struct phy_driver aqr112_driver = {
+U_BOOT_PHY_DRIVER(aqr112) = {
 	.name = "Aquantia AQR112",
 	.uid = 0x3a1b660,
 	.mask = 0xfffffff0,
@@ -681,7 +678,7 @@ struct phy_driver aqr112_driver = {
 	.data = AQUANTIA_GEN3,
 };
 
-struct phy_driver aqr113c_driver = {
+U_BOOT_PHY_DRIVER(aqr113c) = {
 	.name = "Aquantia AQR113C",
 	.uid = 0x31c31c12,
 	.mask = 0xfffffff0,
@@ -695,7 +692,7 @@ struct phy_driver aqr113c_driver = {
 	.data = AQUANTIA_GEN3,
 };
 
-struct phy_driver aqr405_driver = {
+U_BOOT_PHY_DRIVER(aqr405) = {
 	.name = "Aquantia AQR405",
 	.uid = 0x3a1b4b2,
 	.mask = 0xfffffff0,
@@ -709,7 +706,7 @@ struct phy_driver aqr405_driver = {
 	.data = AQUANTIA_GEN1,
 };
 
-struct phy_driver aqr412_driver = {
+U_BOOT_PHY_DRIVER(aqr412) = {
 	.name = "Aquantia AQR412",
 	.uid = 0x3a1b710,
 	.mask = 0xfffffff0,
@@ -722,18 +719,3 @@ struct phy_driver aqr412_driver = {
 	.shutdown = &gen10g_shutdown,
 	.data = AQUANTIA_GEN3,
 };
-
-int phy_aquantia_init(void)
-{
-	phy_register(&aq1202_driver);
-	phy_register(&aq2104_driver);
-	phy_register(&aqr105_driver);
-	phy_register(&aqr106_driver);
-	phy_register(&aqr107_driver);
-	phy_register(&aqr112_driver);
-	phy_register(&aqr113c_driver);
-	phy_register(&aqr405_driver);
-	phy_register(&aqr412_driver);
-
-	return 0;
-}

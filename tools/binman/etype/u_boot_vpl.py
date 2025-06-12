@@ -21,14 +21,15 @@ class Entry_u_boot_vpl(Entry_blob):
     address in SRAM, or written to run from the correct address if direct
     flash execution is possible (e.g. on x86 devices).
 
-    SPL can access binman symbols at runtime. See:
-
-        'Access to binman entry offsets at run time (symbols)'
+    SPL can access binman symbols at runtime. See :ref:`binman_fdt`.
 
     in the binman README for more information.
 
     The ELF file 'vpl/u-boot-vpl' must also be available for this to work, since
     binman uses that to look up symbols to write into the VPL binary.
+
+    Note that this entry is automatically replaced with u-boot-vpl-expanded
+    unless --no-expanded is used or the node has a 'no-expanded' property.
     """
     def __init__(self, section, etype, node):
         super().__init__(section, etype, node, auto_write_symbols=True)

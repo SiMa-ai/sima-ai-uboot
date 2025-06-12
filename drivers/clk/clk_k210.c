@@ -4,7 +4,6 @@
  */
 #define LOG_CATEGORY UCLASS_CLK
 
-#include <common.h>
 #include <clk.h>
 #include <clk-uclass.h>
 #include <div64.h>
@@ -16,6 +15,7 @@
 #include <dt-bindings/mfd/k210-sysctl.h>
 #include <k210/pll.h>
 #include <linux/bitfield.h>
+#include <asm/barrier.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -308,7 +308,7 @@ enum k210_clk_flags {
  * @gate: An &enum k210_gate_id of this clock's gate
  */
 struct k210_clk_params {
-#if CONFIG_IS_ENABLED(CMD_CLK)
+#if IS_ENABLED(CONFIG_CMD_CLK)
 	const char *name;
 #endif
 	u8 flags;
@@ -326,7 +326,7 @@ struct k210_clk_params {
 };
 
 static const struct k210_clk_params k210_clks[] = {
-#if CONFIG_IS_ENABLED(CMD_CLK)
+#if IS_ENABLED(CONFIG_CMD_CLK)
 #define NAME(_name) .name = (_name),
 #else
 #define NAME(name)
@@ -1238,6 +1238,58 @@ static int k210_clk_request(struct clk *clk)
 	return 0;
 }
 
+#if IS_ENABLED(CONFIG_CMD_CLK)
+static char show_enabled(struct k210_clk_priv *priv, int id)
+{
+	bool enabled;
+
+	if (k210_clks[id].flags & K210_CLKF_PLL) {
+		const struct k210_pll_params *pll =
+			&k210_plls[k210_clks[id].pll];
+
+		enabled = k210_pll_enabled(readl(priv->base + pll->off));
+	} else if (k210_clks[id].gate == K210_CLK_GATE_NONE) {
+		return '-';
+	} else {
+		const struct k210_gate_params *gate =
+			&k210_gates[k210_clks[id].gate];
+
+		enabled = k210_clk_readl(priv, gate->off, gate->bit_idx, 1);
+	}
+
+	return enabled ? 'y' : 'n';
+}
+
+static void show_clks(struct k210_clk_priv *priv, int id, int depth)
+{
+	int i;
+
+	for (i = 0; i < ARRAY_SIZE(k210_clks); i++) {
+		if (k210_clk_get_parent(priv, i) != id)
+			continue;
+
+		printf(" %-9lu %-7c %*s%s\n", do_k210_clk_get_rate(priv, i),
+		       show_enabled(priv, i), depth * 4, "",
+		       k210_clks[i].name);
+
+		show_clks(priv, i, depth + 1);
+	}
+}
+
+static void k210_clk_dump(struct udevice *dev)
+{
+	struct k210_clk_priv *priv;
+
+	priv = dev_get_priv(dev);
+
+	puts(" Rate      Enabled Name\n");
+	puts("------------------------\n");
+	printf(" %-9lu %-7c %*s%s\n", clk_get_rate(&priv->in0), 'y', 0, "",
+	       priv->in0.dev->name);
+	show_clks(priv, K210_CLK_IN0, 1);
+}
+#endif
+
 static const struct clk_ops k210_clk_ops = {
 	.request = k210_clk_request,
 	.set_rate = k210_clk_set_rate,
@@ -1245,6 +1297,9 @@ static const struct clk_ops k210_clk_ops = {
 	.set_parent = k210_clk_set_parent,
 	.enable = k210_clk_enable,
 	.disable = k210_clk_disable,
+#if IS_ENABLED(CONFIG_CMD_CLK)
+	.dump = k210_clk_dump,
+#endif
 };
 
 static int k210_clk_probe(struct udevice *dev)
@@ -1283,62 +1338,3 @@ U_BOOT_DRIVER(k210_clk) = {
 	.probe = k210_clk_probe,
 	.priv_auto = sizeof(struct k210_clk_priv),
 };
-
-#if CONFIG_IS_ENABLED(CMD_CLK)
-static char show_enabled(struct k210_clk_priv *priv, int id)
-{
-	bool enabled;
-
-	if (k210_clks[id].flags & K210_CLKF_PLL) {
-		const struct k210_pll_params *pll =
-			&k210_plls[k210_clks[id].pll];
-
-		enabled = k210_pll_enabled(readl(priv->base + pll->off));
-	} else if (k210_clks[id].gate == K210_CLK_GATE_NONE) {
-		return '-';
-	} else {
-		const struct k210_gate_params *gate =
-			&k210_gates[k210_clks[id].gate];
-
-		enabled = k210_clk_readl(priv, gate->off, gate->bit_idx, 1);
-	}
-
-	return enabled ? 'y' : 'n';
-}
-
-static void show_clks(struct k210_clk_priv *priv, int id, int depth)
-{
-	int i;
-
-	for (i = 0; i < ARRAY_SIZE(k210_clks); i++) {
-		if (k210_clk_get_parent(priv, i) != id)
-			continue;
-
-		printf(" %-9lu %-7c %*s%s\n", do_k210_clk_get_rate(priv, i),
-		       show_enabled(priv, i), depth * 4, "",
-		       k210_clks[i].name);
-
-		show_clks(priv, i, depth + 1);
-	}
-}
-
-int soc_clk_dump(void)
-{
-	int ret;
-	struct udevice *dev;
-	struct k210_clk_priv *priv;
-
-	ret = uclass_get_device_by_driver(UCLASS_CLK, DM_DRIVER_GET(k210_clk),
-					  &dev);
-	if (ret)
-		return ret;
-	priv = dev_get_priv(dev);
-
-	puts(" Rate      Enabled Name\n");
-	puts("------------------------\n");
-	printf(" %-9lu %-7c %*s%s\n", clk_get_rate(&priv->in0), 'y', 0, "",
-	       priv->in0.dev->name);
-	show_clks(priv, K210_CLK_IN0, 1);
-	return 0;
-}
-#endif

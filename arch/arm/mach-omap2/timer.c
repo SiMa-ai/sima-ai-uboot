@@ -15,7 +15,7 @@
  * Gary Jennejohn, DENX Software Engineering, <garyj@denx.de>
  */
 
-#include <common.h>
+#include <config.h>
 #include <init.h>
 #include <time.h>
 #include <asm/global_data.h>
@@ -27,7 +27,7 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
-static struct gptimer *timer_base = (struct gptimer *)CONFIG_SYS_TIMERBASE;
+static struct gptimer *timer_base = (struct gptimer *)CFG_SYS_TIMERBASE;
 static ulong get_timer_masked(void);
 
 /*

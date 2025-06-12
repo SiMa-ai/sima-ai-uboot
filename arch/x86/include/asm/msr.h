@@ -71,7 +71,7 @@ static inline unsigned long long native_read_tscp(unsigned int *aux)
 #define EAX_EDX_RET(val, low, high)	"=A" (val)
 #endif
 
-static inline __attribute__((no_instrument_function))
+static inline notrace
 	unsigned long long native_read_msr(unsigned int msr)
 {
 	DECLARE_ARGS(val, low, high);
@@ -244,7 +244,6 @@ do {                                                            \
 #define rdtscpll(val, aux) (val) = native_read_tscp(&(aux))
 
 #endif	/* !CONFIG_PARAVIRT */
-
 
 #define checking_wrmsrl(msr, val) wrmsr_safe((msr), (u32)(val),		\
 					     (u32)((val) >> 32))

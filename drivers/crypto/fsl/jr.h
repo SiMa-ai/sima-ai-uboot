@@ -15,7 +15,7 @@
 
 #define JR_SIZE 4
 /* Timeout currently defined as 10 sec */
-#define CONFIG_USEC_DEQ_TIMEOUT	10000000U
+#define CFG_USEC_DEQ_TIMEOUT	10000000U
 
 #define DEFAULT_JR_ID		0
 #define DEFAULT_JR_LIODN	0
@@ -37,6 +37,8 @@
 #define JRNSLIODN_MASK		0x0fff0000
 #define JRSLIODN_SHIFT		0
 #define JRSLIODN_MASK		0x00000fff
+#define JROWN_NS		0x00000008
+#define JRMID_NS		0x00000001
 
 #define JRDID_MS_PRIM_DID	BIT(0)
 #define JRDID_MS_PRIM_TZ	BIT(4)

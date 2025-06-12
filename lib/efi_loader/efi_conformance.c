@@ -5,7 +5,6 @@
  *  Copyright (C) 2022 Arm Ltd.
  */
 
-#include <common.h>
 #include <efi_loader.h>
 #include <log.h>
 #include <efi_api.h>
@@ -22,7 +21,7 @@ static const efi_guid_t efi_ebbr_2_1_guid =
  */
 efi_status_t efi_ecpt_register(void)
 {
-	int num_entries = 0;
+	u16 num_entries = 0;
 	struct efi_conformance_profiles_table *ecpt;
 	efi_status_t ret;
 	size_t ecpt_size;

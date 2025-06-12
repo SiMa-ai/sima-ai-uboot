@@ -2,12 +2,15 @@ menu "MTD Support"
 
 config MTD_PARTITIONS
 	bool
+	select PARTITIONS
 
 config MTD
 	bool "Enable MTD layer"
 	help
 	  Enable the MTD stack, necessary to interact with NAND, NOR,
 	  SPI-NOR, SPI-NAND, OneNAND, etc.
+
+if MTD
 
 config DM_MTD
 	bool "Enable Driver Model for MTD drivers"
@@ -24,15 +27,20 @@ config MTD_NOR_FLASH
 
 config MTD_CONCAT
 	bool "Enable MTD device concatenation"
-	depends on MTD
 	help
 	  Enable support for concatenating multiple physical MTD devices
 	  into a single logical device. The larger logical device can then
 	  be partitioned.
 
+config MTD_BLOCK
+	bool "Enable block device access to MTD devices"
+	depends on BLK
+	help
+	  Enable support for block device access to MTD devices
+	  using blk_ops abstraction.
+
 config SYS_MTDPARTS_RUNTIME
 	bool "Allow MTDPARTS to be configured at runtime"
-	depends on MTD
 	help
 	  This option allows to call the function board_mtdparts_default to
 	  dynamically build the variables mtdids and mtdparts at runtime.
@@ -77,6 +85,15 @@ config SYS_FLASH_CFI_WIDTH
 	help
 	  This must be kept in sync with the table in include/flash.h
 
+config FLASH_SHOW_PROGRESS
+	int "Print out a countdown durinng writes"
+	depends on FLASH_CFI_DRIVER
+	default 45
+	help
+	  If set to a non-zero value, print out countdown digits and dots.
+	  Recommended value: 45 (9..1) for 80 column displays, 15 (3..1) for 40
+	  column displays.
+
 config CFI_FLASH
 	bool "Enable Driver Model for CFI Flash driver"
 	depends on DM_MTD
@@ -110,9 +127,16 @@ config SYS_FLASH_EMPTY_INFO
 	bool "Enable displaying empty sectors in flash info"
 	depends on FLASH_CFI_DRIVER
 
+config FLASH_SPANSION_S29WS_N
+	bool "Non-standard s29ws-n MirrorBit flash"
+	depends on FLASH_CFI_DRIVER
+	help
+	  Enable this if the s29ws-n MirrorBit flash has non-standard addresses
+	  for buffered write commands.
+
 config FLASH_CFI_MTD
 	bool "Enable CFI MTD driver"
-	depends on FLASH_CFI_DRIVER
+	depends on FLASH_CFI_DRIVER && MTD
 	help
 	  This option enables the building of the cfi_mtd driver
 	  in the drivers directory. The driver exports CFI flash
@@ -147,6 +171,18 @@ config SYS_FLASH_CHECKSUM
 	  If the variable flashchecksum is set in the environment, perform a CRC
 	  of the flash and print the value to console.
 
+config FLASH_VERIFY
+	bool "Compare writes to NOR flash with source location"
+	depends on MTD_NOR_FLASH
+	help
+	  If enabled, the content of the flash (destination) is compared
+	  against the source after the write operation. An error message will
+	  be printed when the contents are not identical.  Please note that
+	  this option is useless in nearly all cases, since such flash
+	  programming errors usually are detected earlier while
+	  unprotecting/erasing/programming. Please only enable this option if
+	  you really know what you are doing.
+
 config ALTERA_QSPI
 	bool "Altera Generic Quad SPI Controller"
 	depends on DM_MTD
@@ -158,11 +194,11 @@ config ALTERA_QSPI
 	  "Embedded Peripherals IP User Guide" of Altera.
 
 config RENESAS_RPC_HF
-	bool "Renesas RCar Gen3 RPC HyperFlash driver"
+	bool "Renesas R-Car Gen3 RPC HyperFlash driver"
 	depends on RCAR_GEN3 && DM_MTD
 	help
 	  This enables access to HyperFlash memory through the Renesas
-	  RCar Gen3 RPC controller.
+	  R-Car Gen3 RPC controller.
 
 config HBMC_AM654
 	bool "HyperBus controller driver for AM65x SoC"
@@ -212,6 +248,24 @@ config SYS_MAX_FLASH_BANKS_DETECT
 
 source "drivers/mtd/nand/Kconfig"
 
+config SYS_NAND_MAX_OOBFREE
+	int "Maximum number of free OOB regions supported"
+	depends on SAMSUNG_ONENAND || MTD_RAW_NAND
+	range 2 32
+	default 32
+	help
+	  Set the maximum number of free OOB regions supported.  Useful for
+	  reducing image size, especially with SPL.
+
+config SYS_NAND_MAX_ECCPOS
+	int "Maximum number of ECC bytes supported"
+	depends on SAMSUNG_ONENAND || MTD_RAW_NAND
+	range 48 2147483647
+	default 680
+	help
+	  Set the maximum number of ECC bytes supported.  Useful for reducing
+	  image size, especially with SPL.
+
 config SYS_NAND_MAX_CHIPS
 	int "NAND max chips"
 	depends on MTD_RAW_NAND || CMD_ONENAND || TARGET_S5PC210_UNIVERSAL || \
@@ -223,5 +277,9 @@ config SYS_NAND_MAX_CHIPS
 source "drivers/mtd/spi/Kconfig"
 
 source "drivers/mtd/ubi/Kconfig"
+
+source "drivers/mtd/nvmxip/Kconfig"
+
+endif
 
 endmenu

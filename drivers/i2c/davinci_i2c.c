@@ -11,7 +11,7 @@
  * Please see doc/driver-model/i2c-howto.rst for instructions.
  */
 
-#include <common.h>
+#include <config.h>
 #include <i2c.h>
 #include <dm.h>
 #include <log.h>
@@ -91,7 +91,7 @@ static uint _davinci_i2c_setspeed(struct i2c_regs *i2c_base,
 
 	psc = 2;
 	/* SCLL + SCLH */
-	div = (CONFIG_SYS_HZ_CLOCK / ((psc + 1) * speed)) - 10;
+	div = (CFG_SYS_HZ_CLOCK / ((psc + 1) * speed)) - 10;
 	REG(&(i2c_base->i2c_psc)) = psc; /* 27MHz / (2 + 1) = 9MHz */
 	REG(&(i2c_base->i2c_scll)) = (div * 50) / 100; /* 50% Duty */
 	REG(&(i2c_base->i2c_sclh)) = div - REG(&(i2c_base->i2c_scll));

@@ -5,6 +5,7 @@
  */
 
 #include <asm/arch/init_ddr_800MHz.h>
+#include <linux/kernel.h>
 
 static init_element_t seq1_init_ddr_800MHz[] = {
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000304, .value=0x00000001  },

@@ -20,7 +20,7 @@
 #include <spi_flash.h>
 #include <spl.h>
 
-#if defined(CONFIG_SPL_BUILD)
+#if defined(CONFIG_XPL_BUILD)
 
 #include <asm/arch/mx6-ddr.h>
 
@@ -565,9 +565,9 @@ void board_init_f(ulong dummy)
 	timer_init();
 
 	/* iomux */
-	if (CONFIG_MXC_UART_BASE == UART2_BASE)
+	if (CFG_MXC_UART_BASE == UART2_BASE)
 		SETUP_IOMUX_PADS(uart2_pads);
-	else if (CONFIG_MXC_UART_BASE == UART3_BASE)
+	else if (CFG_MXC_UART_BASE == UART3_BASE)
 		SETUP_IOMUX_PADS(uart3_pads);
 
 	/* UART clocks enabled and gd valid - init serial console */

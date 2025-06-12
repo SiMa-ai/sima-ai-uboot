@@ -7,7 +7,7 @@
  * Andrej Rosano <andrej@inversepath.com>
  */
 
-#include <common.h>
+#include <config.h>
 #include <command.h>
 #include <fs.h>
 #include <init.h>
@@ -412,7 +412,7 @@ int board_init(void)
 
 int dram_init(void)
 {
-	gd->ram_size = get_ram_size((void *)CONFIG_SYS_SDRAM_BASE, 1 << 30);
+	gd->ram_size = get_ram_size((void *)CFG_SYS_SDRAM_BASE, 1 << 30);
 	return 0;
 }
 

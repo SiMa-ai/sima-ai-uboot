@@ -20,7 +20,6 @@
 #include <stdbool.h>
 
 /* Define this to avoid #ifdefs later on */
-struct lmb;
 struct fdt_region;
 
 #ifdef USE_HOSTCC
@@ -100,6 +99,7 @@ enum {
 	IH_OS_TEE,			/* Trusted Execution Environment */
 	IH_OS_OPENSBI,			/* RISC-V OpenSBI */
 	IH_OS_EFI,			/* EFI Firmware (e.g. GRUB2) */
+	IH_OS_ELF,			/* ELF Image (e.g. seL4) */
 
 	IH_OS_COUNT,
 };
@@ -229,6 +229,9 @@ enum image_type_t {
 	IH_TYPE_COPRO,			/* Coprocessor Image for remoteproc*/
 	IH_TYPE_SUNXI_EGON,		/* Allwinner eGON Boot Image */
 	IH_TYPE_SUNXI_TOC0,		/* Allwinner TOC0 Boot Image */
+	IH_TYPE_FDT_LEGACY,		/* Binary Flat Device Tree Blob	in a Legacy Image */
+	IH_TYPE_RENESAS_SPKG,		/* Renesas SPKG image */
+	IH_TYPE_STARFIVE_SPL,		/* StarFive SPL image */
 
 	IH_TYPE_COUNT,			/* Number of image types */
 };
@@ -406,18 +409,9 @@ struct bootm_headers {
 #define BOOTM_STATE_OS_FAKE_GO	0x00000200	/* 'Almost' run the OS */
 #define BOOTM_STATE_OS_GO	0x00000400
 #define BOOTM_STATE_PRE_LOAD	0x00000800
+#define BOOTM_STATE_MEASURE	0x00001000
 	int		state;
-
-#if defined(CONFIG_LMB) && !defined(USE_HOSTCC)
-	struct lmb	lmb;		/* for memory mgmt */
-#endif
 };
-
-#ifdef CONFIG_LMB
-#define images_lmb(_images)	(&(_images)->lmb)
-#else
-#define images_lmb(_images)	NULL
-#endif
 
 extern struct bootm_headers images;
 
@@ -608,41 +602,86 @@ int boot_get_setup(struct bootm_headers *images, uint8_t arch, ulong *setup_star
 #define IMAGE_FORMAT_FIT	0x02	/* new, libfdt based format */
 #define IMAGE_FORMAT_ANDROID	0x03	/* Android boot image */
 
-ulong genimg_get_kernel_addr_fit(char * const img_addr,
-			         const char **fit_uname_config,
-			         const char **fit_uname_kernel);
+/**
+ * genimg_get_kernel_addr_fit() - Parse FIT specifier
+ *
+ * Get the real kernel start address from a string which is normally the first
+ * argv of bootm/bootz
+ *
+ * These cases are dealt with, based on the value of @img_addr:
+ *    NULL: Returns image_load_addr, does not set last two args
+ *    "<addr>": Returns address
+ *
+ * For FIT:
+ *    "[<addr>]#<conf>": Returns address (or image_load_addr),
+ *	sets fit_uname_config to config name
+ *    "[<addr>]:<subimage>": Returns address (or image_load_addr) and sets
+ *	fit_uname_kernel to the subimage name
+ *
+ * @img_addr: a string might contain real image address (or NULL)
+ * @fit_uname_config: Returns configuration unit name
+ * @fit_uname_kernel: Returns subimage name
+ *
+ * Returns: kernel start address
+ */
+ulong genimg_get_kernel_addr_fit(const char *const img_addr,
+				 const char **fit_uname_config,
+				 const char **fit_uname_kernel);
+
 ulong genimg_get_kernel_addr(char * const img_addr);
 int genimg_get_format(const void *img_addr);
 int genimg_has_config(struct bootm_headers *images);
 
-int boot_get_fpga(int argc, char *const argv[], struct bootm_headers *images,
-		  uint8_t arch, const ulong *ld_start, ulong * const ld_len);
-int boot_get_ramdisk(int argc, char *const argv[], struct bootm_headers *images,
-		     uint8_t arch, ulong *rd_start, ulong *rd_end);
+/**
+ * boot_get_fpga() - Locate the FPGA image
+ *
+ * @images: Information about images being loaded
+ * Return 0 if OK, non-zero on failure
+ */
+int boot_get_fpga(struct bootm_headers *images);
 
 /**
- * boot_get_loadable - routine to load a list of binaries to memory
- * @argc: Ignored Argument
- * @argv: Ignored Argument
+ * boot_get_ramdisk() - Locate the ramdisk
+ *
+ * @select: address or name of ramdisk to use, or NULL for default
  * @images: pointer to the bootm images structure
- * @arch: expected architecture for the image
- * @ld_start: Ignored Argument
- * @ld_len: Ignored Argument
+ * @arch: expected ramdisk architecture
+ * @rd_start: pointer to a ulong variable, will hold ramdisk start address
+ * @rd_end: pointer to a ulong variable, will hold ramdisk end
  *
- * boot_get_loadable() will take the given FIT configuration, and look
- * for a field named "loadables".  Loadables, is a list of elements in
- * the FIT given as strings.  exe:
+ * boot_get_ramdisk() is responsible for finding a valid ramdisk image.
+ * Currently supported are the following ramdisk sources:
+ *      - multicomponent kernel/ramdisk image,
+ *      - commandline provided address of decicated ramdisk image.
+ *
+ * returns:
+ *     0, if ramdisk image was found and valid, or skiped
+ *     rd_start and rd_end are set to ramdisk start/end addresses if
+ *     ramdisk image is found and valid
+ *
+ *     1, if ramdisk image is found but corrupted, or invalid
+ *     rd_start and rd_end are set to 0 if no ramdisk exists
+ */
+int boot_get_ramdisk(char const *select, struct bootm_headers *images,
+		     uint arch, ulong *rd_start, ulong *rd_end);
+
+/**
+ * boot_get_loadable() - load a list of binaries to memory
+ *
+ * @images: pointer to the bootm images structure
+ *
+ * Takes the given FIT configuration, then looks for a field named
+ * "loadables", a list of elements in the FIT given as strings, e.g.:
  *   loadables = "linux_kernel", "fdt-2";
- * this function will attempt to parse each string, and load the
- * corresponding element from the FIT into memory.  Once placed,
- * no aditional actions are taken.
  *
- * @return:
+ * Each string is parsed, loading the corresponding element from the FIT into
+ * memory.  Once placed, no additional actions are taken.
+ *
+ * Return:
  *     0, if only valid images or no images are found
  *     error code, if an error occurs during fit_image_load
  */
-int boot_get_loadable(int argc, char *const argv[], struct bootm_headers *images,
-		      uint8_t arch, const ulong *ld_start, ulong *const ld_len);
+int boot_get_loadable(struct bootm_headers *images);
 
 int boot_get_setup_fit(struct bootm_headers *images, uint8_t arch,
 		       ulong *setup_start, ulong *setup_len);
@@ -701,7 +740,13 @@ int boot_get_fdt_fit(struct bootm_headers *images, ulong addr,
  * @param load_op	Decribes what to do with the load address
  * @param datap		Returns address of loaded image
  * @param lenp		Returns length of loaded image
- * Return: node offset of image, or -ve error code on error
+ * Return: node offset of image, or -ve error code on error:
+ *   -ENOEXEC - unsupported architecture
+ *   -ENOENT - could not find image / subimage
+ *   -EACCES - hash, signature or decryptions failure
+ *   -EBADF - invalid OS or image type, or cannot get image load-address
+ *   -EXDEV - memory overwritten / overlap
+ *   -NOEXEC - image decompression error, or invalid FDT
  */
 int fit_image_load(struct bootm_headers *images, ulong addr,
 		   const char **fit_unamep, const char **fit_uname_configp,
@@ -709,16 +754,18 @@ int fit_image_load(struct bootm_headers *images, ulong addr,
 		   enum fit_load_op load_op, ulong *datap, ulong *lenp);
 
 /**
- * image_source_script() - Execute a script
+ * image_locate_script() - Locate the raw script in an image
  *
- * Executes a U-Boot script at a particular address in memory. The script should
- * have a header (FIT or legacy) with the script type (IH_TYPE_SCRIPT).
- *
- * @addr: Address of script
- * @fit_uname: FIT subimage name
- * Return: result code (enum command_ret_t)
+ * @buf: Address of image
+ * @size: Size of image in bytes
+ * @fit_uname: Node name of FIT image to read
+ * @confname: Node name of FIT config to read
+ * @datap: Returns pointer to raw script on success
+ * @lenp: Returns size of raw script on success
+ * @return 0 if OK, non-zero on error
  */
-int image_source_script(ulong addr, const char *fit_uname);
+int image_locate_script(void *buf, int size, const char *fit_uname,
+			const char *confname, char **datap, uint *lenp);
 
 /**
  * fit_get_node_from_config() - Look up an image a FIT by type
@@ -750,16 +797,40 @@ int image_source_script(ulong addr, const char *fit_uname);
 int fit_get_node_from_config(struct bootm_headers *images,
 			     const char *prop_name, ulong addr);
 
-int boot_get_fdt(int flag, int argc, char *const argv[], uint8_t arch,
-		 struct bootm_headers *images,
-		 char **of_flat_tree, ulong *of_size);
-void boot_fdt_add_mem_rsv_regions(struct lmb *lmb, void *fdt_blob);
-int boot_relocate_fdt(struct lmb *lmb, char **of_flat_tree, ulong *of_size);
+/**
+ * boot_get_fdt() - locate FDT devicetree to use for booting
+ *
+ * @buf: Pointer to image
+ * @select: FDT to select (this is normally argv[2] of the bootm command)
+ * @arch: architecture (IH_ARCH_...)
+ * @images: pointer to the bootm images structure
+ * @of_flat_tree: pointer to a char* variable, will hold fdt start address
+ * @of_size: pointer to a ulong variable, will hold fdt length
+ *
+ * boot_get_fdt() is responsible for finding a valid flat device tree image.
+ * Currently supported are the following FDT sources:
+ *      - multicomponent kernel/ramdisk/FDT image,
+ *      - commandline provided address of decicated FDT image.
+ *
+ * Return:
+ *     0, if fdt image was found and valid, or skipped
+ *     of_flat_tree and of_size are set to fdt start address and length if
+ *     fdt image is found and valid
+ *
+ *     1, if fdt image is found but corrupted
+ *     of_flat_tree and of_size are set to 0 if no fdt exists
+ */
+int boot_get_fdt(void *buf, const char *select, uint arch,
+		 struct bootm_headers *images, char **of_flat_tree,
+		 ulong *of_size);
 
-int boot_ramdisk_high(struct lmb *lmb, ulong rd_data, ulong rd_len,
-		  ulong *initrd_start, ulong *initrd_end);
-int boot_get_cmdline(struct lmb *lmb, ulong *cmd_start, ulong *cmd_end);
-int boot_get_kbd(struct lmb *lmb, struct bd_info **kbd);
+void boot_fdt_add_mem_rsv_regions(void *fdt_blob);
+int boot_relocate_fdt(char **of_flat_tree, ulong *of_size);
+
+int boot_ramdisk_high(ulong rd_data, ulong rd_len, ulong *initrd_start,
+		      ulong *initrd_end);
+int boot_get_cmdline(ulong *cmd_start, ulong *cmd_end);
+int boot_get_kbd(struct bd_info **kbd);
 
 /*******************************************************************/
 /* Legacy format specific code (prefixed with image_) */
@@ -865,7 +936,7 @@ static inline void image_set_name(struct legacy_img_hdr *hdr, const char *name)
 int image_check_hcrc(const struct legacy_img_hdr *hdr);
 int image_check_dcrc(const struct legacy_img_hdr *hdr);
 #ifndef USE_HOSTCC
-ulong env_get_bootm_low(void);
+phys_addr_t env_get_bootm_low(void);
 phys_size_t env_get_bootm_size(void);
 phys_size_t env_get_bootm_mapsize(void);
 #endif
@@ -930,7 +1001,7 @@ int image_decomp_type(const unsigned char *buf, ulong len);
  * @load:	Destination load address in U-Boot memory
  * @image_start Image start address (where we are decompressing from)
  * @type:	OS type (IH_OS_...)
- * @load_bug:	Place to decompress to
+ * @load_buf:	Place to decompress to
  * @image_buf:	Address to decompress from
  * @image_len:	Number of bytes in @image_buf to decompress
  * @unc_len:	Available space for decompression
@@ -947,12 +1018,10 @@ int image_decomp(int comp, ulong load, ulong image_start, int type,
  *
  * @images:	Images information
  * @blob:	FDT to update
- * @of_size:	Size of the FDT
- * @lmb:	Points to logical memory block structure
+ * @lmb:	Flag indicating use of lmb for reserving FDT memory region
  * Return: 0 if ok, <0 on failure
  */
-int image_setup_libfdt(struct bootm_headers *images, void *blob,
-		       int of_size, struct lmb *lmb);
+int image_setup_libfdt(struct bootm_headers *images, void *blob, bool lmb);
 
 /**
  * Set up the FDT to use for booting a kernel
@@ -1031,6 +1100,7 @@ int booti_setup(ulong image, ulong *relocated_addr, ulong *size,
 #define FIT_FPGA_PROP		"fpga"
 #define FIT_FIRMWARE_PROP	"firmware"
 #define FIT_STANDALONE_PROP	"standalone"
+#define FIT_SCRIPT_PROP		"script"
 #define FIT_PHASE_PROP		"phase"
 
 #define FIT_MAX_HASH_LEN	HASH_MAX_DIGEST_SIZE
@@ -1258,7 +1328,14 @@ int fit_image_verify_with_data(const void *fit, int image_noffset,
 			       size_t size);
 
 int fit_image_verify(const void *fit, int noffset);
+#if CONFIG_IS_ENABLED(FIT_SIGNATURE)
 int fit_config_verify(const void *fit, int conf_noffset);
+#else
+static inline int fit_config_verify(const void *fit, int conf_noffset)
+{
+	return 0;
+}
+#endif
 int fit_all_image_verify(const void *fit);
 int fit_config_decrypt(const void *fit, int conf_noffset);
 int fit_image_check_os(const void *fit, int noffset, uint8_t os);
@@ -1377,7 +1454,7 @@ int calculate_hash(const void *data, int data_len, const char *algo,
  * device
  */
 #if defined(USE_HOSTCC)
-# if defined(CONFIG_FIT_SIGNATURE)
+# if CONFIG_IS_ENABLED(FIT_SIGNATURE)
 #  define IMAGE_ENABLE_SIGN	1
 #  define FIT_IMAGE_ENABLE_VERIFY	1
 #  include <openssl/evp.h>
@@ -1722,23 +1799,193 @@ struct cipher_algo {
 int fit_image_cipher_get_algo(const void *fit, int noffset, char **algo);
 
 struct cipher_algo *image_get_cipher_algo(const char *full_name);
+struct andr_image_data;
 
-struct andr_img_hdr;
-int android_image_check_header(const struct andr_img_hdr *hdr);
-int android_image_get_kernel(const struct andr_img_hdr *hdr, int verify,
+/**
+ * android_image_get_data() - Parse Android boot images
+ *
+ * This is used to parse boot and vendor-boot header into
+ * andr_image_data generic structure.
+ *
+ * @boot_hdr: Pointer to boot image header
+ * @vendor_boot_hdr: Pointer to vendor boot image header
+ * @data: Pointer to generic boot format structure
+ * Return: true if succeeded, false otherwise
+ */
+bool android_image_get_data(const void *boot_hdr, const void *vendor_boot_hdr,
+			    struct andr_image_data *data);
+
+struct andr_boot_img_hdr_v0;
+
+/**
+ * android_image_get_kernel() - Processes kernel part of Android boot images
+ *
+ * This function returns the os image's start address and length. Also,
+ * it appends the kernel command line to the bootargs env variable.
+ *
+ * @hdr:	Pointer to image header, which is at the start
+ *			of the image.
+ * @vendor_boot_img : Pointer to vendor boot image header
+ * @verify:	Checksum verification flag. Currently unimplemented.
+ * @os_data:	Pointer to a ulong variable, will hold os data start
+ *			address.
+ * @os_len:	Pointer to a ulong variable, will hold os data length.
+ * Return: Zero, os start address and length on success,
+ *		otherwise on failure.
+ */
+int android_image_get_kernel(const void *hdr,
+			     const void *vendor_boot_img, int verify,
 			     ulong *os_data, ulong *os_len);
-int android_image_get_ramdisk(const struct andr_img_hdr *hdr,
+
+/**
+ * android_image_get_ramdisk() - Extracts the ramdisk load address and its size
+ *
+ * This extracts the load address of the ramdisk and its size
+ *
+ * @hdr:	Pointer to image header
+ * @vendor_boot_img : Pointer to vendor boot image header
+ * @rd_data:	Pointer to a ulong variable, will hold ramdisk address
+ * @rd_len:	Pointer to a ulong variable, will hold ramdisk length
+ * Return: 0 if OK, -ENOPKG if no ramdisk, -EINVAL if invalid image
+ */
+int android_image_get_ramdisk(const void *hdr, const void *vendor_boot_img,
 			      ulong *rd_data, ulong *rd_len);
-int android_image_get_second(const struct andr_img_hdr *hdr,
-			      ulong *second_data, ulong *second_len);
+
+/**
+ * android_image_get_second() - Extracts the secondary bootloader address
+ * and its size
+ *
+ * This extracts the address of the secondary bootloader and its size
+ *
+ * @hdr:	 Pointer to image header
+ * @second_data: Pointer to a ulong variable, will hold secondary bootloader address
+ * @second_len : Pointer to a ulong variable, will hold secondary bootloader length
+ * Return: 0 if succeeded, -1 if secondary bootloader size is 0
+ */
+int android_image_get_second(const void *hdr, ulong *second_data, ulong *second_len);
 bool android_image_get_dtbo(ulong hdr_addr, ulong *addr, u32 *size);
-bool android_image_get_dtb_by_index(ulong hdr_addr, u32 index, ulong *addr,
-				    u32 *size);
-ulong android_image_get_end(const struct andr_img_hdr *hdr);
-ulong android_image_get_kload(const struct andr_img_hdr *hdr);
-ulong android_image_get_kcomp(const struct andr_img_hdr *hdr);
-void android_print_contents(const struct andr_img_hdr *hdr);
+
+/**
+ * android_image_get_dtb_by_index() - Get address and size of blob in DTB area.
+ * @hdr_addr: Boot image header address
+ * @vendor_boot_img: Pointer to vendor boot image header, which is at the start of the image.
+ * @index: Index of desired DTB in DTB area (starting from 0)
+ * @addr: If not NULL, will contain address to specified DTB
+ * @size: If not NULL, will contain size of specified DTB
+ *
+ * Get the address and size of DTB blob by its index in DTB area of Android
+ * Boot Image in RAM.
+ *
+ * Return: true on success or false on error.
+ */
+bool android_image_get_dtb_by_index(ulong hdr_addr, ulong vendor_boot_img,
+				    u32 index, ulong *addr, u32 *size);
+
+/**
+ * android_image_get_end() - Get the end of Android boot image
+ *
+ * This returns the end address of Android boot image address
+ *
+ * @hdr: Pointer to image header
+ * @vendor_boot_img : Pointer to vendor boot image header
+ * Return: The end address of Android boot image
+ */
+ulong android_image_get_end(const struct andr_boot_img_hdr_v0 *hdr,
+			    const void *vendor_boot_img);
+
+/**
+ * android_image_get_kload() - Get the kernel load address
+ *
+ * This returns the kernel load address. The load address is extracted
+ * from the boot image header or the "kernel_addr_r" environment variable
+ *
+ * @hdr: Pointer to image header
+ * @vendor_boot_img : Pointer to vendor boot image header
+ * Return: The kernel load address
+ */
+ulong android_image_get_kload(const void *hdr,
+			      const void *vendor_boot_img);
+
+/**
+ * android_image_get_kcomp() - Get kernel compression type
+ *
+ * This gets the kernel compression type from the boot image header
+ *
+ * @hdr: Pointer to image header
+ * @vendor_boot_img : Pointer to vendor boot image header
+ * Return: Kernel compression type
+ */
+ulong android_image_get_kcomp(const void *hdr,
+			      const void *vendor_boot_img);
+
+/**
+ * android_print_contents() - Prints out the contents of the Android format image
+ *
+ * This formats a multi line Android image contents description.
+ * The routine prints out Android image properties
+ *
+ * @hdr: Pointer to the Android format image header
+ * Return: no returned results
+ */
+void android_print_contents(const struct andr_boot_img_hdr_v0 *hdr);
 bool android_image_print_dtb_contents(ulong hdr_addr);
+
+/**
+ * is_android_boot_image_header() - Check the magic of boot image
+ *
+ * This checks the header of Android boot image and verifies the
+ * magic is "ANDROID!"
+ *
+ * @hdr: Pointer to boot image
+ * Return: non-zero if the magic is correct, zero otherwise
+ */
+bool is_android_boot_image_header(const void *hdr);
+
+/**
+ * is_android_vendor_boot_image_header() - Check the magic of vendor boot image
+ *
+ * This checks the header of Android vendor boot image and verifies the magic
+ * is "VNDRBOOT"
+ *
+ * @vendor_boot_img: Pointer to boot image
+ * Return: non-zero if the magic is correct, zero otherwise
+ */
+bool is_android_vendor_boot_image_header(const void *vendor_boot_img);
+
+/**
+ * get_abootimg_addr() - Get Android boot image address
+ *
+ * Return: Android boot image address
+ */
+ulong get_abootimg_addr(void);
+
+/**
+ * set_abootimg_addr() - Set Android boot image address
+ *
+ * Return: no returned results
+ */
+void set_abootimg_addr(ulong addr);
+
+/**
+ * get_ainit_bootimg_addr() - Get Android init boot image address
+ *
+ * Return: Android init boot image address
+ */
+ulong get_ainit_bootimg_addr(void);
+
+/**
+ * get_avendor_bootimg_addr() - Get Android vendor boot image address
+ *
+ * Return: Android vendor boot image address
+ */
+ulong get_avendor_bootimg_addr(void);
+
+/**
+ * set_abootimg_addr() - Set Android vendor boot image address
+ *
+ * Return: no returned results
+ */
+void set_avendor_bootimg_addr(ulong addr);
 
 /**
  * board_fit_config_name_match() - Check for a matching board name

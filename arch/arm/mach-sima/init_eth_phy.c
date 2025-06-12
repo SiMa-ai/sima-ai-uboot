@@ -3,6 +3,7 @@
  * Copyright (c) 2022 Sima ai
  */
 
+#include <linux/kernel.h>
 #include <asm/arch/init_eth_phy.h>
 
 static init_element_t seq0_init_eth_phy[] = {

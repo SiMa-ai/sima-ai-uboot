@@ -9,57 +9,29 @@
 #ifndef __CONFIG_AM625_EVM_H
 #define __CONFIG_AM625_EVM_H
 
-#include <config_distro_bootcmd.h>
-#include <environment/ti/mmc.h>
+/**
+ * define AM62X_SK_TIBOOT3_IMAGE_GUID - firmware GUID for AM62X sk tiboot3.bin
+ * define AM62X_SK_SPL_IMAGE_GUID     - firmware GUID for AM62X sk SPL
+ * define AM62X_SK_UBOOT_IMAGE_GUID   - firmware GUID for AM62X sk UBOOT
+ *
+ * These GUIDs are used in capsules updates to identify the corresponding
+ * firmware object.
+ *
+ * Board developers using this as a starting reference should
+ * define their own GUIDs to ensure that firmware repositories (like
+ * LVFS) do not confuse them.
+ */
+#define AM62X_SK_TIBOOT3_IMAGE_GUID \
+	EFI_GUID(0xabcb83d2, 0x9cb6, 0x4351, 0xb8, 0xf1, \
+		0x64, 0x94, 0xbb, 0xe3, 0x70, 0x0a)
 
-/* DDR Configuration */
-#define CONFIG_SYS_SDRAM_BASE1		0x880000000
+#define AM62X_SK_SPL_IMAGE_GUID \
+	EFI_GUID(0xaee355fc, 0xbf97, 0x4264, 0x8c, 0x82, \
+		0x43, 0x72, 0x55, 0xef, 0xdc, 0x1d)
 
-#define PARTS_DEFAULT \
-	/* Linux partitions */ \
-	"name=rootfs,start=0,size=-,uuid=${uuid_gpt_rootfs}\0"
-
-/* U-Boot general configuration */
-#define EXTRA_ENV_AM625_BOARD_SETTINGS					\
-	"default_device_tree=" CONFIG_DEFAULT_DEVICE_TREE ".dtb\0"	\
-	"findfdt="							\
-		"setenv name_fdt ${default_device_tree};"		\
-		"setenv fdtfile ${name_fdt}\0"				\
-	"name_kern=Image\0"						\
-	"console=ttyS2,115200n8\0"					\
-	"args_all=setenv optargs ${optargs} earlycon=ns16550a,mmio32,0x02800000 " \
-		"${mtdparts}\0"						\
-	"run_kern=booti ${loadaddr} ${rd_spec} ${fdtaddr}\0"
-
-/* U-Boot MMC-specific configuration */
-#define EXTRA_ENV_AM625_BOARD_SETTINGS_MMC				\
-	"boot=mmc\0"							\
-	"mmcdev=1\0"							\
-	"bootpart=1:2\0"						\
-	"bootdir=/boot\0"						\
-	"rd_spec=-\0"							\
-	"init_mmc=run args_all args_mmc\0"				\
-	"get_fdt_mmc=load mmc ${bootpart} ${fdtaddr} ${bootdir}/${name_fdt}\0" \
-	"get_overlay_mmc="						\
-		"fdt address ${fdtaddr};"				\
-		"fdt resize 0x100000;"					\
-		"for overlay in $name_overlays;"			\
-		"do;"							\
-		"load mmc ${bootpart} ${dtboaddr} ${bootdir}/${overlay} && "	\
-		"fdt apply ${dtboaddr};"				\
-		"done;\0"						\
-	"get_kern_mmc=load mmc ${bootpart} ${loadaddr} "		\
-		"${bootdir}/${name_kern}\0"				\
-	"get_fit_mmc=load mmc ${bootpart} ${addr_fit} "			\
-		"${bootdir}/${name_fit}\0"				\
-	"partitions=" PARTS_DEFAULT
-
-/* Incorporate settings into the U-Boot environment */
-#define CONFIG_EXTRA_ENV_SETTINGS					\
-	DEFAULT_LINUX_BOOT_ENV						\
-	DEFAULT_MMC_TI_ARGS						\
-	EXTRA_ENV_AM625_BOARD_SETTINGS					\
-	EXTRA_ENV_AM625_BOARD_SETTINGS_MMC
+#define AM62X_SK_UBOOT_IMAGE_GUID \
+	EFI_GUID(0x28ab8c6c, 0xfca8, 0x41d3, 0x8e, 0xa1, \
+		0x5f, 0x17, 0x1b, 0x7d, 0x29, 0x29)
 
 /* Now for the remaining common defines */
 #include <configs/ti_armv7_common.h>

@@ -104,7 +104,7 @@ static void usage(const char *msg)
 		"          -v ==> verbose\n",
 		params.cmdname);
 	fprintf(stderr,
-		"       %s [-D dtc_options] [-f fit-image.its|-f auto|-F] [-b <dtb> [-b <dtb>]] [-E] [-B size] [-i <ramdisk.cpio.gz>] fit-image\n"
+		"       %s [-D dtc_options] [-f fit-image.its|-f auto|-f auto-conf|-F] [-b <dtb> [-b <dtb>]] [-E] [-B size] [-i <ramdisk.cpio.gz>] fit-image\n"
 		"           <dtb> file is used with -f auto, it may occur multiple times.\n",
 		params.cmdname);
 	fprintf(stderr,
@@ -115,7 +115,7 @@ static void usage(const char *msg)
 		"          -B => align size in hex for FIT structure and header\n"
 		"          -b => append the device tree binary to the FIT\n"
 		"          -t => update the timestamp in the FIT\n");
-#ifdef CONFIG_FIT_SIGNATURE
+#if CONFIG_IS_ENABLED(FIT_SIGNATURE)
 	fprintf(stderr,
 		"Signing / verified boot options: [-k keydir] [-K dtb] [ -c <comment>] [-p addr] [-r] [-N engine]\n"
 		"          -k => set directory containing private keys\n"
@@ -130,8 +130,9 @@ static void usage(const char *msg)
 		"          -o => algorithm to use for signing\n");
 #else
 	fprintf(stderr,
-		"Signing / verified boot not supported (CONFIG_FIT_SIGNATURE undefined)\n");
+		"Signing / verified boot not supported (CONFIG_TOOLS_FIT_SIGNATURE undefined)\n");
 #endif
+
 	fprintf(stderr, "       %s -V ==> print version information and exit\n",
 		params.cmdname);
 	fprintf(stderr, "Use '-T list' to see a list of available image types\n");
@@ -271,7 +272,10 @@ static void process_args(int argc, char **argv)
 			break;
 		case 'f':
 			datafile = optarg;
-			params.auto_its = !strcmp(datafile, "auto");
+			if (!strcmp(datafile, "auto"))
+				params.auto_fit = AF_HASHED_IMG;
+			else if (!strcmp(datafile, "auto-conf"))
+				params.auto_fit = AF_SIGNED_CONF;
 			/* fallthrough */
 		case 'F':
 			/*
@@ -283,6 +287,7 @@ static void process_args(int argc, char **argv)
 			break;
 		case 'g':
 			params.keyname = optarg;
+			break;
 		case 'G':
 			params.keyfile = optarg;
 			break;
@@ -370,6 +375,15 @@ static void process_args(int argc, char **argv)
 	if (optind < argc)
 		params.imagefile = argv[optind];
 
+	if (params.auto_fit == AF_SIGNED_CONF) {
+		if (!params.keyname || !params.algo_name)
+			usage("Missing key/algo for auto-FIT with signed configs (use -g -o)");
+	} else if (params.auto_fit == AF_HASHED_IMG && params.keyname) {
+		params.auto_fit = AF_SIGNED_IMG;
+		if (!params.algo_name)
+			usage("Missing algorithm for auto-FIT with signed images (use -g)");
+	}
+
 	/*
 	 * For auto-generated FIT images we need to know the image type to put
 	 * in the FIT, which is separate from the file's image type (which
@@ -377,8 +391,8 @@ static void process_args(int argc, char **argv)
 	 */
 	if (params.type == IH_TYPE_FLATDT) {
 		params.fit_image_type = type ? type : IH_TYPE_KERNEL;
-		/* For auto_its, datafile is always 'auto' */
-		if (!params.auto_its)
+		/* For auto-FIT, datafile has to be provided with -d */
+		if (!params.auto_fit)
 			params.datafile = datafile;
 		else if (!params.datafile)
 			usage("Missing data file for auto-FIT (use -d)");
@@ -428,6 +442,25 @@ static void verify_image(const struct image_type_params *tparams)
 
 	(void)munmap(ptr, params.file_size);
 	(void)close(ifd);
+}
+
+void copy_datafile(int ifd, char *file)
+{
+	if (!file)
+		return;
+	for (;;) {
+		char *sep = strchr(file, ':');
+
+		if (sep) {
+			*sep = '\0';
+			copy_file(ifd, file, 1);
+			*sep++ = ':';
+			file = sep;
+		} else {
+			copy_file(ifd, file, 0);
+			break;
+		}
+	}
 }
 
 int main(int argc, char **argv)
@@ -567,7 +600,12 @@ int main(int argc, char **argv)
 		exit (retval);
 	}
 
-	if ((params.type != IH_TYPE_MULTI) && (params.type != IH_TYPE_SCRIPT)) {
+	if (!params.skipcpy && params.type != IH_TYPE_MULTI && params.type != IH_TYPE_SCRIPT) {
+		if (!params.datafile) {
+			fprintf(stderr, "%s: Option -d with image data file was not specified\n",
+				params.cmdname);
+			exit(EXIT_FAILURE);
+		}
 		dfd = open(params.datafile, O_RDONLY | O_BINARY);
 		if (dfd < 0) {
 			fprintf(stderr, "%s: Can't open %s: %s\n",
@@ -647,21 +685,7 @@ int main(int argc, char **argv)
 					file = NULL;
 				}
 			}
-
-			file = params.datafile;
-
-			for (;;) {
-				char *sep = strchr(file, ':');
-				if (sep) {
-					*sep = '\0';
-					copy_file (ifd, file, 1);
-					*sep++ = ':';
-					file = sep;
-				} else {
-					copy_file (ifd, file, 0);
-					break;
-				}
-			}
+			copy_datafile(ifd, params.datafile);
 		} else if (params.type == IH_TYPE_PBLIMAGE) {
 			/* PBL has special Image format, implements its' own */
 			pbl_load_uboot(ifd, &params);
@@ -760,14 +784,14 @@ int main(int argc, char **argv)
 	if (tparams->set_header)
 		tparams->set_header (ptr, &sbuf, ifd, &params);
 	else {
-		fprintf (stderr, "%s: Can't set header for %s: %s\n",
-			params.cmdname, tparams->name, strerror(errno));
+		fprintf (stderr, "%s: Can't set header for %s\n",
+			params.cmdname, tparams->name);
 		exit (EXIT_FAILURE);
 	}
 
 	/* Print the image information by processing image header */
 	if (tparams->print_header)
-		tparams->print_header (ptr);
+		tparams->print_header (ptr, &params);
 	else {
 		fprintf (stderr, "%s: Can't print header for %s\n",
 			params.cmdname, tparams->name);
@@ -842,7 +866,9 @@ copy_file (int ifd, const char *datafile, int pad)
 		exit (EXIT_FAILURE);
 	}
 
-	if (params.xflag) {
+	if (params.xflag &&
+	    (((params.type > IH_TYPE_INVALID) && (params.type < IH_TYPE_FLATDT)) ||
+	     (params.type == IH_TYPE_KERNEL_NOLOAD) || (params.type == IH_TYPE_FIRMWARE_IVT))) {
 		unsigned char *p = NULL;
 		/*
 		 * XIP: do not append the struct legacy_img_hdr at the

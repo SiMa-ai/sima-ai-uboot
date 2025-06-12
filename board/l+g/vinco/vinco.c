@@ -9,7 +9,7 @@
  *		      Gregory CLEMENT <gregory.clement@free-electrons.com>
  */
 
-#include <common.h>
+#include <config.h>
 #include <init.h>
 #include <asm/global_data.h>
 #include <asm/io.h>
@@ -62,7 +62,6 @@ static void vinco_spi0_hw_init(void)
 }
 #endif /* CONFIG_ATMEL_SPI */
 
-
 #ifdef CONFIG_CMD_USB
 static void vinco_usb_hw_init(void)
 {
@@ -71,7 +70,6 @@ static void vinco_usb_hw_init(void)
 	at91_set_pio_output(AT91_PIO_PORTE, 10, 0);
 }
 #endif
-
 
 #ifdef CONFIG_GENERIC_ATMEL_MCI
 void vinco_mci0_hw_init(void)
@@ -164,7 +162,7 @@ int board_early_init_f(void)
 int board_init(void)
 {
 	/* adress of boot parameters */
-	gd->bd->bi_boot_params = CONFIG_SYS_SDRAM_BASE + 0x100;
+	gd->bd->bi_boot_params = CFG_SYS_SDRAM_BASE + 0x100;
 
 #if !CONFIG_IS_ENABLED(DM_SPI)
 	vinco_spi0_hw_init();
@@ -188,8 +186,8 @@ int board_init(void)
 
 int dram_init(void)
 {
-	gd->ram_size = get_ram_size((void *)CONFIG_SYS_SDRAM_BASE,
-				    CONFIG_SYS_SDRAM_SIZE);
+	gd->ram_size = get_ram_size((void *)CFG_SYS_SDRAM_BASE,
+				    CFG_SYS_SDRAM_SIZE);
 	return 0;
 }
 

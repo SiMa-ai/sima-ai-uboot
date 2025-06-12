@@ -28,7 +28,6 @@
  */
 
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-#include <common.h>
 #include <log.h>
 #include <malloc.h>
 #include <watchdog.h>
@@ -245,39 +244,6 @@ static void nand_write_byte16(struct mtd_info *mtd, uint8_t byte)
 	chip->write_buf(mtd, (uint8_t *)&word, 2);
 }
 
-static void iowrite8_rep(void *addr, const uint8_t *buf, int len)
-{
-	int i;
-
-	for (i = 0; i < len; i++)
-		writeb(buf[i], addr);
-}
-static void ioread8_rep(void *addr, uint8_t *buf, int len)
-{
-	int i;
-
-	for (i = 0; i < len; i++)
-		buf[i] = readb(addr);
-}
-
-static void ioread16_rep(void *addr, void *buf, int len)
-{
-	int i;
-	u16 *p = (u16 *) buf;
-
-	for (i = 0; i < len; i++)
-		p[i] = readw(addr);
-}
-
-static void iowrite16_rep(void *addr, void *buf, int len)
-{
-	int i;
-        u16 *p = (u16 *) buf;
-
-        for (i = 0; i < len; i++)
-                writew(p[i], addr);
-}
-
 /**
  * nand_write_buf - [DEFAULT] write buffer to chip
  * @mtd: MTD device structure
@@ -447,7 +413,10 @@ static int nand_default_block_markbad(struct mtd_info *mtd, loff_t ofs)
 static int nand_block_markbad_lowlevel(struct mtd_info *mtd, loff_t ofs)
 {
 	struct nand_chip *chip = mtd_to_nand(mtd);
-	int res, ret = 0;
+	int ret = 0;
+#ifndef CONFIG_XPL_BUILD
+	int res;
+#endif
 
 	if (!(chip->bbt_options & NAND_BBT_NO_OOB_BBM)) {
 		struct erase_info einfo;
@@ -465,12 +434,14 @@ static int nand_block_markbad_lowlevel(struct mtd_info *mtd, loff_t ofs)
 		nand_release_device(mtd);
 	}
 
+#ifndef CONFIG_XPL_BUILD
 	/* Mark block bad in BBT */
 	if (chip->bbt) {
 		res = nand_markbad_bbt(mtd, ofs);
 		if (!ret)
 			ret = res;
 	}
+#endif
 
 	if (!ret)
 		mtd->ecc_stats.badblocks++;
@@ -517,7 +488,11 @@ static int nand_block_isreserved(struct mtd_info *mtd, loff_t ofs)
 	if (!chip->bbt)
 		return 0;
 	/* Return info from the table */
+#ifndef CONFIG_XPL_BUILD
 	return nand_isreserved_bbt(mtd, ofs);
+#else
+	return 0;
+#endif
 }
 
 /**
@@ -543,7 +518,11 @@ static int nand_block_checkbad(struct mtd_info *mtd, loff_t ofs, int allowbbt)
 		return chip->block_bad(mtd, ofs);
 
 	/* Return info from the table */
+#ifndef CONFIG_XPL_BUILD
 	return nand_isbad_bbt(mtd, ofs, allowbbt);
+#else
+	return 0;
+#endif
 }
 
 /**
@@ -2788,7 +2767,6 @@ out:
 	return ret;
 }
 
-
 /**
  * nand_write_page_raw - [INTERN] raw page write function
  * @mtd: mtd info structure
@@ -2948,7 +2926,6 @@ static int nand_write_page_hwecc(struct mtd_info *mtd, struct nand_chip *chip,
 	return 0;
 }
 
-
 /**
  * nand_write_subpage_hwecc - [REPLACEABLE] hardware ECC based subpage write
  * @mtd:	mtd info structure
@@ -3014,7 +2991,6 @@ static int nand_write_subpage_hwecc(struct mtd_info *mtd,
 
 	return 0;
 }
-
 
 /**
  * nand_write_page_syndrome - [REPLACEABLE] hardware ECC syndrome based page write
@@ -3752,8 +3728,11 @@ static void nand_set_defaults(struct nand_chip *chip, int busw)
 		chip->write_byte = busw ? nand_write_byte16 : nand_write_byte;
 	if (!chip->read_buf || chip->read_buf == nand_read_buf)
 		chip->read_buf = busw ? nand_read_buf16 : nand_read_buf;
+
+#ifndef CONFIG_XPL_BUILD
 	if (!chip->scan_bbt)
 		chip->scan_bbt = nand_default_bbt;
+#endif
 
 	if (!chip->controller) {
 		chip->controller = &chip->hwcontrol;
@@ -4135,7 +4114,7 @@ static int nand_get_bits_per_cell(u8 cellinfo)
  */
 void nand_decode_ext_id(struct nand_chip *chip)
 {
-	struct mtd_info *mtd = &chip->mtd;
+	struct mtd_info *mtd = nand_to_mtd(chip);
 	int extid;
 	/* The 3rd id byte holds MLC / multichip data */
 	chip->bits_per_cell = nand_get_bits_per_cell(chip->id.data[2]);
@@ -4202,7 +4181,7 @@ static int nand_manufacturer_init(struct nand_chip *chip)
  */
 static void nand_decode_id(struct nand_chip *chip, struct nand_flash_dev *type)
 {
-	struct mtd_info *mtd = &chip->mtd;
+	struct mtd_info *mtd = nand_to_mtd(chip);
 
 	mtd->erasesize = type->erasesize;
 	mtd->writesize = type->pagesize;
@@ -4282,7 +4261,7 @@ static const struct nand_manufacturer *nand_get_manufacturer_desc(u8 id)
 int nand_detect(struct nand_chip *chip, int *maf_id,
 		int *dev_id, struct nand_flash_dev *type)
 {
-	struct mtd_info *mtd = &chip->mtd;
+	struct mtd_info *mtd = nand_to_mtd(chip);
 	const struct nand_manufacturer *manufacturer_desc;
 	int busw, ret;
 	u8 *id_data = chip->id.data;
@@ -4446,17 +4425,14 @@ ident_done:
 	else if (chip->jedec_version)
 		pr_info("%s %s\n", manufacturer_desc->name,
 			chip->jedec_params.model);
-	else
+	else if (manufacturer_desc)
 		pr_info("%s %s\n", manufacturer_desc->name, type->name);
 #else
 	if (chip->jedec_version)
 		pr_info("%s %s\n", manufacturer_desc->name,
 			chip->jedec_params.model);
-	else
+	else if (manufacturer_desc)
 		pr_info("%s %s\n", manufacturer_desc->name, type->name);
-
-	pr_info("%s %s\n", manufacturer_desc->name,
-		type->name);
 #endif
 
 	pr_info("%d MiB, %s, erase size: %d KiB, page size: %d, OOB size: %d\n",
@@ -4471,11 +4447,15 @@ EXPORT_SYMBOL(nand_detect);
 static int nand_dt_init(struct mtd_info *mtd, struct nand_chip *chip, ofnode node)
 {
 	int ret, ecc_mode = -1, ecc_strength, ecc_step;
+	int ecc_algo = NAND_ECC_UNKNOWN;
 	const char *str;
 
 	ret = ofnode_read_s32_default(node, "nand-bus-width", -1);
 	if (ret == 16)
 		chip->options |= NAND_BUSWIDTH_16;
+
+	if (ofnode_read_bool(node, "nand-is-boot-medium"))
+		chip->options |= NAND_IS_BOOT_MEDIUM;
 
 	if (ofnode_read_bool(node, "nand-on-flash-bbt"))
 		chip->bbt_options |= NAND_BBT_USE_FLASH;
@@ -4496,10 +4476,22 @@ static int nand_dt_init(struct mtd_info *mtd, struct nand_chip *chip, ofnode nod
 			ecc_mode = NAND_ECC_SOFT_BCH;
 	}
 
-	if (ecc_mode == NAND_ECC_SOFT) {
-		str = ofnode_read_string(node, "nand-ecc-algo");
-		if (str && !strcmp(str, "bch"))
-			ecc_mode = NAND_ECC_SOFT_BCH;
+	str = ofnode_read_string(node, "nand-ecc-algo");
+	if (str) {
+		/*
+		 * If we are in NAND_ECC_SOFT mode, just alter the
+		 * soft mode to BCH here. No change of algorithm.
+		 */
+		if (ecc_mode == NAND_ECC_SOFT) {
+			if (!strcmp(str, "bch"))
+				ecc_mode = NAND_ECC_SOFT_BCH;
+		} else {
+			if (!strcmp(str, "bch")) {
+				ecc_algo = NAND_ECC_BCH;
+			} else if (!strcmp(str, "hamming")) {
+				ecc_algo = NAND_ECC_HAMMING;
+			}
+		}
 	}
 
 	ecc_strength = ofnode_read_s32_default(node,
@@ -4512,6 +4504,14 @@ static int nand_dt_init(struct mtd_info *mtd, struct nand_chip *chip, ofnode nod
 		pr_err("must set both strength and step size in DT\n");
 		return -EINVAL;
 	}
+
+	/*
+	 * Chip drivers may have assigned default algorithms here,
+	 * onlt override it if we have found something explicitly
+	 * specified in the device tree.
+	 */
+	if (ecc_algo != NAND_ECC_UNKNOWN)
+		chip->ecc.algo = ecc_algo;
 
 	if (ecc_mode >= 0)
 		chip->ecc.mode = ecc_mode;

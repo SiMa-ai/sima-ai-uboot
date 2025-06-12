@@ -5,7 +5,6 @@
  * Derived from code Copyright (C) 2017 Marek Vasut <marek.vasut@gmail.com>
  */
 
-#include <common.h>
 #include <clk.h>
 #include <clk-uclass.h>
 #include <dm.h>
@@ -17,7 +16,7 @@
 #include <linux/kernel.h>
 #include <linux/math64.h>
 
-#include <dt-bindings/clk/versaclock.h>
+#include <dt-bindings/clock/versaclock.h>
 
 /* VersaClock5 registers */
 #define VC5_OTP_CONTROL				0x00
@@ -1000,26 +999,18 @@ int versaclock_probe(struct udevice *dev)
 	return 0;
 
 free_out:
-	for (n = 1; n < vc5->chip_info->clk_out_cnt; n++) {
-		clk_free(&vc5->clk_out[n].hw);
+	for (n = 1; n < vc5->chip_info->clk_out_cnt; n++)
 		free(out_name[n]);
-	}
 free_selb:
-	clk_free(&vc5->clk_out[0].hw);
 	free(outsel_name);
 free_fod:
-	for (n = 0; n < vc5->chip_info->clk_fod_cnt; n++) {
-		clk_free(&vc5->clk_fod[n].hw);
+	for (n = 0; n < vc5->chip_info->clk_fod_cnt; n++)
 		free(fod_name[n]);
-	}
 free_pll:
-	clk_free(&vc5->clk_pll.hw);
 	free(pll_name);
 free_pfd:
-	clk_free(&vc5->clk_pfd);
 	free(pfd_name);
 free_mux:
-	clk_free(&vc5->clk_mux);
 	free(mux_name);
 
 	return ret;

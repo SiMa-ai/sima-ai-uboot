@@ -19,7 +19,7 @@
 };
 
 &uart5 {
-	u-boot,dm-pre-reloc;
+	bootph-all;
 	status = "okay";
 };
 
@@ -28,17 +28,17 @@
 };
 
 &wdt1 {
-	u-boot,dm-pre-reloc;
+	bootph-all;
 	status = "okay";
 };
 
 &wdt2 {
-	u-boot,dm-pre-reloc;
+	bootph-all;
 	status = "okay";
 };
 
 &wdt3 {
-	u-boot,dm-pre-reloc;
+	bootph-all;
 	status = "okay";
 };
 
@@ -128,4 +128,9 @@
                 compatible = "national,lm75";
                 reg = <0x4d>;
         };
+};
+
+&sgpio {
+	status = "okay";
+	ngpios = <80>;
 };

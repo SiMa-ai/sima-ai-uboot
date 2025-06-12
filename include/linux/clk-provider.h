@@ -65,7 +65,7 @@ struct clk_mux {
 	 */
 	const char	* const *parent_names;
 	u8		num_parents;
-#if CONFIG_IS_ENABLED(SANDBOX_CLK_CCF)
+#if IS_ENABLED(CONFIG_SANDBOX_CLK_CCF)
 	u32             io_mux_val;
 #endif
 
@@ -74,6 +74,7 @@ struct clk_mux {
 #define to_clk_mux(_clk) container_of(_clk, struct clk_mux, clk)
 extern const struct clk_ops clk_mux_ops;
 u8 clk_mux_get_parent(struct clk *clk);
+int clk_mux_fetch_parent_index(struct clk *clk, struct clk *parent);
 
 /**
  * clk_mux_index_to_val() - Convert the parent index to the register value
@@ -93,7 +94,7 @@ struct clk_gate {
 	void __iomem	*reg;
 	u8		bit_idx;
 	u8		flags;
-#if CONFIG_IS_ENABLED(SANDBOX_CLK_CCF)
+#if IS_ENABLED(CONFIG_SANDBOX_CLK_CCF)
 	u32		io_gate_val;
 #endif
 };
@@ -121,7 +122,7 @@ struct clk_divider {
 	u8		width;
 	u8		flags;
 	const struct clk_div_table	*table;
-#if CONFIG_IS_ENABLED(SANDBOX_CLK_CCF)
+#if IS_ENABLED(CONFIG_SANDBOX_CLK_CCF)
 	u32             io_divider_val;
 #endif
 };

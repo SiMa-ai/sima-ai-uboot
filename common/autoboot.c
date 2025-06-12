@@ -4,13 +4,14 @@
  * Wolfgang Denk, DENX Software Engineering, wd@denx.de.
  */
 
-#include <common.h>
+#include <config.h>
 #include <autoboot.h>
 #include <bootretry.h>
 #include <cli.h>
 #include <command.h>
 #include <console.h>
 #include <env.h>
+#include <errno.h>
 #include <fdtdec.h>
 #include <hash.h>
 #include <log.h>
@@ -40,11 +41,15 @@ DECLARE_GLOBAL_DATA_PTR;
 static int stored_bootdelay;
 static int menukey;
 
-#if !defined(CONFIG_AUTOBOOT_STOP_STR_CRYPT)
-#define CONFIG_AUTOBOOT_STOP_STR_CRYPT ""
+#if defined(CONFIG_AUTOBOOT_STOP_STR_CRYPT)
+#define AUTOBOOT_STOP_STR_CRYPT	CONFIG_AUTOBOOT_STOP_STR_CRYPT
+#else
+#define AUTOBOOT_STOP_STR_CRYPT	""
 #endif
-#if !defined(CONFIG_AUTOBOOT_STOP_STR_SHA256)
-#define CONFIG_AUTOBOOT_STOP_STR_SHA256 ""
+#if defined(CONFIG_AUTOBOOT_STOP_STR_SHA256)
+#define AUTOBOOT_STOP_STR_SHA256	CONFIG_AUTOBOOT_STOP_STR_SHA256
+#else
+#define AUTOBOOT_STOP_STR_SHA256	""
 #endif
 
 #ifdef CONFIG_AUTOBOOT_USE_MENUKEY
@@ -81,7 +86,7 @@ static int passwd_abort_crypt(uint64_t etime)
 	int err;
 
 	if (IS_ENABLED(CONFIG_AUTOBOOT_STOP_STR_ENABLE) && !crypt_env_str)
-		crypt_env_str = CONFIG_AUTOBOOT_STOP_STR_CRYPT;
+		crypt_env_str = AUTOBOOT_STOP_STR_CRYPT;
 
 	if (!crypt_env_str)
 		return 0;
@@ -160,9 +165,12 @@ static int passwd_abort_sha256(uint64_t etime)
 	int ret;
 
 	if (sha_env_str == NULL)
-		sha_env_str = CONFIG_AUTOBOOT_STOP_STR_SHA256;
+		sha_env_str = AUTOBOOT_STOP_STR_SHA256;
 
 	presskey = malloc_cache_aligned(DELAY_STOP_STR_MAX_LENGTH);
+	if (!presskey)
+		return -ENOMEM;
+
 	c = strstr(sha_env_str, ":");
 	if (c && (c - sha_env_str < DELAY_STOP_STR_MAX_LENGTH)) {
 		/* preload presskey with salt */
@@ -422,7 +430,7 @@ static int abortboot(int bootdelay)
 	return abort;
 }
 
-static void process_fdt_options(const void *blob)
+static void process_fdt_options(void)
 {
 #ifdef CONFIG_TEXT_BASE
 	ulong addr;
@@ -474,7 +482,7 @@ const char *bootdelay_process(void)
 		s = env_get("bootcmd");
 
 	if (IS_ENABLED(CONFIG_OF_CONTROL))
-		process_fdt_options(gd->fdt_blob);
+		process_fdt_options();
 	stored_bootdelay = bootdelay;
 
 	return s;

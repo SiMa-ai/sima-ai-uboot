@@ -4,7 +4,7 @@
  * Author(s): Vikas Manocha, <vikas.manocha@st.com> for STMicroelectronics.
  */
 
-#include <common.h>
+#include <config.h>
 #include <image.h>
 #include <log.h>
 #include <spl.h>
@@ -14,7 +14,7 @@ static int spl_xip(struct spl_image_info *spl_image,
 {
 #if CONFIG_IS_ENABLED(OS_BOOT)
 	if (!spl_start_uboot()) {
-		spl_image->arg = (void *)CONFIG_SYS_SPL_ARGS_ADDR;
+		spl_image->arg = (void *)CONFIG_SPL_PAYLOAD_ARGS_ADDR;
 		spl_image->name = "Linux";
 		spl_image->os = IH_OS_LINUX;
 		spl_image->load_addr = CONFIG_SYS_LOAD_ADDR;
@@ -25,6 +25,6 @@ static int spl_xip(struct spl_image_info *spl_image,
 	}
 #endif
 	return(spl_parse_image_header(spl_image, bootdev,
-	       (const struct legacy_img_hdr *)CONFIG_SYS_UBOOT_BASE));
+	       (const struct legacy_img_hdr *)CFG_SYS_UBOOT_BASE));
 }
 SPL_LOAD_IMAGE_METHOD("XIP", 0, BOOT_DEVICE_XIP, spl_xip);

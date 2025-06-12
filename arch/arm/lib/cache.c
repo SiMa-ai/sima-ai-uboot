@@ -4,9 +4,7 @@
  * Wolfgang Denk, DENX Software Engineering, wd@denx.de.
  */
 
-/* for now: just dummy functions to satisfy the linker */
-
-#include <common.h>
+#include <config.h>
 #include <cpu_func.h>
 #include <log.h>
 #include <malloc.h>
@@ -62,7 +60,7 @@ int check_cache_range(unsigned long start, unsigned long stop)
 		ok = 0;
 
 	if (!ok) {
-		warn_non_spl("CACHE: Misaligned operation at range [%08lx, %08lx]\n",
+		warn_non_xpl("CACHE: Misaligned operation at range [%08lx, %08lx]\n",
 			     start, stop);
 	}
 
@@ -152,13 +150,22 @@ __weak int arm_reserve_mmu(void)
 	debug("TLB table from %08lx to %08lx\n", gd->arch.tlb_addr,
 	      gd->arch.tlb_addr + gd->arch.tlb_size);
 
-#ifdef CONFIG_SYS_MEM_RESERVE_SECURE
+#ifdef CFG_SYS_MEM_RESERVE_SECURE
 	/*
 	 * Record allocated tlb_addr in case gd->tlb_addr to be overwritten
 	 * with location within secure ram.
 	 */
 	gd->arch.tlb_allocated = gd->arch.tlb_addr;
 #endif
+
+	if (IS_ENABLED(CONFIG_CMO_BY_VA_ONLY)) {
+		/*
+		 * As invalidate_dcache_all() will be called before
+		 * mmu_setup(), we should make sure that the PTs are
+		 * already in a valid state.
+		 */
+		memset((void *)gd->arch.tlb_addr, 0, gd->arch.tlb_size);
+	}
 #endif
 
 	return 0;

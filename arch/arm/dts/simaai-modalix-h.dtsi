@@ -1,0 +1,8 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * Copyright (c) 2023 SiMa ai
+ */
+
+/dts-v1/;
+
+#include "simaai-modalix.dtsi"

@@ -1,0 +1,12 @@
+if TARGET_DAVINCI
+
+config SYS_BOARD
+	default "davinci"
+
+config SYS_VENDOR
+	default "sima"
+
+config SYS_CONFIG_NAME
+	default "davinci"
+
+endif

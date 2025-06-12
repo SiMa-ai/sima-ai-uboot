@@ -3,8 +3,9 @@
  * (C) Copyright 2014, Cavium Inc.
 **/
 
-#include <common.h>
+#include <config.h>
 #include <command.h>
+#include <vsprintf.h>
 #include <asm/cache.h>
 #include <asm/io.h>
 #include <asm/ptrace.h>
@@ -187,7 +188,7 @@ static void atf_print_part_table(void)
 	int ret;
 	char *ptype;
 
-	struct storage_partition *part = (void *)CONFIG_SYS_LOWMEM_BASE;
+	struct storage_partition *part = (void *)CFG_SYS_LOWMEM_BASE;
 
 	pcount = atf_get_pcount();
 

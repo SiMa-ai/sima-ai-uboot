@@ -3,8 +3,8 @@
  * Copyright 2014 Freescale Semiconductor, Inc.
  */
 
-#include <common.h>
 #include <log.h>
+#include <asm/cache.h>
 #include <asm/global_data.h>
 #include <asm/immap_85xx.h>
 #include "sleep.h"
@@ -50,7 +50,7 @@ static void dp_ddr_restore(void)
 
 	/* get the address of ddr date from SPARECR3 */
 	src = (u64 *)(in_be32(&scfg->sparecr[2]) + DDR_BUFF_LEN - 8);
-	dst = (u64 *)(CONFIG_SYS_SDRAM_BASE + DDR_BUFF_LEN - 8);
+	dst = (u64 *)(CFG_SYS_SDRAM_BASE + DDR_BUFF_LEN - 8);
 
 	for (i = 0; i < DDR_BUFF_LEN / 8; i++)
 		*dst-- = *src--;

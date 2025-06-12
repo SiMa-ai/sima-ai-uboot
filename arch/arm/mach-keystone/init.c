@@ -6,7 +6,6 @@
  *     Texas Instruments Incorporated, <www.ti.com>
  */
 
-#include <common.h>
 #include <cpu_func.h>
 #include <init.h>
 #include <ns16550.h>
@@ -185,8 +184,8 @@ int arch_cpu_init(void)
 	 * driver doesn't handle this.
 	 */
 #ifndef CONFIG_DM_SERIAL
-	ns16550_init((struct ns16550 *)(CONFIG_SYS_NS16550_COM2),
-		     CONFIG_SYS_NS16550_CLK / 16 / CONFIG_BAUDRATE);
+	ns16550_init((struct ns16550 *)(CFG_SYS_NS16550_COM2),
+		     CFG_SYS_NS16550_CLK / 16 / CONFIG_BAUDRATE);
 #endif
 
 	return 0;

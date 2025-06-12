@@ -7,9 +7,16 @@
  * Based on upstream Linux kernel driver:
  * pci-imx6.c:		Sean Cross <xobs@kosagi.com>
  * pcie-designware.c:	Jingoo Han <jg1.han@samsung.com>
+ *
+ * This is a legacy PCIe iMX driver kept to support older iMX6 SoCs. It is
+ * rather tied to quite old port of pcie-designware driver from Linux which
+ * suffices only iMX6 specific needs. But now we have modern PCIe iMX driver
+ * (drivers/pci/pcie_dw_imx.c) utilizing all the common DWC specific bits from
+ * (drivers/pci/pcie_dw_common.*). So you are encouraged to add any further iMX
+ * SoC support there or even better if you posses older iMX6 SoCs then switch
+ * those too in order to have a single modern PCIe iMX driver.
  */
 
-#include <common.h>
 #include <init.h>
 #include <log.h>
 #include <malloc.h>
@@ -534,13 +541,13 @@ static int imx6_pcie_init_phy(void)
 
 int imx6_pcie_toggle_power(struct udevice *vpcie)
 {
-#ifdef CONFIG_PCIE_IMX_POWER_GPIO
-	gpio_request(CONFIG_PCIE_IMX_POWER_GPIO, "pcie_power");
-	gpio_direction_output(CONFIG_PCIE_IMX_POWER_GPIO, 0);
+#ifdef CFG_PCIE_IMX_POWER_GPIO
+	gpio_request(CFG_PCIE_IMX_POWER_GPIO, "pcie_power");
+	gpio_direction_output(CFG_PCIE_IMX_POWER_GPIO, 0);
 	mdelay(20);
-	gpio_set_value(CONFIG_PCIE_IMX_POWER_GPIO, 1);
+	gpio_set_value(CFG_PCIE_IMX_POWER_GPIO, 1);
 	mdelay(20);
-	gpio_free(CONFIG_PCIE_IMX_POWER_GPIO);
+	gpio_free(CFG_PCIE_IMX_POWER_GPIO);
 #endif
 
 #if CONFIG_IS_ENABLED(DM_REGULATOR)
@@ -566,7 +573,7 @@ int imx6_pcie_toggle_reset(struct gpio_desc *gpio, bool active_high)
 	 * do self-initialisation.
 	 *
 	 * In case your #PERST pin is connected to a plain GPIO pin of the
-	 * CPU, you can define CONFIG_PCIE_IMX_PERST_GPIO in your board's
+	 * CPU, you can define CFG_PCIE_IMX_PERST_GPIO in your board's
 	 * configuration file and the condition below will handle the rest
 	 * of the reset toggling.
 	 *
@@ -578,13 +585,13 @@ int imx6_pcie_toggle_reset(struct gpio_desc *gpio, bool active_high)
 	 * Linux at all in the first place since it's in some non-reset
 	 * state due to being previously used in U-Boot.
 	 */
-#ifdef CONFIG_PCIE_IMX_PERST_GPIO
-	gpio_request(CONFIG_PCIE_IMX_PERST_GPIO, "pcie_reset");
-	gpio_direction_output(CONFIG_PCIE_IMX_PERST_GPIO, 0);
+#ifdef CFG_PCIE_IMX_PERST_GPIO
+	gpio_request(CFG_PCIE_IMX_PERST_GPIO, "pcie_reset");
+	gpio_direction_output(CFG_PCIE_IMX_PERST_GPIO, 0);
 	mdelay(20);
-	gpio_set_value(CONFIG_PCIE_IMX_PERST_GPIO, 1);
+	gpio_set_value(CFG_PCIE_IMX_PERST_GPIO, 1);
 	mdelay(20);
-	gpio_free(CONFIG_PCIE_IMX_PERST_GPIO);
+	gpio_free(CFG_PCIE_IMX_PERST_GPIO);
 #else
 	if (dm_gpio_is_valid(gpio)) {
 		/* Assert PERST# for 20ms then de-assert */
@@ -751,8 +758,8 @@ static int imx_pcie_of_to_plat(struct udevice *dev)
 {
 	struct imx_pcie_priv *priv = dev_get_priv(dev);
 
-	priv->dbi_base = (void __iomem *)devfdt_get_addr_index(dev, 0);
-	priv->cfg_base = (void __iomem *)devfdt_get_addr_index(dev, 1);
+	priv->dbi_base = devfdt_get_addr_index_ptr(dev, 0);
+	priv->cfg_base = devfdt_get_addr_index_ptr(dev, 1);
 	if (!priv->dbi_base || !priv->cfg_base)
 		return -EINVAL;
 

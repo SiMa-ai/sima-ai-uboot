@@ -31,17 +31,17 @@
 					func(DHCP, dhcp, na)
 #include <config_distro_bootcmd.h>
 
-#define CONFIG_EXTRA_ENV_SETTINGS					\
+#define CFG_EXTRA_ENV_SETTINGS					\
 			"loader_mmc_blknum=0x0\0"			\
 			"loader_mmc_nblks=0x780\0"			\
 			"env_mmc_blknum=0xf80\0"			\
 			"env_mmc_nblks=0x80\0"				\
 			"kernel_addr_r=0x30000000\0"			\
-			"pxefile_addr_r=0x32000000\0"			\
-			"scriptaddr=0x32000000\0"			\
-			"fdt_addr_r=0x32200000\0"			\
+			"pxefile_addr_r=0x33000000\0"			\
+			"scriptaddr=0x33000000\0"			\
+			"fdt_addr_r=0x33200000\0"			\
 			"fdtfile=hisilicon/hi3798cv200-poplar.dtb\0"	\
-			"ramdisk_addr_r=0x32400000\0"			\
+			"ramdisk_addr_r=0x33400000\0"			\
 			BOOTENV
 
 #endif /* _POPLAR_H_ */

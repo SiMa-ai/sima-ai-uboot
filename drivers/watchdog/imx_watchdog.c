@@ -4,7 +4,6 @@
  * Licensed under the GPL-2 or later.
  */
 
-#include <common.h>
 #include <cpu_func.h>
 #include <dm.h>
 #include <hang.h>
@@ -68,13 +67,8 @@ static void imx_watchdog_init(struct watchdog_regs *wdog, bool ext_reset,
 
 	/*
 	 * The timer watchdog can be set between
-	 * 0.5 and 128 Seconds. If not defined
-	 * in configuration file, sets 128 Seconds
+	 * 0.5 and 128 Seconds.
 	 */
-#ifndef CONFIG_WATCHDOG_TIMEOUT_MSECS
-#define CONFIG_WATCHDOG_TIMEOUT_MSECS 128000
-#endif
-
 	timeout = max_t(u64, timeout, TIMEOUT_MIN);
 	timeout = min_t(u64, timeout, TIMEOUT_MAX);
 	timeout = lldiv(timeout, 500) - 1;

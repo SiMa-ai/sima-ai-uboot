@@ -3,7 +3,6 @@
  * Copyright (C) 2018, Bin Meng <bmeng.cn@gmail.com>
  */
 
-#include <common.h>
 #include <dm.h>
 #include <virtio_types.h>
 #include <virtio.h>
@@ -45,7 +44,7 @@ static int dm_test_virtio_base(struct unit_test_state *uts)
 
 	return 0;
 }
-DM_TEST(dm_test_virtio_base, UT_TESTF_SCAN_PDATA | UT_TESTF_SCAN_FDT);
+DM_TEST(dm_test_virtio_base, UTF_SCAN_PDATA | UTF_SCAN_FDT);
 
 /* Test all of the virtio uclass ops */
 static int dm_test_virtio_all_ops(struct unit_test_state *uts)
@@ -94,12 +93,13 @@ static int dm_test_virtio_all_ops(struct unit_test_state *uts)
 
 	return 0;
 }
-DM_TEST(dm_test_virtio_all_ops, UT_TESTF_SCAN_PDATA | UT_TESTF_SCAN_FDT);
+DM_TEST(dm_test_virtio_all_ops, UTF_SCAN_PDATA | UTF_SCAN_FDT);
 
 /* Test removal of virtio device driver */
 static int dm_test_virtio_remove(struct unit_test_state *uts)
 {
 	struct udevice *bus, *dev;
+	u8 status;
 
 	/* check probe success */
 	ut_assertok(uclass_first_device_err(UCLASS_VIRTIO, &bus));
@@ -117,10 +117,12 @@ static int dm_test_virtio_remove(struct unit_test_state *uts)
 	ut_asserteq(-EKEYREJECTED, device_remove(bus, DM_REMOVE_ACTIVE_ALL));
 
 	ut_asserteq(false, device_active(dev));
+	virtio_get_status(dev, &status);
+	ut_assertok(status);
 
 	return 0;
 }
-DM_TEST(dm_test_virtio_remove, UT_TESTF_SCAN_PDATA | UT_TESTF_SCAN_FDT);
+DM_TEST(dm_test_virtio_remove, UTF_SCAN_PDATA | UTF_SCAN_FDT);
 
 /* Test all of the virtio ring */
 static int dm_test_virtio_ring(struct unit_test_state *uts)
@@ -192,4 +194,4 @@ static int dm_test_virtio_ring(struct unit_test_state *uts)
 
 	return 0;
 }
-DM_TEST(dm_test_virtio_ring, UT_TESTF_SCAN_PDATA | UT_TESTF_SCAN_FDT);
+DM_TEST(dm_test_virtio_ring, UTF_SCAN_PDATA | UTF_SCAN_FDT);

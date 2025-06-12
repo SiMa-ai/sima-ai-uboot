@@ -10,9 +10,10 @@
  * Stefan Roese, DENX Software Engineering, sr at denx.de.
  */
 
-#include <common.h>
+#include <config.h>
 #include <hang.h>
 #include <nand.h>
+#include <system-constants.h>
 #include <linux/mtd/rawnand.h>
 #include <asm/arch/imx-regs.h>
 #include <asm/io.h>
@@ -304,13 +305,13 @@ int nand_spl_load_image(uint32_t from, unsigned int size, void *buf)
 		 * Check if we have crossed a block boundary, and if so
 		 * check for bad block.
 		 */
-		if (!(page % CONFIG_SYS_NAND_PAGE_COUNT)) {
+		if (!(page % SYS_NAND_BLOCK_PAGES)) {
 			/*
 			 * Yes, new block. See if this block is good. If not,
 			 * loop until we find a good block.
 			 */
 			while (is_badblock(page)) {
-				page = page + CONFIG_SYS_NAND_PAGE_COUNT;
+				page = page + SYS_NAND_BLOCK_PAGES;
 				/* Check i we've reached the end of flash. */
 				if (page >= maxpages)
 					return -1;
@@ -332,14 +333,14 @@ __used void nand_boot(void)
 	__attribute__((noreturn)) void (*uboot)(void);
 
 	/*
-	 * CONFIG_SYS_NAND_U_BOOT_OFFS and CONFIG_SYS_NAND_U_BOOT_SIZE must
+	 * CONFIG_SYS_NAND_U_BOOT_OFFS and CFG_SYS_NAND_U_BOOT_SIZE must
 	 * be aligned to full pages
 	 */
 	if (!nand_spl_load_image(CONFIG_SYS_NAND_U_BOOT_OFFS,
-			CONFIG_SYS_NAND_U_BOOT_SIZE,
-			(uchar *)CONFIG_SYS_NAND_U_BOOT_DST)) {
+			CFG_SYS_NAND_U_BOOT_SIZE,
+			(uchar *)CFG_SYS_NAND_U_BOOT_DST)) {
 		/* Copy from NAND successful, start U-Boot */
-		uboot = (void *)CONFIG_SYS_NAND_U_BOOT_START;
+		uboot = (void *)CFG_SYS_NAND_U_BOOT_START;
 		uboot();
 	} else {
 		/* Unrecoverable error when copying from NAND */
@@ -350,3 +351,8 @@ __used void nand_boot(void)
 
 void nand_init(void) {}
 void nand_deselect(void) {}
+
+unsigned int nand_page_size(void)
+{
+	return CONFIG_SYS_NAND_PAGE_SIZE;
+}

@@ -6,7 +6,6 @@
  *  Copyright (c) 2018 AKASHI Takahiro, Linaro Limited
  */
 
-#include <common.h>
 #include <efi_loader.h>
 #include <malloc.h>
 #include <asm/unaligned.h>
@@ -757,6 +756,9 @@ set_keyboard_layout(const struct efi_hii_database_protocol *this,
 		    efi_guid_t *key_guid)
 {
 	EFI_ENTRY("%p, %pUs", this, key_guid);
+
+	if (!key_guid)
+		return EFI_EXIT(EFI_INVALID_PARAMETER);
 
 	return EFI_EXIT(EFI_NOT_FOUND);
 }

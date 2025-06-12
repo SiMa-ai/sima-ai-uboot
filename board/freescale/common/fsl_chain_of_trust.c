@@ -4,7 +4,7 @@
  * Copyright 2022 NXP
  */
 
-#include <common.h>
+#include <config.h>
 #include <dm.h>
 #include <env.h>
 #include <init.h>
@@ -15,7 +15,7 @@
 #include <dm/root.h>
 #include <asm/fsl_secure_boot.h>
 
-#if defined(CONFIG_SPL_BUILD) && defined(CONFIG_SPL_FRAMEWORK)
+#if defined(CONFIG_XPL_BUILD) && defined(CONFIG_SPL_FRAMEWORK)
 #include <spl.h>
 #endif
 
@@ -28,9 +28,9 @@
 #endif
 
 #if defined(CONFIG_MPC85xx)
-#define CONFIG_DCFG_ADDR	CFG_SYS_MPC85xx_GUTS_ADDR
+#define CFG_DCFG_ADDR	CFG_SYS_MPC85xx_GUTS_ADDR
 #else
-#define CONFIG_DCFG_ADDR	CFG_SYS_FSL_GUTS_ADDR
+#define CFG_DCFG_ADDR	CFG_SYS_FSL_GUTS_ADDR
 #endif
 
 #ifdef CONFIG_SYS_FSL_CCSR_GUR_LE
@@ -43,8 +43,8 @@
 int fsl_check_boot_mode_secure(void)
 {
 	uint32_t val;
-	struct ccsr_sfp_regs *sfp_regs = (void *)(CONFIG_SYS_SFP_ADDR);
-	struct ccsr_gur __iomem *gur = (void *)(CONFIG_DCFG_ADDR);
+	struct ccsr_sfp_regs *sfp_regs = (void *)(CFG_SYS_SFP_ADDR);
+	struct ccsr_gur __iomem *gur = (void *)(CFG_DCFG_ADDR);
 
 	val = sfp_in32(&sfp_regs->ospr) & ITS_MASK;
 	if (val == ITS_MASK)
@@ -67,7 +67,7 @@ int fsl_check_boot_mode_secure(void)
 	return 0;
 }
 
-#ifndef CONFIG_SPL_BUILD
+#ifndef CONFIG_XPL_BUILD
 int fsl_setenv_chain_of_trust(void)
 {
 	/* Check Boot Mode
@@ -92,7 +92,7 @@ int fsl_setenv_chain_of_trust(void)
 }
 #endif
 
-#ifdef CONFIG_SPL_BUILD
+#ifdef CONFIG_XPL_BUILD
 void spl_validate_uboot(uint32_t hdr_addr, uintptr_t img_addr)
 {
 	int res;
@@ -127,7 +127,7 @@ void spl_validate_uboot(uint32_t hdr_addr, uintptr_t img_addr)
 				   &img_addr);
 
 	if (res == 0)
-		printf("SPL: Validation of U-boot successful\n");
+		printf("SPL: Validation of U-Boot successful\n");
 }
 
 #ifdef CONFIG_SPL_FRAMEWORK
@@ -143,7 +143,7 @@ void __noreturn jump_to_image_no_args(struct spl_image_info *spl_image)
 		(image_entry_noargs_t)(unsigned long)spl_image->entry_point;
 
 	hdr_addr = (spl_image->entry_point + spl_image->size -
-			CONFIG_U_BOOT_HDR_SIZE);
+			FSL_U_BOOT_HDR_SIZE);
 	spl_validate_uboot(hdr_addr, (uintptr_t)spl_image->entry_point);
 	/*
 	 * In case of failure in validation, spl_validate_uboot would
@@ -157,4 +157,4 @@ void __noreturn jump_to_image_no_args(struct spl_image_info *spl_image)
 	image_entry();
 }
 #endif /* ifdef CONFIG_SPL_FRAMEWORK */
-#endif /* ifdef CONFIG_SPL_BUILD */
+#endif /* ifdef CONFIG_XPL_BUILD */

@@ -11,7 +11,7 @@ class Bintoolmkimage(bintool.Bintool):
     """Image generation for U-Boot
 
     This bintool supports running `mkimage` with some basic parameters as
-    neeed by binman.
+    needed by binman.
 
     Normally binman uses the mkimage built by U-Boot. But when run outside the
     U-Boot build system, binman can use the version installed in your system.
@@ -22,7 +22,7 @@ class Bintoolmkimage(bintool.Bintool):
 
     # pylint: disable=R0913
     def run(self, reset_timestamp=False, output_fname=None, external=False,
-            pad=None):
+            pad=None, align=None, priv_keys_dir=None):
         """Run mkimage
 
         Args:
@@ -33,6 +33,8 @@ class Bintoolmkimage(bintool.Bintool):
             pad: Bytes to use for padding the FIT devicetree output. This allows
                 other things to be easily added later, if required, such as
                 signatures
+            align: Bytes to use for alignment of the FIT and its external data
+            priv_keys_dir: Path to directory containing private keys
             version: True to get the mkimage version
         """
         args = []
@@ -40,8 +42,12 @@ class Bintoolmkimage(bintool.Bintool):
             args.append('-E')
         if pad:
             args += ['-p', f'{pad:x}']
+        if align:
+            args += ['-B', f'{align:x}']
         if reset_timestamp:
             args.append('-t')
+        if priv_keys_dir:
+            args += ['-k', f'{priv_keys_dir}']
         if output_fname:
             args += ['-F', output_fname]
         return self.run_cmd(*args)

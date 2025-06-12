@@ -8,7 +8,6 @@
 #define LOG_CATEGORY LOGC_EFI
 
 #include <ansi.h>
-#include <common.h>
 #include <charset.h>
 #include <malloc.h>
 #include <time.h>
@@ -77,6 +76,14 @@ static struct simple_text_output_mode efi_con_mode = {
 	.cursor_visible = 1,
 };
 
+/**
+ * term_get_char() - read a character from the console
+ *
+ * Wait for up to 100 ms to read a character from the console.
+ *
+ * @c:		pointer to the buffer to receive the character
+ * Return:	0 on success, 1 otherwise
+ */
 static int term_get_char(s32 *c)
 {
 	u64 timeout;
@@ -93,7 +100,7 @@ static int term_get_char(s32 *c)
 }
 
 /**
- * Receive and parse a reply from the terminal.
+ * term_read_reply() - receive and parse a reply from the terminal
  *
  * @n:		array of return values
  * @num:	number of return values expected
@@ -174,7 +181,7 @@ static efi_status_t EFIAPI efi_cout_output_string(
 	}
 	pos = buf;
 	utf16_utf8_strcpy(&pos, string);
-	fputs(stdout, buf);
+	puts(buf);
 	free(buf);
 
 	/*
@@ -461,10 +468,21 @@ static efi_status_t EFIAPI efi_cout_set_attribute(
 }
 
 /**
- * efi_cout_clear_screen() - clear screen
+ * efi_clear_screen() - clear screen
  */
 static void efi_clear_screen(void)
 {
+	if (CONFIG_IS_ENABLED(EFI_SCROLL_ON_CLEAR_SCREEN)) {
+		unsigned int row, screen_rows, screen_columns;
+
+		/* Avoid overwriting previous outputs on streaming consoles */
+		screen_rows = efi_cout_modes[efi_con_mode.mode].rows;
+		screen_columns = efi_cout_modes[efi_con_mode.mode].columns;
+		printf(ESC "[%u;%uH", screen_rows, screen_columns);
+		for (row = 1; row < screen_rows; row++)
+			printf("\n");
+	}
+
 	/*
 	 * The Linux console wants both a clear and a home command. The video
 	 * uclass does not support <ESC>[H without coordinates, yet.
@@ -488,6 +506,12 @@ static efi_status_t EFIAPI efi_cout_clear_screen(
 			struct efi_simple_text_output_protocol *this)
 {
 	EFI_ENTRY("%p", this);
+
+	/* Set default colors if not done yet */
+	if (efi_con_mode.attribute == 0) {
+		efi_con_mode.attribute = 0x07;
+		printf(ESC "[0;37;40m");
+	}
 
 	efi_clear_screen();
 
@@ -652,7 +676,7 @@ static LIST_HEAD(cin_notify_functions);
  * @mod:	Xterm shift mask
  * @key_state:  receives the state of the shift, alt, control, and logo keys
  */
-void set_shift_mask(int mod, struct efi_key_state *key_state)
+static void set_shift_mask(int mod, struct efi_key_state *key_state)
 {
 	key_state->key_shift_state = EFI_SHIFT_STATE_VALID;
 	if (mod) {
@@ -1151,7 +1175,6 @@ static efi_status_t EFIAPI efi_cin_unregister_key_notify(
 out:
 	return EFI_EXIT(ret);
 }
-
 
 /**
  * efi_cin_reset() - drain the input buffer

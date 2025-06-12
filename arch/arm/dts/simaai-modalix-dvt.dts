@@ -1,0 +1,79 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * Copyright (c) 2023 SiMa ai
+ */
+
+/dts-v1/;
+
+#include "simaai-modalix-h.dtsi"
+
+
+/ {
+	model = "SiMa.ai Modalix DVT Board";
+
+	chosen {
+		bootargs = "console=ttyS0,1152000n8 root=/dev/ram0 rw rootfstype=ramfs";
+		firmware-loader = <&fs_loader0>;
+	};
+
+	fs_loader0: fs-loader {
+		bootph-all;
+		compatible = "u-boot,fs-loader";
+		phandlepart = <&emmc 4>;
+	};
+
+	aliases {
+		console   = &uart0;
+		mmc0 = &emmc;
+		mmc1 = &sd;
+	};
+
+	memory@1000000000 {
+		device_type = "memory";
+		reg = <0x10 0x00000000 0x0e 0x00000000>;
+	};
+};
+
+&emmc {
+	status = "okay";
+};
+
+&sd {
+	status = "okay";
+};
+
+&xgmac0 {
+	phy-mode = "sgmii";
+	managed = "in-band-status";
+	max-speed = <1000>;
+	phy-handle = <&ethernet_phy0>;
+	status = "okay";
+
+	mdio0 {
+		compatible = "snps,dwmac-mdio";
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		ethernet_phy0: ethernet-phy@0 {
+			reg = <0>;
+		};
+	};
+};
+
+&xgmac1 {
+	phy-handle = <&ethernet_phy1>;
+	phy-mode = "usxgmii";
+	managed = "in-band-status";
+	status = "okay";
+
+	mdio1 {
+		compatible = "snps,dwmac-mdio";
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		ethernet_phy1: ethernet-phy@1 {
+			compatible = "ethernet-phy-ieee802.3-c45";
+			reg = <1>;
+		};
+	};
+};

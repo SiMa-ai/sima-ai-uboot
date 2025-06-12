@@ -17,13 +17,11 @@
  */
 
 /* I2C */
-#define CONFIG_I2C_MVTWSI_BASE0		MVEBU_TWSI_BASE
+#define CFG_I2C_MVTWSI_BASE0		MVEBU_TWSI_BASE
 
 /* USB/EHCI configuration */
 
 /* Environment in SPI NOR flash */
-
-#define PHY_ANEG_TIMEOUT	8000	/* PHY needs a longer aneg time */
 
 /*
  * mv-common.h should be defined after CMD configs since it used them

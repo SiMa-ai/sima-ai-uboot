@@ -12,12 +12,10 @@
 
 /* Environment in SPI NOR flash */
 
-#define PHY_ANEG_TIMEOUT	8000	/* PHY needs a longer aneg time */
-
 /* NAND */
 
 /* Keep device tree and initrd in lower memory so the kernel can access them */
-#define CONFIG_EXTRA_ENV_SETTINGS	\
+#define CFG_EXTRA_ENV_SETTINGS	\
 	"fdt_high=0x10000000\0"		\
 	"initrd_high=0x10000000\0"
 

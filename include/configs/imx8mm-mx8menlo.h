@@ -8,9 +8,11 @@
 
 #include <configs/verdin-imx8mm.h>
 
+/* PHY needs a longer autoneg timeout */
+
 /* Custom initial environment variables */
-#undef CONFIG_EXTRA_ENV_SETTINGS
-#define CONFIG_EXTRA_ENV_SETTINGS					\
+#undef CFG_EXTRA_ENV_SETTINGS
+#define CFG_EXTRA_ENV_SETTINGS					\
 	BOOTENV								\
 	MEM_LAYOUT_ENV_SETTINGS						\
 	"devtype=mmc\0"							\

@@ -8,7 +8,6 @@
  * (C) Copyright 2015      Hans de Goede <hdegoede@redhat.com>
  * (C) Copyright 2015      Jens Kuske <jenskuske@gmail.com>
  */
-#include <common.h>
 #include <init.h>
 #include <log.h>
 #include <asm/io.h>
@@ -16,7 +15,6 @@
 #include <asm/arch/dram.h>
 #include <asm/arch/cpu.h>
 #include <linux/delay.h>
-#include <linux/kconfig.h>
 
 static void mctl_phy_init(u32 val)
 {
@@ -81,15 +79,15 @@ enum {
 	MBUS_QOS_HIGHEST
 };
 
-static inline void mbus_configure_port(u8 port,
-				       bool bwlimit,
-				       bool priority,
-				       u8 qos,         /* MBUS_QOS_LOWEST .. MBUS_QOS_HIGEST */
-				       u8 waittime,    /* 0 .. 0xf */
-				       u8 acs,         /* 0 .. 0xff */
-				       u16 bwl0,       /* 0 .. 0xffff, bandwidth limit in MB/s */
-				       u16 bwl1,
-				       u16 bwl2)
+static void mbus_configure_port(u8 port,
+				bool bwlimit,
+				bool priority,
+				u8 qos,         /* MBUS_QOS_LOWEST .. MBUS_QOS_HIGEST */
+				u8 waittime,    /* 0 .. 0xf */
+				u8 acs,         /* 0 .. 0xff */
+				u16 bwl0,       /* 0 .. 0xffff, bandwidth limit in MB/s */
+				u16 bwl1,
+				u16 bwl2)
 {
 	struct sunxi_mctl_com_reg * const mctl_com =
 			(struct sunxi_mctl_com_reg *)SUNXI_DRAM_COM_BASE;
@@ -652,20 +650,6 @@ static int mctl_channel_init(uint16_t socid, struct dram_para *para)
 	return 0;
 }
 
-/*
- * Test if memory at offset offset matches memory at a certain base
- */
-static bool mctl_mem_matches_base(u32 offset, ulong base)
-{
-	/* Try to write different values to RAM at two addresses */
-	writel(0, base);
-	writel(0xaa55aa55, base + offset);
-	dsb();
-	/* Check if the same value is actually observed when reading back */
-	return readl(base) ==
-	       readl(base + offset);
-}
-
 static void mctl_auto_detect_dram_size_rank(uint16_t socid, struct dram_para *para, ulong base, struct rank_para *rank)
 {
 	/* detect row address bits */
@@ -711,7 +695,7 @@ static unsigned long mctl_calc_rank_size(struct rank_para *rank)
  */
 static void mctl_r40_detect_rank_count(struct dram_para *para)
 {
-	ulong rank1_base = (ulong) CONFIG_SYS_SDRAM_BASE +
+	ulong rank1_base = (ulong) CFG_SYS_SDRAM_BASE +
 			   mctl_calc_rank_size(&para->ranks[0]);
 	struct sunxi_mctl_ctl_reg * const mctl_ctl =
 			(struct sunxi_mctl_ctl_reg *)SUNXI_DRAM_CTL0_BASE;
@@ -744,10 +728,10 @@ static void mctl_r40_detect_rank_count(struct dram_para *para)
 
 static void mctl_auto_detect_dram_size(uint16_t socid, struct dram_para *para)
 {
-	mctl_auto_detect_dram_size_rank(socid, para, (ulong)CONFIG_SYS_SDRAM_BASE, &para->ranks[0]);
+	mctl_auto_detect_dram_size_rank(socid, para, (ulong)CFG_SYS_SDRAM_BASE, &para->ranks[0]);
 
 	if ((socid == SOCID_A64 || socid == SOCID_R40) && para->dual_rank) {
-		mctl_auto_detect_dram_size_rank(socid, para, (ulong)CONFIG_SYS_SDRAM_BASE + mctl_calc_rank_size(&para->ranks[0]), &para->ranks[1]);
+		mctl_auto_detect_dram_size_rank(socid, para, (ulong)CFG_SYS_SDRAM_BASE + mctl_calc_rank_size(&para->ranks[0]), &para->ranks[1]);
 	}
 }
 

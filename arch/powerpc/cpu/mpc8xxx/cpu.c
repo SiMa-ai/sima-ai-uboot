@@ -8,7 +8,6 @@
  */
 
 #include <config.h>
-#include <common.h>
 #include <command.h>
 #include <cpu_func.h>
 #include <init.h>
@@ -301,7 +300,6 @@ __weak int cpu_numcores(void)
 	return cpu->num_cores;
 }
 
-
 /*
  * Check if the given core ID is valid
  *
@@ -343,29 +341,3 @@ int fixup_cpu(void)
 #endif
 	return 0;
 }
-
-#ifndef CONFIG_DM_ETH
-/*
- * Initializes on-chip ethernet controllers.
- * to override, implement board_eth_init()
- */
-int cpu_eth_init(struct bd_info *bis)
-{
-#if defined(CONFIG_UEC_ETH)
-	uec_standard_init(bis);
-#endif
-
-#if defined(CONFIG_TSEC_ENET) || defined(CONFIG_MPC85XX_FEC)
-	tsec_standard_init(bis);
-#endif
-
-#ifdef CONFIG_FMAN_ENET
-	fm_standard_init(bis);
-#endif
-
-#ifdef CONFIG_VSC9953
-	vsc9953_init(bis);
-#endif
-	return 0;
-}
-#endif

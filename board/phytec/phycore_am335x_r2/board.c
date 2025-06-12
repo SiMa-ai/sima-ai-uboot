@@ -4,13 +4,13 @@
  *
  * Board functions for Phytec phyCORE-AM335x R2 (PCL060 / PCM060) based boards
  *
- * Copyright (C) 2011, Texas Instruments, Incorporated - http://www.ti.com/
+ * Copyright (C) 2011, Texas Instruments, Incorporated - https://www.ti.com/
  * Copyright (C) 2013 Lars Poeschel, Lemonage Software GmbH
  * Copyright (C) 2015 Wadim Egorov, PHYTEC Messtechnik GmbH
  * Copyright (C) 2019 DENX Software Engineering GmbH
  */
 
-#include <common.h>
+#include <config.h>
 #include <init.h>
 #include <spl.h>
 #include <asm/arch/cpu.h>
@@ -26,7 +26,7 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
-#ifdef CONFIG_SPL_BUILD
+#ifdef CONFIG_XPL_BUILD
 
 static struct ctrl_dev *cdev = (struct ctrl_dev *)CTRL_DEVICE_BASE;
 
@@ -166,8 +166,8 @@ void sdram_init(void)
 		   0);
 
 	/* Detect memory physically present */
-	gd->ram_size = get_ram_size((void *)CONFIG_SYS_SDRAM_BASE,
-				    CONFIG_MAX_RAM_BANK_SIZE);
+	gd->ram_size = get_ram_size((void *)CFG_SYS_SDRAM_BASE,
+				    CFG_MAX_RAM_BANK_SIZE);
 
 	/* Reconfigure memory for actual detected size */
 	switch (gd->ram_size) {
@@ -269,7 +269,7 @@ void set_mux_conf_regs(void)
  */
 int board_init(void)
 {
-	gd->bd->bi_boot_params = CONFIG_SYS_SDRAM_BASE + 0x100;
+	gd->bd->bi_boot_params = CFG_SYS_SDRAM_BASE + 0x100;
 	return 0;
 }
 

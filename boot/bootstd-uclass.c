@@ -6,10 +6,10 @@
  * Written by Simon Glass <sjg@chromium.org>
  */
 
-#include <common.h>
 #include <bootflow.h>
 #include <bootstd.h>
 #include <dm.h>
+#include <env.h>
 #include <log.h>
 #include <malloc.h>
 #include <dm/device-internal.h>
@@ -33,6 +33,8 @@ static int bootstd_of_to_plat(struct udevice *dev)
 					   &priv->prefixes);
 		dev_read_string_list(dev, "bootdev-order",
 				     &priv->bootdev_order);
+
+		priv->theme = ofnode_find_subnode(dev_ofnode(dev), "theme");
 	}
 
 	return 0;
@@ -70,9 +72,23 @@ static int bootstd_remove(struct udevice *dev)
 	return 0;
 }
 
-const char *const *const bootstd_get_bootdev_order(struct udevice *dev)
+const char *const *const bootstd_get_bootdev_order(struct udevice *dev,
+						   bool *okp)
 {
 	struct bootstd_priv *std = dev_get_priv(dev);
+	const char *targets = env_get("boot_targets");
+
+	*okp = true;
+	log_debug("- targets %s %p\n", targets, std->bootdev_order);
+	if (targets && *targets) {
+		str_free_list(std->env_order);
+		std->env_order = str_to_list(targets);
+		if (!std->env_order) {
+			*okp = false;
+			return NULL;
+		}
+		return std->env_order;
+	}
 
 	return std->bootdev_order;
 }
@@ -106,7 +122,7 @@ static int bootstd_probe(struct udevice *dev)
 	return 0;
 }
 
-/* For now, bind the boormethod device if none are found in the devicetree */
+/* For now, bind the bootmethod device if none are found in the devicetree */
 int dm_scan_other(bool pre_reloc_only)
 {
 	struct driver *drv = ll_entry_start(struct driver, driver);

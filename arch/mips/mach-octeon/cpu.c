@@ -67,7 +67,7 @@ static int get_clocks(void)
 	gd->cpu_clk = ref_clock * FIELD_GET(RST_BOOT_C_MUL, val);
 	gd->bus_clk = ref_clock * FIELD_GET(RST_BOOT_PNR_MUL, val);
 
-	debug("%s: cpu: %lu, bus: %lu\n", __func__, gd->cpu_clk, gd->bus_clk);
+	debug("%s: cpu: %lu, bus: %u\n", __func__, gd->cpu_clk, gd->bus_clk);
 
 	return 0;
 }
@@ -448,10 +448,10 @@ int arch_misc_init(void)
 	if (ret)
 		return ret;
 
-	if (CONFIG_IS_ENABLED(OCTEON_SERIAL_PCIE_CONSOLE))
+	if (IS_ENABLED(CONFIG_OCTEON_SERIAL_PCIE_CONSOLE))
 		init_pcie_console();
 
-	if (CONFIG_IS_ENABLED(OCTEON_SERIAL_BOOTCMD))
+	if (IS_ENABLED(CONFIG_OCTEON_SERIAL_BOOTCMD))
 		init_bootcmd_console();
 
 	return 0;

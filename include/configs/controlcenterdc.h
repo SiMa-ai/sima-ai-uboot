@@ -15,16 +15,11 @@
 
 /* Environment in SPI NOR flash */
 
-#define PHY_ANEG_TIMEOUT	8000	/* PHY needs a longer aneg time */
-
 /*
  * Environment Configuration
  */
 
-#define CONFIG_HOSTNAME		"ccdc"
-#define CONFIG_ROOTPATH		"/opt/nfsroot"
-
-#define CONFIG_EXTRA_ENV_SETTINGS						\
+#define CFG_EXTRA_ENV_SETTINGS						\
 	"netdev=eth1\0"						\
 	"consoledev=ttyS1\0"							\
 	"u-boot=u-boot.bin\0"							\

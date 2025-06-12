@@ -6,7 +6,6 @@
  * based on source code of Shlomi Gridish
  */
 
-#include <common.h>
 #include <malloc.h>
 #include <command.h>
 #include <asm/global_data.h>
@@ -23,6 +22,9 @@
 #ifdef CONFIG_ARM64
 #include <asm/armv8/mmu.h>
 #include <asm/arch/cpu.h>
+#endif
+#ifdef CONFIG_PPC
+#include <asm/ppc.h>
 #endif
 
 #define MPC85xx_DEVDISR_QE_DISABLE	0x1
@@ -185,7 +187,7 @@ void qe_init(uint qe_base)
 		 * which do not have ROM in QE.
 		 */
 		qe_upload_firmware((const void *)(CONFIG_SYS_QE_FW_ADDR +
-				   CONFIG_SYS_FSL_IFC_BASE));
+				   CFG_SYS_FSL_IFC_BASE));
 
 		/* enable the microcode in IRAM */
 		out_be32(&qe_immr->iram.iready, QE_IRAM_READY);
@@ -234,7 +236,7 @@ void u_qe_init(void)
 
 	if (src == BOOT_SOURCE_IFC_NOR)
 		addr = (void *)(CONFIG_SYS_QE_FW_ADDR +
-				CONFIG_SYS_FSL_IFC_BASE);
+				CFG_SYS_FSL_IFC_BASE);
 
 	if (src == BOOT_SOURCE_QSPI_NOR)
 		addr = (void *)(CONFIG_SYS_QE_FW_ADDR +

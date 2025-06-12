@@ -35,9 +35,9 @@ PROP_IGNORE_LIST = [
     'linux,phandle',
     "status",
     'phandle',
-    'u-boot,dm-pre-reloc',
-    'u-boot,dm-tpl',
-    'u-boot,dm-spl',
+    'bootph-all',
+    'bootph-pre-sram',
+    'bootph-pre-ram',
 ]
 
 # C type declarations for the types we support
@@ -442,7 +442,7 @@ class DtbPlatdata():
         """
         parent = node.parent
         if parent and not parent.props:
-            raise ValueError("Parent node '%s' has no properties - do you need u-boot,dm-spl or similar?" %
+            raise ValueError("Parent node '%s' has no properties - do you need bootph-pre-ram or similar?" %
                              parent.path)
         num_addr, num_size = 2, 2
         if parent:
@@ -754,7 +754,7 @@ class DtbPlatdata():
                 # This might indicate that the parent node is not in the
                 # SPL/TPL devicetree but the child is. For example if we are
                 # dealing with of-platdata in TPL, the parent has a
-                # u-boot,dm-tpl tag but the child has u-boot,dm-pre-reloc. In
+                # bootph-pre-sram tag but the child has bootph-all. In
                 # this case the child node exists in TPL but the parent does
                 # not.
                 raise ValueError("Node '%s' requires parent node '%s' but it is not in the valid list" %
@@ -835,7 +835,6 @@ class DtbPlatdata():
 
     def generate_uclasses(self):
         self.out('\n')
-        self.out('#include <common.h>\n')
         self.out('#include <dm.h>\n')
         self.out('#include <dt-structs.h>\n')
         self.out('\n')
@@ -1059,7 +1058,6 @@ class DtbPlatdata():
         self.out('/* Allow use of U_BOOT_DRVINFO() in this file */\n')
         self.out('#define DT_PLAT_C\n')
         self.out('\n')
-        self.out('#include <common.h>\n')
         self.out('#include <dm.h>\n')
         self.out('#include <dt-structs.h>\n')
         self.out('\n')
@@ -1092,7 +1090,6 @@ class DtbPlatdata():
         See the documentation in doc/driver-model/of-plat.rst for more
         information.
         """
-        self.out('#include <common.h>\n')
         self.out('#include <dm.h>\n')
         self.out('#include <dt-structs.h>\n')
         self.out('\n')

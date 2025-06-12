@@ -4,9 +4,10 @@
  * Copyright 2021 NXP
  */
 
-#include <common.h>
+#include <config.h>
 #ifdef CONFIG_PPC
 #include <asm/fsl_law.h>
+#include <asm/ppc.h>
 #endif
 #include <div64.h>
 #include <linux/delay.h>
@@ -139,10 +140,10 @@ __fsl_ddr_set_lawbar(const common_timing_params_t *memctl_common_params,
 	}
 
 #if !defined(CONFIG_PHYS_64BIT)
-	if (base >= CONFIG_MAX_MEM_MAPPED)
+	if (base >= CFG_MAX_MEM_MAPPED)
 		return;
-	if ((base + size) >= CONFIG_MAX_MEM_MAPPED)
-		size = CONFIG_MAX_MEM_MAPPED - base;
+	if ((base + size) >= CFG_MAX_MEM_MAPPED)
+		size = CFG_MAX_MEM_MAPPED - base;
 #endif
 	if (set_ddr_laws(base, size, law_memctl) < 0) {
 		printf("%s: ERROR (ctrl #%d, TRGT ID=%x)\n", __func__, ctrl_num,

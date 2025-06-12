@@ -3,7 +3,6 @@
  * Copyright (c) 2016, NVIDIA CORPORATION.
  */
 
-#include <common.h>
 #include <dm.h>
 #include <dm/device-internal.h>
 #include <log.h>
@@ -35,8 +34,7 @@ static int dm_test_reset_base(struct unit_test_state *uts)
 
 	/* Get the same reset port in 2 different ways and compare */
 	ut_assertok(reset_get_by_index(dev, 0, &reset_method1));
-	ut_assertok(reset_get_by_index_nodev(dev_ofnode(dev), 0,
-					     &reset_method1_1));
+	ut_assertok(reset_get_by_name(dev, NULL, &reset_method1_1));
 	ut_assertok(reset_get_by_index(dev, 1, &reset_method2));
 	ut_assertok(reset_get_by_index_nodev(dev_ofnode(dev), 1,
 					     &reset_method2_1));
@@ -68,8 +66,7 @@ static int dm_test_reset_base(struct unit_test_state *uts)
 
 	return 0;
 }
-
-DM_TEST(dm_test_reset_base, UT_TESTF_SCAN_FDT);
+DM_TEST(dm_test_reset_base, UTF_SCAN_FDT);
 
 static int dm_test_reset(struct unit_test_state *uts)
 {
@@ -96,7 +93,7 @@ static int dm_test_reset(struct unit_test_state *uts)
 
 	return 0;
 }
-DM_TEST(dm_test_reset, UT_TESTF_SCAN_FDT);
+DM_TEST(dm_test_reset, UTF_SCAN_FDT);
 
 static int dm_test_reset_devm(struct unit_test_state *uts)
 {
@@ -121,7 +118,7 @@ static int dm_test_reset_devm(struct unit_test_state *uts)
 
 	return 0;
 }
-DM_TEST(dm_test_reset_devm, UT_TESTF_SCAN_FDT);
+DM_TEST(dm_test_reset_devm, UTF_SCAN_FDT);
 
 static int dm_test_reset_bulk(struct unit_test_state *uts)
 {
@@ -151,7 +148,7 @@ static int dm_test_reset_bulk(struct unit_test_state *uts)
 
 	return 0;
 }
-DM_TEST(dm_test_reset_bulk, UT_TESTF_SCAN_FDT);
+DM_TEST(dm_test_reset_bulk, UTF_SCAN_FDT);
 
 static int dm_test_reset_bulk_devm(struct unit_test_state *uts)
 {
@@ -183,4 +180,4 @@ static int dm_test_reset_bulk_devm(struct unit_test_state *uts)
 
 	return 0;
 }
-DM_TEST(dm_test_reset_bulk_devm, UT_TESTF_SCAN_FDT);
+DM_TEST(dm_test_reset_bulk_devm, UTF_SCAN_FDT);

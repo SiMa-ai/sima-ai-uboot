@@ -1,0 +1,7 @@
+Modalix A65
+M:	Yurii Konovalenko <yurii.konovalenko@sima.ai>
+S:	Maintained
+F:	arch/arm/include/asm/arch-sima
+F:	board/sima/modalix
+F:	include/configs/modalix.h
+F:	configs/sima_modalix_defconfig

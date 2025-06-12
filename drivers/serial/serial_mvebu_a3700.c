@@ -4,7 +4,6 @@
  * Copyright (C) 2021 Pali Rohár <pali@kernel.org>
  */
 
-#include <common.h>
 #include <clk.h>
 #include <dm.h>
 #include <serial.h>
@@ -40,8 +39,8 @@ static int mvebu_serial_putc(struct udevice *dev, const char ch)
 	struct mvebu_plat *plat = dev_get_plat(dev);
 	void __iomem *base = plat->base;
 
-	while (readl(base + UART_STATUS_REG) & UART_STATUS_TXFIFO_FULL)
-		;
+	if (readl(base + UART_STATUS_REG) & UART_STATUS_TXFIFO_FULL)
+		return -EAGAIN;
 
 	writel(ch, base + UART_TX_REG);
 
@@ -53,8 +52,8 @@ static int mvebu_serial_getc(struct udevice *dev)
 	struct mvebu_plat *plat = dev_get_plat(dev);
 	void __iomem *base = plat->base;
 
-	while (!(readl(base + UART_STATUS_REG) & UART_STATUS_RX_RDY))
-		;
+	if (!(readl(base + UART_STATUS_REG) & UART_STATUS_RX_RDY))
+		return -EAGAIN;
 
 	return readl(base + UART_RX_REG) & 0xff;
 }

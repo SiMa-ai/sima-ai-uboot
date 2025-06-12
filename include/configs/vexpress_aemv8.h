@@ -86,9 +86,9 @@
 
 /* PL011 Serial Configuration */
 #ifdef CONFIG_TARGET_VEXPRESS64_JUNO
-#define CONFIG_PL011_CLOCK		7372800
+#define CFG_PL011_CLOCK		7372800
 #else
-#define CONFIG_PL011_CLOCK		24000000
+#define CFG_PL011_CLOCK		24000000
 #endif
 
 /* Physical Memory Map */
@@ -96,7 +96,7 @@
 /* Top 16MB reserved for secure world use */
 #define DRAM_SEC_SIZE		0x01000000
 #define PHYS_SDRAM_1_SIZE	0x80000000 - DRAM_SEC_SIZE
-#define CONFIG_SYS_SDRAM_BASE	PHYS_SDRAM_1
+#define CFG_SYS_SDRAM_BASE	PHYS_SDRAM_1
 
 #ifdef CONFIG_TARGET_VEXPRESS64_JUNO
 #define PHYS_SDRAM_2			(0x880000000)
@@ -148,6 +148,12 @@
 #define FUNC_VIRTIO(func)
 #endif
 
+#ifdef CONFIG_CMD_MMC
+#define FUNC_MMC(func)	func(MMC, mmc, 0)
+#else
+#define FUNC_MMC(func)
+#endif
+
 /*
  * Boot by loading an Android image, or kernel, initrd and FDT through
  * semihosting into DRAM.
@@ -181,6 +187,7 @@
 	func(USB, usb, 0)		\
 	func(SATA, sata, 0)		\
 	func(SATA, sata, 1)		\
+	FUNC_VIRTIO(func)		\
 	func(PXE, pxe, na)		\
 	func(DHCP, dhcp, na)		\
 	func(AFS, afs, na)
@@ -204,6 +211,7 @@
 	func(SMH, smh, na)		\
 	func(MEM, mem, na)		\
 	FUNC_VIRTIO(func)		\
+	FUNC_MMC(func)			\
 	func(PXE, pxe, na)		\
 	func(DHCP, dhcp, na)
 
@@ -244,7 +252,7 @@
 #include <config_distro_bootcmd.h>
 
 /* Default load addresses and names for the different payloads. */
-#define CONFIG_EXTRA_ENV_SETTINGS	\
+#define CFG_EXTRA_ENV_SETTINGS	\
 		"kernel_addr_r=" __stringify(VEXPRESS_KERNEL_ADDR) "\0"	       \
 		"ramdisk_addr_r=" __stringify(VEXPRESS_RAMDISK_ADDR) "\0"      \
 		"pxefile_addr_r=" __stringify(VEXPRESS_PXEFILE_ADDR) "\0"      \
@@ -254,9 +262,9 @@
 		BOOTENV
 
 #ifdef CONFIG_TARGET_VEXPRESS64_JUNO
-#define CONFIG_SYS_FLASH_BASE		0x08000000
+#define CFG_SYS_FLASH_BASE		0x08000000
 #else
-#define CONFIG_SYS_FLASH_BASE		(V2M_PA_BASE + 0x0C000000)
+#define CFG_SYS_FLASH_BASE		(V2M_PA_BASE + 0x0C000000)
 #endif
 
 #endif /* __VEXPRESS_AEMV8_H */

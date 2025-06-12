@@ -16,16 +16,12 @@ class Entry_u_boot_vpl_nodtb(Entry_blob):
 
     This is the U-Boot VPL binary, It does not include a device tree blob at
     the end of it so may not be able to work without it, assuming VPL needs
-    a device tree to operate on your platform. You can add a u_boot_vpl_dtb
-    entry after this one, or use a u_boot_vpl entry instead, which normally
+    a device tree to operate on your platform. You can add a u-boot-vpl-dtb
+    entry after this one, or use a u-boot-vpl entry instead, which normally
     expands to a section containing u-boot-vpl-dtb, u-boot-vpl-bss-pad and
     u-boot-vpl-dtb
 
-    VPL can access binman symbols at runtime. See:
-
-        'Access to binman entry offsets at run time (symbols)'
-
-    in the binman README for more information.
+    VPL can access binman symbols at runtime. See :ref:`binman_fdt`.
 
     The ELF file 'vpl/u-boot-vpl' must also be available for this to work, since
     binman uses that to look up symbols to write into the VPL binary.

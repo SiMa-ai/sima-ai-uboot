@@ -5,7 +5,6 @@
  * Copyright (C) 2015, Texas Instruments, Incorporated
  */
 
-#include <common.h>
 #include <dm.h>
 #include <errno.h>
 #include <timer.h>
@@ -114,6 +113,7 @@ static const struct udevice_id omap_timer_ids[] = {
 	{ .compatible = "ti,am335x-timer" },
 	{ .compatible = "ti,am4372-timer" },
 	{ .compatible = "ti,omap5430-timer" },
+	{ .compatible = "ti,am654-timer" },
 	{}
 };
 

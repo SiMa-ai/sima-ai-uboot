@@ -11,11 +11,14 @@
 #ifndef _USB_H_
 #define _USB_H_
 
+#include <stdbool.h>
 #include <fdtdec.h>
 #include <usb_defs.h>
 #include <linux/usb/ch9.h>
 #include <asm/cache.h>
 #include <part.h>
+
+extern bool usb_started; /* flag for the started/stopped USB status */
 
 /*
  * The EHCI spec says that we must align to at least 32 bytes.  However,
@@ -45,6 +48,12 @@
  * time for a BULK device to react - some are slow.
  */
 #define USB_TIMEOUT_MS(pipe) (usb_pipebulk(pipe) ? 5000 : 1000)
+
+/*
+ * The xhcd hcd driver prepares only a limited number interfaces / endpoints.
+ * Define this limit so that drivers do not exceed it.
+ */
+#define USB_MAX_ACTIVE_INTERFACES	2
 
 /* device request (setup) */
 struct devrequest {
@@ -241,23 +250,21 @@ int usb_host_eth_scan(int mode);
 
 #endif
 
-#ifdef CONFIG_USB_KEYBOARD
-
 /*
  * USB Keyboard reports are 8 bytes in boot protocol.
  * Appendix B of HID Device Class Definition 1.11
  */
 #define USB_KBD_BOOT_REPORT_SIZE 8
 
-int drv_usb_kbd_init(void);
-int usb_kbd_deregister(int force);
+/*
+ * usb_init() - initialize the USB Controllers
+ *
+ * Returns: 0 if OK, -ENOENT if there are no USB devices
+ */
+int usb_init(void);
 
-#endif
-/* routines */
-int usb_init(void); /* initialize the USB Controller */
 int usb_stop(void); /* stop the USB Controller */
 int usb_detect_change(void); /* detect if a USB device has been (un)plugged */
-
 
 int usb_set_protocol(struct usb_device *dev, int ifnum, int protocol);
 int usb_set_idle(struct usb_device *dev, int ifnum, int duration,
@@ -584,7 +591,6 @@ struct usb_hub_descriptor {
 	} u;
 } __attribute__ ((packed));
 
-
 struct usb_hub_device {
 	struct usb_device *pusb_dev;
 	struct usb_hub_descriptor desc;
@@ -807,21 +813,6 @@ struct dm_usb_ops {
 
 #define usb_get_ops(dev)	((struct dm_usb_ops *)(dev)->driver->ops)
 #define usb_get_emul_ops(dev)	((struct dm_usb_ops *)(dev)->driver->ops)
-
-/**
- * usb_get_dev_index() - look up a device index number
- *
- * Look up devices using their index number (starting at 0). This works since
- * in U-Boot device addresses are allocated starting at 1 with no gaps.
- *
- * TODO(sjg@chromium.org): Remove this function when usb_ether.c is modified
- * to work better with driver model.
- *
- * @bus:	USB bus to check
- * @index:	Index number of device to find (0=first). This is just the
- *		device address less 1.
- */
-struct usb_device *usb_get_dev_index(struct udevice *bus, int index);
 
 /**
  * usb_setup_device() - set up a device ready for use
@@ -1100,5 +1091,17 @@ struct usb_generic_descriptor **usb_emul_find_descriptor(
  * each.
  */
 void usb_show_tree(void);
+
+/**
+ * usb_kbd_remove_for_test() - Remove any USB keyboard
+ *
+ * This can only be called from test_pre_run(). It removes the USB keyboard from
+ * the console system so that the USB device can be dropped
+ */
+#if CONFIG_IS_ENABLED(USB_KEYBOARD)
+int usb_kbd_remove_for_test(void);
+#else
+static inline int usb_kbd_remove_for_test(void) { return 0; }
+#endif
 
 #endif /*_USB_H_ */

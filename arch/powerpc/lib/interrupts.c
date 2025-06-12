@@ -7,7 +7,7 @@
  * Gleb Natapov <gnatapov@mrv.com>
  */
 
-#include <common.h>
+#include <asm/ppc.h>
 #include <irq_func.h>
 #include <asm/processor.h>
 #include <watchdog.h>
@@ -17,8 +17,8 @@
 #include <asm/ptrace.h>
 
 #ifndef CONFIG_MPC83XX_TIMER
-#ifndef CONFIG_SYS_WATCHDOG_FREQ
-#define CONFIG_SYS_WATCHDOG_FREQ (CONFIG_SYS_HZ / 2)
+#ifndef CFG_SYS_WATCHDOG_FREQ
+#define CFG_SYS_WATCHDOG_FREQ (CONFIG_SYS_HZ / 2)
 #endif
 
 static unsigned decrementer_count; /* count value for 1e6/HZ microseconds */
@@ -31,7 +31,6 @@ static __inline__ unsigned long get_dec (void)
 
 	return val;
 }
-
 
 static __inline__ void set_dec (unsigned long val)
 {
@@ -80,7 +79,7 @@ void timer_interrupt(struct pt_regs *regs)
 	timestamp++;
 
 #if defined(CONFIG_WATCHDOG) || defined (CONFIG_HW_WATCHDOG)
-	if (CONFIG_SYS_WATCHDOG_FREQ && (timestamp % (CONFIG_SYS_WATCHDOG_FREQ)) == 0)
+	if (CFG_SYS_WATCHDOG_FREQ && (timestamp % (CFG_SYS_WATCHDOG_FREQ)) == 0)
 		schedule();
 #endif    /* CONFIG_WATCHDOG || CONFIG_HW_WATCHDOG */
 

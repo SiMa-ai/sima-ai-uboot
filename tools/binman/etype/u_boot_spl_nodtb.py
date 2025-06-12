@@ -21,11 +21,7 @@ class Entry_u_boot_spl_nodtb(Entry_blob):
     expands to a section containing u-boot-spl-dtb, u-boot-spl-bss-pad and
     u-boot-spl-dtb
 
-    SPL can access binman symbols at runtime. See:
-
-        'Access to binman entry offsets at run time (symbols)'
-
-    in the binman README for more information.
+    SPL can access binman symbols at runtime. See :ref:`binman_fdt`.
 
     The ELF file 'spl/u-boot-spl' must also be available for this to work, since
     binman uses that to look up symbols to write into the SPL binary.

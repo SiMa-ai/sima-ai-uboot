@@ -3,7 +3,7 @@
  * (C) Copyright 2014, Cavium Inc.
 **/
 
-#include <common.h>
+#include <config.h>
 #include <cpu_func.h>
 #include <dm.h>
 #include <init.h>
@@ -20,7 +20,7 @@
 #include <dm/platform_data/serial_pl01x.h>
 
 static const struct pl01x_serial_plat serial0 = {
-	.base = CONFIG_SYS_SERIAL0,
+	.base = CFG_SYS_SERIAL0,
 	.type = TYPE_PL011,
 	.clock = 0,
 	.skip_init = true,
@@ -32,7 +32,7 @@ U_BOOT_DRVINFO(thunderx_serial0) = {
 };
 
 static const struct pl01x_serial_plat serial1 = {
-	.base = CONFIG_SYS_SERIAL1,
+	.base = CFG_SYS_SERIAL1,
 	.type = TYPE_PL011,
 	.clock = 0,
 	.skip_init = true,

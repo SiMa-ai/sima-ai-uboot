@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0+
 /* Copyright (C) 2019 Stephan Gerhold */
 
-#include <common.h>
 #include <dm.h>
 #include <generic-phy.h>
 #include <linux/bitops.h>
@@ -19,7 +18,7 @@ static int ab8500_usb_phy_power_on(struct phy *phy)
 	struct udevice *dev = phy->dev;
 	uint set = AB8500_BIT_PHY_CTRL_DEVICE_EN;
 
-	if (CONFIG_IS_ENABLED(USB_MUSB_HOST))
+	if (IS_ENABLED(CONFIG_USB_MUSB_HOST))
 		set = AB8500_BIT_PHY_CTRL_HOST_EN;
 
 	return pmic_clrsetbits(dev->parent, AB8500_USB_PHY_CTRL_REG,

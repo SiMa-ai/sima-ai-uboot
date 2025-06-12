@@ -3,7 +3,6 @@
  * (C) Copyright 2014
  * Heiko Schocher, DENX Software Engineering, hs@denx.de.
  */
-#include <common.h>
 #include <env.h>
 #include <log.h>
 #include <malloc.h>
@@ -30,8 +29,6 @@ static const char *get_mtdids(void)
 
 #if defined(CONFIG_SYS_MTDPARTS_RUNTIME)
 	board_mtdparts_default(&mtdids, &mtdparts);
-#elif defined(MTDIDS_DEFAULT)
-	mtdids = MTDIDS_DEFAULT;
 #elif defined(CONFIG_MTDIDS_DEFAULT)
 	mtdids = CONFIG_MTDIDS_DEFAULT;
 #endif
@@ -147,8 +144,6 @@ static const char *get_mtdparts(void)
 
 #if defined(CONFIG_SYS_MTDPARTS_RUNTIME)
 	board_mtdparts_default(&mtdids, &mtdparts);
-#elif defined(MTDPARTS_DEFAULT)
-	mtdparts = MTDPARTS_DEFAULT;
 #elif defined(CONFIG_MTDPARTS_DEFAULT)
 	mtdparts = CONFIG_MTDPARTS_DEFAULT;
 #endif

@@ -3,7 +3,6 @@
  * Copyright (c) 2018-2020 Linaro Limited
  */
 
-#include <common.h>
 #include <cpu_func.h>
 #include <dm.h>
 #include <dm/device_compat.h>
@@ -73,7 +72,7 @@ static struct optee_service *find_service_driver(const struct tee_optee_ta_uuid 
 
 	for (idx = 0; idx < service_cnt; idx++, service++) {
 		tee_optee_ta_uuid_to_octets(loc_uuid, &service->uuid);
-		if (!memcmp(uuid, loc_uuid, sizeof(uuid)))
+		if (!memcmp(uuid, loc_uuid, sizeof(*uuid)))
 			return service;
 	}
 
@@ -92,7 +91,8 @@ static int bind_service_list(struct udevice *dev, struct tee_shm *service_list, 
 		if (!service)
 			continue;
 
-		ret = device_bind_driver(dev, service->driver_name, service->driver_name, NULL);
+		ret = device_bind_driver_to_node(dev, service->driver_name, service->driver_name,
+						 dev_ofnode(dev), NULL);
 		if (ret) {
 			dev_warn(dev, "%s was not bound: %d, ignored\n", service->driver_name, ret);
 			continue;
@@ -137,6 +137,11 @@ static int enum_services(struct udevice *dev, struct tee_shm **shm, size_t *coun
 	ret = __enum_services(dev, NULL, &shm_size, tee_sess, pta_cmd);
 	if (ret)
 		return ret;
+
+	if (!shm_size) {
+		*count = 0;
+		return 0;
+	}
 
 	ret = tee_shm_alloc(dev, shm_size, 0, shm);
 	if (ret) {
@@ -184,14 +189,15 @@ static int bind_service_drivers(struct udevice *dev)
 
 	ret = enum_services(dev, &service_list, &service_count, tee_sess,
 			    PTA_CMD_GET_DEVICES);
-	if (!ret)
+	if (!ret && service_count)
 		ret = bind_service_list(dev, service_list, service_count);
 
 	tee_shm_free(service_list);
+	service_list = NULL;
 
 	ret2 = enum_services(dev, &service_list, &service_count, tee_sess,
 			     PTA_CMD_GET_DEVICES_SUPP);
-	if (!ret2)
+	if (!ret2 && service_count)
 		ret2 = bind_service_list(dev, service_list, service_count);
 
 	tee_shm_free(service_list);
@@ -840,15 +846,16 @@ static int optee_probe(struct udevice *dev)
 	if (IS_ENABLED(CONFIG_OPTEE_SERVICE_DISCOVERY)) {
 		ret = bind_service_drivers(dev);
 		if (ret)
-			return ret;
+			dev_warn(dev, "optee service enumeration failed: %d\n", ret);
 	} else if (IS_ENABLED(CONFIG_RNG_OPTEE)) {
 		/*
 		 * Discovery of TAs on the TEE bus is not supported in U-Boot:
 		 * only bind the drivers associated to the supported OP-TEE TA
 		 */
-		ret = device_bind_driver(dev, "optee-rng", "optee-rng", NULL);
+		ret = device_bind_driver_to_node(dev, "optee-rng", "optee-rng",
+						 dev_ofnode(dev), NULL);
 		if (ret)
-			dev_warn(dev, "ftpm_tee failed to bind: %d\n", ret);
+			dev_warn(dev, "optee-rng failed to bind: %d\n", ret);
 	}
 
 	return 0;

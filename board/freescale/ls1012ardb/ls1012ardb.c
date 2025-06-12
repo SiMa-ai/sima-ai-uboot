@@ -4,7 +4,7 @@
  * Copyright 2021 NXP
  */
 
-#include <common.h>
+#include <config.h>
 #include <command.h>
 #include <fdt_support.h>
 #include <hang.h>
@@ -15,9 +15,6 @@
 #include <asm/io.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/fsl_serdes.h>
-#ifdef CONFIG_FSL_LS_PPA
-#include <asm/arch/ppa.h>
-#endif
 #include <asm/arch/mmu.h>
 #include <asm/arch/soc.h>
 #include <hwconfig.h>
@@ -113,7 +110,7 @@ int dram_init(void)
 {
 	gd->ram_size = tfa_get_dram_size();
 	if (!gd->ram_size)
-		gd->ram_size = CONFIG_SYS_SDRAM_SIZE;
+		gd->ram_size = CFG_SYS_SDRAM_SIZE;
 
 	return 0;
 }
@@ -140,8 +137,8 @@ int dram_init(void)
 	mmdc_init(&mparam);
 #endif
 
-	gd->ram_size = CONFIG_SYS_SDRAM_SIZE;
-#if !defined(CONFIG_SPL) || defined(CONFIG_SPL_BUILD)
+	gd->ram_size = CFG_SYS_SDRAM_SIZE;
+#if !defined(CONFIG_SPL) || defined(CONFIG_XPL_BUILD)
 	/* This will break-before-make MMU for DDR */
 	update_early_mmu_table();
 #endif
@@ -149,7 +146,6 @@ int dram_init(void)
 	return 0;
 }
 #endif
-
 
 int board_early_init_f(void)
 {
@@ -173,9 +169,6 @@ int board_init(void)
 	erratum_a010315();
 #endif
 
-#ifdef CONFIG_FSL_LS_PPA
-	ppa_init();
-#endif
 	return 0;
 }
 

@@ -9,7 +9,6 @@
 #ifndef __CONFIG_TOPIC_MIAMI_H
 #define __CONFIG_TOPIC_MIAMI_H
 
-
 /* Speed up boot time by ignoring the environment which we never used */
 
 #include "zynq-common.h"
@@ -44,8 +43,8 @@
 # define EXTRA_ENV_USB
 #endif
 
-#undef CONFIG_EXTRA_ENV_SETTINGS
-#define CONFIG_EXTRA_ENV_SETTINGS	\
+#undef CFG_EXTRA_ENV_SETTINGS
+#define CFG_EXTRA_ENV_SETTINGS	\
 	"kernel_image=uImage\0"	\
 	"kernel_addr=0x2080000\0" \
 	"ramdisk_image=uramdisk.image.gz\0"	\

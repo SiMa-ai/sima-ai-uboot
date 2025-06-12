@@ -16,7 +16,6 @@
 
 #include <asm-offsets.h>
 #include <config.h>
-#include <common.h>
 #include <linux/linkage.h>
 
 /*
@@ -95,7 +94,7 @@ flush_dcache:
 	mrc	p15, 0, r0, c1, c0, 0
 	bic	r0, r0, #0x00000300	/* clear bits 9:8 (---- --RS) */
 	bic	r0, r0, #0x00000087	/* clear bits 7, 2:0 (B--- -CAM) */
-#ifdef CONFIG_SYS_EXCEPTION_VECTORS_HIGH
+#ifdef CFG_SYS_EXCEPTION_VECTORS_HIGH
 	orr	r0, r0, #0x00002000	/* set bit 13 (--V- ----) */
 #else
 	bic	r0, r0, #0x00002000	/* clear bit 13 (--V- ----) */
