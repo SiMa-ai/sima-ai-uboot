@@ -18,7 +18,7 @@
         cpus {
                #address-cells = <2>;
                #size-cells = <0>;
-               
+
                 cpu0: cpu@0 {
                         device_type = "cpu";
                         compatible = "arm,armv8";
@@ -297,7 +297,7 @@
                 #size-cells = <2>;
                 ranges;
                 interrupt-controller;
-                reg = <0x0 0x5400000 0x0 0x10000>, 
+                reg = <0x0 0x5400000 0x0 0x10000>,
                       <0x0 0x5440000 0x0 0x200000>;
         };
 
@@ -307,6 +307,14 @@
                 clock-frequency = <250000000>;
                 clock-output-names = "sysdiv4clk";
         };
+
+	sio00_clk: siodivclk@0x04000300 {
+		compatible = "simaai,clkdiv-sio";
+		reg = <0x0 0x04000300 0 0x28>;
+		#clock-cells = <1>;
+		clocks = <&sysdiv4clk>;
+		simaai,ignore-unused = <0x200>;
+	};
 
 	sio10_clk: siodivclk@0x04010300 {
 		compatible = "simaai,clkdiv-sio";
@@ -321,6 +329,12 @@
 		reg = <0x0 0x04020300 0 0x28>;
 		#clock-cells = <1>;
 		clocks = <&sysdiv4clk>;
+	};
+
+	reset00: reset@0x04000210 {
+		compatible = "simaai,reset-sio";
+		reg = <0x0 0x04000210 0 0x8>;
+		#reset-cells = <1>;
 	};
 
 	reset10: reset@0x04010210 {
@@ -343,7 +357,7 @@
                 reg-shift = <2>;
                 clocks = <&sio10_clk SIMAAI_SIO_DEV_UART2>;
                 resets = <&reset10 SIMAAI_SIO_DEV_UART2>;
-                pinctrl-0 = <&pins_uart12_deafult>;
+                pinctrl-0 = <&pins_uart12_default>;
                 pinctrl-names = "default";
         };
 
@@ -355,7 +369,7 @@
                 reg-shift = <2>;
                 clocks = <&sio10_clk SIMAAI_SIO_DEV_UART3>;
                 resets = <&reset10 SIMAAI_SIO_DEV_UART3>;
-                pinctrl-0 = <&pins_uart13_deafult>;
+                pinctrl-0 = <&pins_uart13_default>;
                 pinctrl-names = "default";
         };
 
@@ -367,16 +381,79 @@
                 reg-shift = <2>;
                 clocks = <&sio20_clk SIMAAI_SIO_DEV_UART2>;
                 resets = <&reset20 SIMAAI_SIO_DEV_UART2>;
-                pinctrl-0 = <&pins_uart22_deafult>;
+                pinctrl-0 = <&pins_uart22_default>;
                 pinctrl-names = "default";
         };
+
+	uart3: uart@04006000 {
+                compatible = "snps,dw-apb-uart";
+                reg = <0x0 0x04006000 0x0 0x100>;
+                interrupts = <GIC_SPI 0x11A IRQ_TYPE_LEVEL_HIGH>;
+                reg-io-width = <4>;
+                reg-shift = <2>;
+                clock-frequency = <250000000>;
+                clocks = <&sio00_clk SIMAAI_SIO_DEV_UART0>;
+                resets = <&reset00 SIMAAI_SIO_DEV_UART0>;
+                pinctrl-0 = <&pins_uart00_default>;
+                pinctrl-names = "default";
+        };
+
+	gpio10: gpio@0x04011000 {
+		compatible = "snps,dw-apb-gpio";
+		reg = <0x0 0x04011000 0 0x100>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		status = "disabled";
+		port1: gpio@10 {
+			compatible = "snps,dw-apb-gpio-port";
+			gpio-controller;
+			#gpio-cells = <2>;
+			snps,nr-gpios = <8>;
+			interrupt-controller;
+			#interrupt-cells = <2>;
+			reg = <0>;
+			interrupts = <GIC_SPI 308 IRQ_TYPE_LEVEL_HIGH>,
+				     <GIC_SPI 310 IRQ_TYPE_LEVEL_HIGH>,
+				     <GIC_SPI 312 IRQ_TYPE_LEVEL_HIGH>,
+				     <GIC_SPI 314 IRQ_TYPE_LEVEL_HIGH>,
+				     <GIC_SPI 316 IRQ_TYPE_LEVEL_HIGH>,
+				     <GIC_SPI 318 IRQ_TYPE_LEVEL_HIGH>,
+				     <GIC_SPI 320 IRQ_TYPE_LEVEL_HIGH>,
+				     <GIC_SPI 322 IRQ_TYPE_LEVEL_HIGH>;
+		};
+	};
+
+	gpio60: gpio@0x04061000 {
+		compatible = "snps,dw-apb-gpio";
+		reg = <0x0 0x04061000 0 0x100>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		status = "disabled";
+		port6: gpio@60 {
+			compatible = "snps,dw-apb-gpio-port";
+			gpio-controller;
+			#gpio-cells = <2>;
+			snps,nr-gpios = <8>;
+			interrupt-controller;
+			#interrupt-cells = <2>;
+			reg = <0>;
+			interrupts = <GIC_SPI 438 IRQ_TYPE_LEVEL_HIGH>,
+				     <GIC_SPI 440 IRQ_TYPE_LEVEL_HIGH>,
+				     <GIC_SPI 442 IRQ_TYPE_LEVEL_HIGH>,
+				     <GIC_SPI 444 IRQ_TYPE_LEVEL_HIGH>,
+				     <GIC_SPI 446 IRQ_TYPE_LEVEL_HIGH>,
+				     <GIC_SPI 448 IRQ_TYPE_LEVEL_HIGH>,
+				     <GIC_SPI 450 IRQ_TYPE_LEVEL_HIGH>,
+				     <GIC_SPI 452 IRQ_TYPE_LEVEL_HIGH>;
+		};
+	};
 
         emmc: mmc@0408a000 {
 		compatible = "simaai,sdhci-4.20a";
 		reg = <0x0 0x0408a000 0 0x1000>;
 		bus-width = <8>;
 		max-frequency= <400000000>;
-		pinctrl-0 = <&pins_nvs_emmc_deafult>;
+		pinctrl-0 = <&pins_nvs_emmc_default>;
 		pinctrl-names = "default";
 		status = "disabled";
 	};
@@ -386,7 +463,7 @@
 		reg = <0x0 0x0408b000 0 0x1000>;
 		bus-width = <4>;
 		max-frequency= <400000000>;
-		pinctrl-0 = <&pins_nvs_sd_deafult>;
+		pinctrl-0 = <&pins_nvs_sd_default>;
 		pinctrl-names = "default";
 		no-1-8-v;
 		status = "disabled";
@@ -471,97 +548,109 @@
 		status = "disabled";
 	};
 
+
+	pinmux00: pinmux@0x04000000 {
+		compatible = "simaai,pinctrl-sio";
+		reg = <0x0 0x04000000 0 0x208>, <0x0 0x04001008 0 0x4>;
+		reg-names = "ctl", "gpio";
+
+		pins_uart00_default: pins_uart00 {
+			function = "uart";
+			groups = "uart0_group";
+		};
+	};
+
 	pinmux10: pinmux@0x04010000 {
 		compatible = "simaai,pinctrl-sio";
 		reg = <0x0 0x04010000 0 0x208>, <0x0 0x04011008 0 0x4>;
 		reg-names = "ctl", "gpio";
 
-		pins_spi10_deafult: pins_spi10 {
+		pins_spi10_default: pins_spi10 {
 			function = "spi";
 			groups = "spi0_group";
 		};
 
-		pins_spi11_deafult: pins_spi11 {
+		pins_spi11_default: pins_spi11 {
 			function = "spi";
 			groups = "spi1_group";
 		};
 
-		pins_i2c10_deafult: pins_i2c10 {
+		pins_i2c10_default: pins_i2c10 {
 			function = "i2c";
 			groups = "i2c0_group";
 		};
 
-		pins_i2c11_deafult: pins_i2c11 {
+		pins_i2c11_default: pins_i2c11 {
 			function = "i2c";
 			groups = "i2c1_group";
 		};
 
-		pins_i2c12_deafult: pins_i2c12 {
+		pins_i2c12_default: pins_i2c12 {
 			function = "i2c";
 			groups = "i2c2_group";
 		};
 
-		pins_i2c13_deafult: pins_i2c13 {
+		pins_i2c13_default: pins_i2c13 {
 			function = "i2c";
 			groups = "i2c3_group";
 		};
 
-		pins_uart10_deafult: pins_uart10 {
+		pins_uart10_default: pins_uart10 {
 			function = "uart";
 			groups = "uart0_group";
 		};
 
-		pins_uart11_deafult: pins_uart11 {
+		pins_uart11_default: pins_uart11 {
 			function = "uart";
 			groups = "uart1_group";
 		};
 
-		pins_uart12_deafult: pins_uart12 {
+		pins_uart12_default: pins_uart12 {
 			function = "uart";
 			groups = "uart2_group";
 		};
 
-		pins_uart13_deafult: pins_uart13 {
+		pins_uart13_default: pins_uart13 {
 			function = "uart";
 			groups = "uart3_group";
 		};
 
-		pins_gpio10_deafult: pins_gpio10 {
+		pins_gpio10_default: pins_gpio10 {
 			function = "gpio";
 			groups = "gpio0_group";
 		};
 
-		pins_gpio11_deafult: pins_gpio11 {
+		pins_gpio11_default: pins_gpio11 {
 			function = "gpio";
 			groups = "gpio1_group";
 		};
 
-		pins_gpio12_deafult: pins_gpio12 {
+		pins_gpio12_default: pins_gpio12 {
 			function = "gpio";
 			groups = "gpio2_group";
 		};
 
-		pins_gpio13_deafult: pins_gpio13 {
+		pins_gpio13_default: pins_gpio13 {
 			function = "gpio";
 			groups = "gpio3_group";
 		};
 
-		pins_gpio14_deafult: pins_gpio14 {
+		pins_gpio14_default: pins_gpio14 {
 			function = "gpio";
 			groups = "gpio4_group";
 		};
 
-		pins_gpio15_deafult: pins_gpio15 {
+		pins_gpio15_default: pins_gpio15 {
 			function = "gpio";
 			groups = "gpio5_group";
 		};
 
-		pins_gpio16_deafult: pins_gpio16 {
+		pins_gpio16_default: pins_gpio16 {
 			function = "gpio";
 			groups = "gpio6_group";
 		};
 
-		pins_gpio17_deafult: pins_gpio17 {
+		pins_gpio17_default: pins_gpio17 {
 			function = "gpio";
 			groups = "gpio7_group";
 		};
@@ -572,92 +661,188 @@
 		reg = <0x0 0x04020000 0 0x208>, <0x0 0x04021008 0 0x4>;
 		reg-names = "ctl", "gpio";
 
-		pins_spi20_deafult: pins_spi20 {
+		pins_spi20_default: pins_spi20 {
 			function = "spi";
 			groups = "spi0_group";
 		};
 
-		pins_spi21_deafult: pins_spi21 {
+		pins_spi21_default: pins_spi21 {
 			function = "spi";
 			groups = "spi1_group";
 		};
 
-		pins_i2c20_deafult: pins_i2c20 {
+		pins_i2c20_default: pins_i2c20 {
 			function = "i2c";
 			groups = "i2c0_group";
 		};
 
-		pins_i2c21_deafult: pins_i2c21 {
+		pins_i2c21_default: pins_i2c21 {
 			function = "i2c";
 			groups = "i2c1_group";
 		};
 
-		pins_i2c22_deafult: pins_i2c22 {
+		pins_i2c22_default: pins_i2c22 {
 			function = "i2c";
 			groups = "i2c2_group";
 		};
 
-		pins_i2c23_deafult: pins_i2c23 {
+		pins_i2c23_default: pins_i2c23 {
 			function = "i2c";
 			groups = "i2c3_group";
 		};
 
-		pins_uart20_deafult: pins_uart20 {
+		pins_uart20_default: pins_uart20 {
 			function = "uart";
 			groups = "uart0_group";
 		};
 
-		pins_uart21_deafult: pins_uart21 {
+		pins_uart21_default: pins_uart21 {
 			function = "uart";
 			groups = "uart1_group";
 		};
 
-		pins_uart22_deafult: pins_uart22 {
+		pins_uart22_default: pins_uart22 {
 			function = "uart";
 			groups = "uart2_group";
 		};
 
-		pins_uart23_deafult: pins_uart23 {
+		pins_uart23_default: pins_uart23 {
 			function = "uart";
 			groups = "uart3_group";
 		};
 
-		pins_gpio20_deafult: pins_gpio20 {
+		pins_gpio20_default: pins_gpio20 {
 			function = "gpio";
 			groups = "gpio0_group";
 		};
 
-		pins_gpio21_deafult: pins_gpio21 {
+		pins_gpio21_default: pins_gpio21 {
 			function = "gpio";
 			groups = "gpio1_group";
 		};
 
-		pins_gpio22_deafult: pins_gpio22 {
+		pins_gpio22_default: pins_gpio22 {
 			function = "gpio";
 			groups = "gpio2_group";
 		};
 
-		pins_gpio23_deafult: pins_gpio23 {
+		pins_gpio23_default: pins_gpio23 {
 			function = "gpio";
 			groups = "gpio3_group";
 		};
 
-		pins_gpio24_deafult: pins_gpio24 {
+		pins_gpio24_default: pins_gpio24 {
 			function = "gpio";
 			groups = "gpio4_group";
 		};
 
-		pins_gpio25_deafult: pins_gpio25 {
+		pins_gpio25_default: pins_gpio25 {
 			function = "gpio";
 			groups = "gpio5_group";
 		};
 
-		pins_gpio26_deafult: pins_gpio26 {
+		pins_gpio26_default: pins_gpio26 {
 			function = "gpio";
 			groups = "gpio6_group";
 		};
 
-		pins_gpio27_deafult: pins_gpio27 {
+		pins_gpio27_default: pins_gpio27 {
+			function = "gpio";
+			groups = "gpio7_group";
+		};
+	};
+
+	pinmux60: pinmux@0x04060000 {
+		compatible = "simaai,pinctrl-sio";
+		reg = <0x0 0x04060000 0 0x208>, <0x0 0x04061008 0 0x4>;
+		reg-names = "ctl", "gpio";
+
+		pins_spi60_default: pins_spi60 {
+			function = "spi";
+			groups = "spi0_group";
+		};
+
+		pins_spi61_default: pins_spi61 {
+			function = "spi";
+			groups = "spi1_group";
+		};
+
+		pins_i2c60_default: pins_i2c60 {
+			function = "i2c";
+			groups = "i2c0_group";
+		};
+
+		pins_i2c61_default: pins_i2c61 {
+			function = "i2c";
+			groups = "i2c1_group";
+		};
+
+		pins_i2c62_default: pins_i2c62 {
+			function = "i2c";
+			groups = "i2c2_group";
+		};
+
+		pins_i2c63_default: pins_i2c63 {
+			function = "i2c";
+			groups = "i2c3_group";
+		};
+
+		pins_uart60_default: pins_uart60 {
+			function = "uart";
+			groups = "uart0_group";
+		};
+
+		pins_uart61_default: pins_uart61 {
+			function = "uart";
+			groups = "uart1_group";
+		};
+
+		pins_uart62_default: pins_uart62 {
+			function = "uart";
+			groups = "uart2_group";
+		};
+
+		pins_uart63_default: pins_uart63 {
+			function = "uart";
+			groups = "uart3_group";
+		};
+
+		pins_gpio60_default: pins_gpio60 {
+			function = "gpio";
+			groups = "gpio0_group";
+		};
+
+		pins_gpio61_default: pins_gpio61 {
+			function = "gpio";
+			groups = "gpio1_group";
+		};
+
+		pins_gpio62_default: pins_gpio62 {
+			function = "gpio";
+			groups = "gpio2_group";
+		};
+
+		pins_gpio63_default: pins_gpio63 {
+			function = "gpio";
+			groups = "gpio3_group";
+		};
+
+		pins_gpio64_default: pins_gpio64 {
+			function = "gpio";
+			groups = "gpio4_group";
+		};
+
+		pins_gpio65_default: pins_gpio65 {
+			function = "gpio";
+			groups = "gpio5_group";
+		};
+
+		pins_gpio66_default: pins_gpio66 {
+			function = "gpio";
+			groups = "gpio6_group";
+		};
+
+		pins_gpio67_default: pins_gpio67 {
 			function = "gpio";
 			groups = "gpio7_group";
 		};
@@ -667,7 +852,7 @@
 		compatible = "simaai,pinctrl-nvs-sdemmc";
 		reg = <0x0 0x0408d000 0 0x130>;
 
-		pins_nvs_emmc_deafult: pins_nvs_emmc {
+		pins_nvs_emmc_default: pins_nvs_emmc {
 			nvs_emmc_data_pins {
 				pins = "EMMC_D0", "EMMC_D1", "EMMC_D2", "EMMC_D3",
 					"EMMC_D4", "EMMC_D5", "EMMC_D6", "EMMC_D7";
@@ -697,7 +882,7 @@
 			};
 		};
 
-		pins_nvs_sd_deafult: pins_nvs_sd {
+		pins_nvs_sd_default: pins_nvs_sd {
 			nvs_sd_data_pins {
 				pins = "SDIO_D0", "SDIO_D1", "SDIO_D2", "SDIO_D3";
 				input-enable;

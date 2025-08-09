@@ -1,11 +1,13 @@
 //SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 /*
  * Copyright (c) 2024 Sima ai
- * Generated 03/20/2025 17:15:02 by nileshr
+ * Generated 06/13/2025 12:55:17 by nileshr
  */
 
 #include <asm/arch/init_ddr_modalix.h>
 #include <linux/kernel.h>
+
+#define ENABLE_DDR_RETRAINING (1)
 
 static init_element_t seq1_init_ddr_modalix[] = {
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00010b84, .value=0x1 }, // OPCTRL1
@@ -19,7 +21,7 @@ static init_element_t seq1_init_ddr_modalix[] = {
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00010180, .value=0x211 }, // PWRCTL
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00010184, .value=0x0 }, // HWLPCTL
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x0001018c, .value=0x0 }, // CLKGATECTL
-    { .type=PHY_INIT_TYPE_WRITE, .addr=0x00010200, .value=0x140 }, // RFSHMOD0
+    { .type=PHY_INIT_TYPE_WRITE, .addr=0x00010200, .value=0x14a }, // RFSHMOD0
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00010220, .value=0x1F090E01 }, // RFMMOD0
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00010224, .value=0x0 }, // RFMMOD1
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00010c94, .value=0x1 }, // DBICTL
@@ -77,8 +79,8 @@ static init_element_t seq1_init_ddr_modalix[] = {
     { .type=PHY_INIT_TYPE_WRITE_FREQ, .addr=0x00000588, .value=0x24230f }, // DFITMG2
     { .type=PHY_INIT_TYPE_WRITE_FREQ, .addr=0x00000590, .value=0x0c040003 }, // DFITMG4
     { .type=PHY_INIT_TYPE_WRITE_FREQ, .addr=0x00000594, .value=0x4080007 }, // DFITMG5
-    { .type=PHY_INIT_TYPE_WRITE, .addr=0x000005a0, .value=0x00020202 }, // DFILPTMG0
-    { .type=PHY_INIT_TYPE_WRITE, .addr=0x000005a4, .value=0x00000201 }, // DFILPTMG1
+    { .type=PHY_INIT_TYPE_WRITE_FREQ, .addr=0x000005a0, .value=0x00020202 }, // DFILPTMG0
+    { .type=PHY_INIT_TYPE_WRITE_FREQ, .addr=0x000005a4, .value=0x00000201 }, // DFILPTMG1
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x000005a8, .value=0x00280002  }, // DFIUPDTMG0
     { .type=PHY_INIT_TYPE_WRITE_FREQ, .addr=0x000005ac, .value=0x008300e9 }, // DFIUPDTMG1
     { .type=PHY_INIT_TYPE_WRITE_FREQ, .addr=0x00000600, .value=0x82120073 }, // RFSHSET1TMG0
@@ -89,7 +91,7 @@ static init_element_t seq1_init_ddr_modalix[] = {
     { .type=PHY_INIT_TYPE_WRITE_FREQ, .addr=0x00000800, .value=0xc04b0 }, // ZQSET1TMG0
     { .type=PHY_INIT_TYPE_WRITE_FREQ, .addr=0x00000804, .value=0x140000a }, // ZQSET1TMG1
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000a80, .value=0x3c44 }, // DQSOSCCTL0
-    { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000b00, .value=0xbd3062ae }, // DERATEINT
+    { .type=PHY_INIT_TYPE_WRITE_FREQ, .addr=0x00000b00, .value=0xbd3062ae }, // DERATEINT
     { .type=PHY_INIT_TYPE_WRITE_FREQ, .addr=0x00000b04, .value=0x8120805 }, // DERATEVAL0
     { .type=PHY_INIT_TYPE_WRITE_FREQ, .addr=0x00000b08, .value=0x0000001a }, // DERATEVAL1
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000b80, .value=0x0 }, // HWLPTMG0
@@ -123,7 +125,7 @@ static init_element_t seq1_init_ddr_modalix[] = {
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01010180, .value=0x211 }, // PWRCTL
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01010184, .value=0x0 }, // HWLPCTL
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x0101018c, .value=0x0 }, // CLKGATECTL
-    { .type=PHY_INIT_TYPE_WRITE, .addr=0x01010200, .value=0x140 }, // RFSHMOD0
+    { .type=PHY_INIT_TYPE_WRITE, .addr=0x01010200, .value=0x14a }, // RFSHMOD0
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01010220, .value=0x1F090E01  }, // RFMMOD0
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01010224, .value=0x0 }, // RFMMOD1
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01010c94, .value=0x1 }, // DBICTL
@@ -181,8 +183,8 @@ static init_element_t seq1_init_ddr_modalix[] = {
     { .type=PHY_INIT_TYPE_WRITE_FREQ, .addr=0x01000588, .value=0x24230f }, // DFITMG2
     { .type=PHY_INIT_TYPE_WRITE_FREQ, .addr=0x01000590, .value=0x0c040003 }, // DFITMG4
     { .type=PHY_INIT_TYPE_WRITE_FREQ, .addr=0x01000594, .value=0x4080007 }, // DFITMG5
-    { .type=PHY_INIT_TYPE_WRITE, .addr=0x010005a0, .value=0x00020202 }, // DFILPTMG0
-    { .type=PHY_INIT_TYPE_WRITE, .addr=0x010005a4, .value=0x00000201 }, // DFILPTMG1
+    { .type=PHY_INIT_TYPE_WRITE_FREQ, .addr=0x010005a0, .value=0x00020202 }, // DFILPTMG0
+    { .type=PHY_INIT_TYPE_WRITE_FREQ, .addr=0x010005a4, .value=0x00000201 }, // DFILPTMG1
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x010005a8, .value=0x00280002  }, // DFIUPDTMG0
     { .type=PHY_INIT_TYPE_WRITE_FREQ, .addr=0x010005ac, .value=0x008300e9 }, // DFIUPDTMG1
     { .type=PHY_INIT_TYPE_WRITE_FREQ, .addr=0x01000600, .value=0x82120073 }, // RFSHSET1TMG0
@@ -193,7 +195,7 @@ static init_element_t seq1_init_ddr_modalix[] = {
     { .type=PHY_INIT_TYPE_WRITE_FREQ, .addr=0x01000800, .value=0xc04b0 }, // ZQSET1TMG0
     { .type=PHY_INIT_TYPE_WRITE_FREQ, .addr=0x01000804, .value=0x140000a }, // ZQSET1TMG1
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000a80, .value=0x3c44 }, // DQSOSCCTL0
-    { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000b00, .value=0xbd3062ae }, // DERATEINT
+    { .type=PHY_INIT_TYPE_WRITE_FREQ, .addr=0x01000b00, .value=0xbd3062ae }, // DERATEINT
     { .type=PHY_INIT_TYPE_WRITE_FREQ, .addr=0x01000b04, .value=0x8120805 }, // DERATEVAL0
     { .type=PHY_INIT_TYPE_WRITE_FREQ, .addr=0x01000b08, .value=0x0000001a }, // DERATEVAL1
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000b80, .value=0x0 }, // HWLPTMG0
@@ -241,6 +243,8 @@ static init_element_t seq1_init_ddr_modalix_PHY_DDR_FREQ_3200_8[] = {
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000588, .value=0x24230f }, // DFITMG2
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000590, .value=0x0c040003 }, // DFITMG4
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000594, .value=0x4080007 }, // DFITMG5
+    { .type=PHY_INIT_TYPE_WRITE, .addr=0x000005a0, .value=0x00020202 }, // DFILPTMG0
+    { .type=PHY_INIT_TYPE_WRITE, .addr=0x000005a4, .value=0x00000201 }, // DFILPTMG1
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x000005ac, .value=0x008300e9 }, // DFIUPDTMG1
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000600, .value=0x82120073 }, // RFSHSET1TMG0
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000604, .value=0x730073 }, // RFSHSET1TMG1
@@ -248,6 +252,7 @@ static init_element_t seq1_init_ddr_modalix_PHY_DDR_FREQ_3200_8[] = {
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000650, .value=0x44 }, // RFMSET1TMG0
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000800, .value=0xc04b0 }, // ZQSET1TMG0
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000804, .value=0x140000a }, // ZQSET1TMG1
+    { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000b00, .value=0xbd3062ae }, // DERATEINT
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000b04, .value=0x8120805 }, // DERATEVAL0
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000b08, .value=0x0000001a }, // DERATEVAL1
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000d08, .value=0xe12 }, // RANKTMG1
@@ -284,6 +289,8 @@ static init_element_t seq1_init_ddr_modalix_PHY_DDR_FREQ_3200_8[] = {
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000588, .value=0x24230f }, // DFITMG2
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000590, .value=0x0c040003 }, // DFITMG4
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000594, .value=0x4080007 }, // DFITMG5
+    { .type=PHY_INIT_TYPE_WRITE, .addr=0x010005a0, .value=0x00020202 }, // DFILPTMG0
+    { .type=PHY_INIT_TYPE_WRITE, .addr=0x010005a4, .value=0x00000201 }, // DFILPTMG1
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x010005ac, .value=0x008300e9 }, // DFIUPDTMG1
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000600, .value=0x82120073 }, // RFSHSET1TMG0
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000604, .value=0x730073 }, // RFSHSET1TMG1
@@ -291,6 +298,7 @@ static init_element_t seq1_init_ddr_modalix_PHY_DDR_FREQ_3200_8[] = {
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000650, .value=0x44 }, // RFMSET1TMG0
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000800, .value=0xc04b0 }, // ZQSET1TMG0
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000804, .value=0x140000a }, // ZQSET1TMG1
+    { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000b00, .value=0xbd3062ae }, // DERATEINT
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000b04, .value=0x8120805 }, // DERATEVAL0
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000b08, .value=0x0000001a }, // DERATEVAL1
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000d08, .value=0xe12 }, // RANKTMG1
@@ -330,6 +338,8 @@ static init_element_t seq1_init_ddr_modalix_PHY_DDR_FREQ_3200_16[] = {
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000588, .value=0x24230f }, // DFITMG2
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000590, .value=0x0c040003 }, // DFITMG4
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000594, .value=0x4080007 }, // DFITMG5
+    { .type=PHY_INIT_TYPE_WRITE, .addr=0x000005a0, .value=0x00020202 }, // DFILPTMG0
+    { .type=PHY_INIT_TYPE_WRITE, .addr=0x000005a4, .value=0x00000201 }, // DFILPTMG1
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x000005ac, .value=0x008300e9 }, // DFIUPDTMG1
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000600, .value=0x82120073 }, // RFSHSET1TMG0
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000604, .value=0x730073 }, // RFSHSET1TMG1
@@ -337,6 +347,7 @@ static init_element_t seq1_init_ddr_modalix_PHY_DDR_FREQ_3200_16[] = {
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000650, .value=0x44 }, // RFMSET1TMG0
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000800, .value=0xc04b0 }, // ZQSET1TMG0
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000804, .value=0x140000a }, // ZQSET1TMG1
+    { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000b00, .value=0xbd3062ae }, // DERATEINT
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000b04, .value=0x8120805 }, // DERATEVAL0
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000b08, .value=0x0000001a }, // DERATEVAL1
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000d08, .value=0xe12 }, // RANKTMG1
@@ -373,6 +384,8 @@ static init_element_t seq1_init_ddr_modalix_PHY_DDR_FREQ_3200_16[] = {
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000588, .value=0x24230f }, // DFITMG2
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000590, .value=0x0c040003 }, // DFITMG4
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000594, .value=0x4080007 }, // DFITMG5
+    { .type=PHY_INIT_TYPE_WRITE, .addr=0x010005a0, .value=0x00020202 }, // DFILPTMG0
+    { .type=PHY_INIT_TYPE_WRITE, .addr=0x010005a4, .value=0x00000201 }, // DFILPTMG1
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x010005ac, .value=0x008300e9 }, // DFIUPDTMG1
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000600, .value=0x82120073 }, // RFSHSET1TMG0
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000604, .value=0x730073 }, // RFSHSET1TMG1
@@ -380,6 +393,7 @@ static init_element_t seq1_init_ddr_modalix_PHY_DDR_FREQ_3200_16[] = {
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000650, .value=0x44 }, // RFMSET1TMG0
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000800, .value=0xc04b0 }, // ZQSET1TMG0
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000804, .value=0x140000a }, // ZQSET1TMG1
+    { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000b00, .value=0xbd3062ae }, // DERATEINT
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000b04, .value=0x8120805 }, // DERATEVAL0
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000b08, .value=0x0000001a }, // DERATEVAL1
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000d08, .value=0xe12 }, // RANKTMG1
@@ -410,7 +424,7 @@ static init_element_t seq1_init_ddr_modalix_PHY_DDR_FREQ_6400_8[] = {
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000024, .value=0x20412 }, // DRAMSET1TMG9
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000034, .value=0xc100002 }, // DRAMSET1TMG13
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000038, .value=0x2000E6 }, // DRAMSET1TMG14
-    { .type=PHY_INIT_TYPE_WRITE, .addr=0x0000005c, .value=0x9d000d }, // DRAMSET1TMG23
+    { .type=PHY_INIT_TYPE_WRITE, .addr=0x0000005c, .value=0x009D000d }, // DRAMSET1TMG23
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000060, .value=0x11170e }, // DRAMSET1TMG24
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000064, .value=0x2906  }, // DRAMSET1TMG25
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000078, .value=0x1a1519 }, // DRAMSET1TMG30
@@ -419,6 +433,8 @@ static init_element_t seq1_init_ddr_modalix_PHY_DDR_FREQ_6400_8[] = {
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000588, .value=0x21431f }, // DFITMG2
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000590, .value=0x20100811 }, // DFITMG4
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000594, .value=0x0410000D  }, // DFITMG5
+    { .type=PHY_INIT_TYPE_WRITE, .addr=0x000005a0, .value=0x00020202 }, // DFILPTMG0
+    { .type=PHY_INIT_TYPE_WRITE, .addr=0x000005a4, .value=0x00000201 }, // DFILPTMG1
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x000005ac, .value=0x280050 }, // DFIUPDTMG1
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000600, .value=0x0201000c }, // RFSHSET1TMG0
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000604, .value=0x00E00070 }, // RFSHSET1TMG1
@@ -426,6 +442,7 @@ static init_element_t seq1_init_ddr_modalix_PHY_DDR_FREQ_6400_8[] = {
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000650, .value=0x98 }, // RFMSET1TMG0
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000800, .value=0x180960 }, // ZQSET1TMG0
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000804, .value=0x280000a }, // ZQSET1TMG1
+    { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000b00, .value=0xbd3062ae }, // DERATEINT
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000b04, .value=0x10241004 }, // DERATEVAL0
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000b08, .value=0x00000033 }, // DERATEVAL1
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000d08, .value=0x1c12 }, // RANKTMG1
@@ -453,7 +470,7 @@ static init_element_t seq1_init_ddr_modalix_PHY_DDR_FREQ_6400_8[] = {
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000024, .value=0x20412 }, // DRAMSET1TMG9
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000034, .value=0xc100002 }, // DRAMSET1TMG13
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000038, .value=0x2000E6 }, // DRAMSET1TMG14
-    { .type=PHY_INIT_TYPE_WRITE, .addr=0x0100005c, .value=0x9d000d }, // DRAMSET1TMG23
+    { .type=PHY_INIT_TYPE_WRITE, .addr=0x0100005c, .value=0x009D000d }, // DRAMSET1TMG23
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000060, .value=0x11170e }, // DRAMSET1TMG24
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000064, .value=0x2906  }, // DRAMSET1TMG25
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000078, .value=0x1a1519 }, // DRAMSET1TMG30
@@ -462,6 +479,8 @@ static init_element_t seq1_init_ddr_modalix_PHY_DDR_FREQ_6400_8[] = {
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000588, .value=0x21431f }, // DFITMG2
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000590, .value=0x20100811 }, // DFITMG4
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000594, .value=0x0410000D }, // DFITMG5
+    { .type=PHY_INIT_TYPE_WRITE, .addr=0x010005a0, .value=0x00020202 }, // DFILPTMG0
+    { .type=PHY_INIT_TYPE_WRITE, .addr=0x010005a4, .value=0x00000201 }, // DFILPTMG1
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x010005ac, .value=0x280050 }, // DFIUPDTMG1
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000600, .value=0x0201000c }, // RFSHSET1TMG0
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000604, .value=0x00E00070 }, // RFSHSET1TMG1
@@ -469,6 +488,7 @@ static init_element_t seq1_init_ddr_modalix_PHY_DDR_FREQ_6400_8[] = {
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000650, .value=0x98 }, // RFMSET1TMG0
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000800, .value=0x180960 }, // ZQSET1TMG0
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000804, .value=0x280000a }, // ZQSET1TMG1
+    { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000b00, .value=0xbd3062ae }, // DERATEINT
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000b04, .value=0x10241004 }, // DERATEVAL0
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000b08, .value=0x00000033 }, // DERATEVAL1
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000d08, .value=0x1c12 }, // RANKTMG1
@@ -490,7 +510,7 @@ static init_element_t seq1_init_ddr_modalix_PHY_DDR_FREQ_6400_16[] = {
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00010108, .value=0x1 }, // DERATECTL2
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000000, .value=0x2A101B22 }, // DRAMSET1TMG0
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000004, .value=0x100630 }, // DRAMSET1TMG1
-    { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000008, .value=0x9111717 }, // DRAMSET1TMG2
+    { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000008, .value=0x9111317 }, // DRAMSET1TMG2
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x0000000c, .value=0xC212F }, // DRAMSET1TMG3
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000010, .value=0xf04040f }, // DRAMSET1TMG4
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000014, .value=0x02040C09 }, // DRAMSET1TMG5
@@ -499,22 +519,25 @@ static init_element_t seq1_init_ddr_modalix_PHY_DDR_FREQ_6400_16[] = {
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000024, .value=0x20410 }, // DRAMSET1TMG9
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000034, .value=0xc100002 }, // DRAMSET1TMG13
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000038, .value=0x2000E6 }, // DRAMSET1TMG14
-    { .type=PHY_INIT_TYPE_WRITE, .addr=0x0000005c, .value=0x9d000d }, // DRAMSET1TMG23
+    { .type=PHY_INIT_TYPE_WRITE, .addr=0x0000005c, .value=0x009D0009 }, // DRAMSET1TMG23
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000060, .value=0x10160E }, // DRAMSET1TMG24
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000064, .value=0x2806 }, // DRAMSET1TMG25
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000078, .value=0x191418 }, // DRAMSET1TMG30
-    { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000580, .value=0x543021f }, // DFITMG0
+    { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000580, .value=0x53f021f }, // DFITMG0
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000584, .value=0xB0505 }, // DFITMG1
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000588, .value=0x213f1f }, // DFITMG2
-    { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000590, .value=0x1c100811 }, // DFITMG4
+    { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000590, .value=0x180C0411 }, // DFITMG4
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000594, .value=0x0410000D  }, // DFITMG5
+    { .type=PHY_INIT_TYPE_WRITE, .addr=0x000005a0, .value=0x00100A0C }, // DFILPTMG0
+    { .type=PHY_INIT_TYPE_WRITE, .addr=0x000005a4, .value=0x310 }, // DFILPTMG1
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x000005ac, .value=0x280050 }, // DFIUPDTMG1
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000600, .value=0x0201000c }, // RFSHSET1TMG0
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000604, .value=0x00E00070 }, // RFSHSET1TMG1
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000608, .value=0x06480000 }, // RFSHSET1TMG2
-    { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000650, .value=0x98 }, // RFMSET1TMG0
-    { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000800, .value=0x180960 }, // ZQSET1TMG0
-    { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000804, .value=0x280000a }, // ZQSET1TMG1
+    { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000650, .value=0x88 }, // RFMSET1TMG0
+    { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000800, .value=0x18096a }, // ZQSET1TMG0
+    { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000804, .value=0x28061a8 }, // ZQSET1TMG1
+    { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000b00, .value=0x00F42400 }, // DERATEINT
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000b04, .value=0x10241004 }, // DERATEVAL0
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000b08, .value=0x00000033 }, // DERATEVAL1
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00000d08, .value=0x1c12 }, // RANKTMG1
@@ -533,7 +556,7 @@ static init_element_t seq1_init_ddr_modalix_PHY_DDR_FREQ_6400_16[] = {
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01010108, .value=0x1 }, // DERATECTL2
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000000, .value=0x2A101B22 }, // DRAMSET1TMG0
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000004, .value=0x100630 }, // DRAMSET1TMG1
-    { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000008, .value=0x9111717 }, // DRAMSET1TMG2
+    { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000008, .value=0x9111317 }, // DRAMSET1TMG2
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x0100000c, .value=0xC212F }, // DRAMSET1TMG3
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000010, .value=0xf04040f }, // DRAMSET1TMG4
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000014, .value=0x02040C09 }, // DRAMSET1TMG5
@@ -542,22 +565,25 @@ static init_element_t seq1_init_ddr_modalix_PHY_DDR_FREQ_6400_16[] = {
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000024, .value=0x20410 }, // DRAMSET1TMG9
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000034, .value=0xc100002 }, // DRAMSET1TMG13
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000038, .value=0x2000E6 }, // DRAMSET1TMG14
-    { .type=PHY_INIT_TYPE_WRITE, .addr=0x0100005c, .value=0x9d000d }, // DRAMSET1TMG23
+    { .type=PHY_INIT_TYPE_WRITE, .addr=0x0100005c, .value=0x009D0009 }, // DRAMSET1TMG23
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000060, .value=0x10160E }, // DRAMSET1TMG24
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000064, .value=0x2806 }, // DRAMSET1TMG25
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000078, .value=0x191418 }, // DRAMSET1TMG30
-    { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000580, .value=0x543021f }, // DFITMG0
+    { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000580, .value=0x53f021f }, // DFITMG0
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000584, .value=0xB0505 }, // DFITMG1
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000588, .value=0x213f1f }, // DFITMG2
-    { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000590, .value=0x1c100811 }, // DFITMG4
+    { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000590, .value=0x180C0411 }, // DFITMG4
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000594, .value=0x0410000D }, // DFITMG5
+    { .type=PHY_INIT_TYPE_WRITE, .addr=0x010005a0, .value=0x00100A0C }, // DFILPTMG0
+    { .type=PHY_INIT_TYPE_WRITE, .addr=0x010005a4, .value=0x310 }, // DFILPTMG1
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x010005ac, .value=0x280050 }, // DFIUPDTMG1
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000600, .value=0x0201000c }, // RFSHSET1TMG0
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000604, .value=0x00E00070 }, // RFSHSET1TMG1
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000608, .value=0x06480000 }, // RFSHSET1TMG2
-    { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000650, .value=0x98 }, // RFMSET1TMG0
-    { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000800, .value=0x180960 }, // ZQSET1TMG0
-    { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000804, .value=0x280000a }, // ZQSET1TMG1
+    { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000650, .value=0x88 }, // RFMSET1TMG0
+    { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000800, .value=0x18096a }, // ZQSET1TMG0
+    { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000804, .value=0x28061a8 }, // ZQSET1TMG1
+    { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000b00, .value=0x00F42400 }, // DERATEINT
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000b04, .value=0x10241004 }, // DERATEVAL0
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000b08, .value=0x00000033 }, // DERATEVAL1
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01000d08, .value=0x1c12 }, // RANKTMG1
@@ -596,7 +622,6 @@ static init_element_t seq2_init_ddr_modalix[] = {
 };
 
 static init_element_t seq3_2D_init_ddr_modalix[] = {
-    { .type=PHY_INIT_TYPE_PHYSETTINGS, .addr=0x0, .value=0x0 },
     { .type=PHY_INIT_TYPE_PHY, .addr=0x20060, .value=0x2 }, // DWC_DDRPHYA_MASTER0_p0_MemResetL
     { .type=PHY_INIT_TYPE_PHY, .addr=0x200a5, .value=0x1 }, // DWC_DDRPHYA_MASTER0_p0_LP5Mode
     { .type=PHY_INIT_TYPE_PHY, .addr=0xd0036, .value=0x0 }, // DWC_DDRPHYA_APBONLY0_NeverGateAcCsrClock
@@ -616,17 +641,11 @@ static init_element_t seq3_2D_init_ddr_modalix[] = {
     { .type=PHY_INIT_TYPE_PHY, .addr=0x310ad, .value=0x80 }, // DWC_DDRPHYA_AC1_p0_DfiClkAcLnDis
     { .type=PHY_INIT_TYPE_PHY, .addr=0x310ac, .value=0x80 }, // DWC_DDRPHYA_AC1_p0_AcLnDisable
     { .type=PHY_INIT_TYPE_PHY, .addr=0xc0086, .value=0x0 }, // DWC_DDRPHYA_DRTUB0_ArcPmuEccCtl
-#if ENABLE_DDR_RETRAINING
-    { .type=PHY_INIT_TYPE_PHY, .addr=0x100a3, .value=0xb33 }, // DWC_DDRPHYA_DBYTE0_p0_PptCtlStatic
-    { .type=PHY_INIT_TYPE_PHY, .addr=0x110a3, .value=0xb33 }, // DWC_DDRPHYA_DBYTE1_p0_PptCtlStatic
-    { .type=PHY_INIT_TYPE_PHY, .addr=0x120a3, .value=0xb33 }, // DWC_DDRPHYA_DBYTE2_p0_PptCtlStatic
-    { .type=PHY_INIT_TYPE_PHY, .addr=0x130a3, .value=0xb33 }, // DWC_DDRPHYA_DBYTE3_p0_PptCtlStatic
-#else
-    { .type=PHY_INIT_TYPE_PHY, .addr=0x100a3, .value=0x833 }, // DWC_DDRPHYA_DBYTE0_p0_PptCtlStatic
-    { .type=PHY_INIT_TYPE_PHY, .addr=0x110a3, .value=0x833 }, // DWC_DDRPHYA_DBYTE1_p0_PptCtlStatic
-    { .type=PHY_INIT_TYPE_PHY, .addr=0x120a3, .value=0x833 }, // DWC_DDRPHYA_DBYTE2_p0_PptCtlStatic
-    { .type=PHY_INIT_TYPE_PHY, .addr=0x130a3, .value=0x833 }, // DWC_DDRPHYA_DBYTE3_p0_PptCtlStatic
-#endif
+    { .type=PHY_INIT_TYPE_PHY_FREQ, .addr=0x100a3, .value=0xb33 }, // DWC_DDRPHYA_DBYTE0_p0_PptCtlStatic
+    { .type=PHY_INIT_TYPE_PHY_FREQ, .addr=0x110a3, .value=0xb33 }, // DWC_DDRPHYA_DBYTE1_p0_PptCtlStatic
+    { .type=PHY_INIT_TYPE_PHY_FREQ, .addr=0x120a3, .value=0xb33 }, // DWC_DDRPHYA_DBYTE2_p0_PptCtlStatic
+    { .type=PHY_INIT_TYPE_PHY_FREQ, .addr=0x130a3, .value=0xb33 }, // DWC_DDRPHYA_DBYTE3_p0_PptCtlStatic
+    { .type=PHY_INIT_TYPE_PHYSETTINGS, .addr=0x0, .value=0x0 },
     { .type=PHY_INIT_TYPE_PHY, .addr=0xc00f1, .value=0x6000 }, // DWC_DDRPHYA_DRTUB0_DfiFreqXlat1
     { .type=PHY_INIT_TYPE_PHY, .addr=0xc00f2, .value=0xa9 }, // DWC_DDRPHYA_DRTUB0_DfiFreqXlat2
     { .type=PHY_INIT_TYPE_PHY, .addr=0xc00f3, .value=0x8000 }, // DWC_DDRPHYA_DRTUB0_DfiFreqXlat3
@@ -1078,6 +1097,7 @@ static init_element_t seq3_2D_init_ddr_modalix[] = {
     { .type=PHY_INIT_TYPE_FIRMWARE, .addr=0x58000, .value=0x1 }, // 
     { .type=PHY_INIT_TYPE_PHY_FREQ, .addr=0x58003, .value=0xc80 }, // 
     { .type=PHY_INIT_TYPE_PHY_FREQ, .addr=0x58008, .value=0x17df }, // 
+    { .type=PHY_INIT_TYPE_PHY_FREQ, .addr=0x5800e, .value=0xf }, // 
     { .type=PHY_INIT_TYPE_PHY_FREQ, .addr=0x5802d, .value=0x5151 }, // 
     { .type=PHY_INIT_TYPE_PHY_FREQ, .addr=0x5802e, .value=0x5151 }, // 
     { .type=PHY_INIT_TYPE_PHY_FREQ, .addr=0x5802f, .value=0x5555 }, // 
@@ -1086,6 +1106,10 @@ static init_element_t seq3_2D_init_ddr_modalix[] = {
     { .type=PHY_INIT_TYPE_PHY_FREQ, .addr=0x58032, .value=0x1616 }, // 
     { .type=PHY_INIT_TYPE_PHY_FREQ, .addr=0x58039, .value=0x2020 }, // 
     { .type=PHY_INIT_TYPE_PHY_FREQ, .addr=0x5803a, .value=0x2020 }, // 
+    { .type=PHY_INIT_TYPE_PHY_FREQ, .addr=0x5803f, .value=0x505 }, // 
+    { .type=PHY_INIT_TYPE_PHY_FREQ, .addr=0x58040, .value=0x505 }, // 
+    { .type=PHY_INIT_TYPE_PHY_FREQ, .addr=0x58041, .value=0xae86 }, // 
+    { .type=PHY_INIT_TYPE_PHY_FREQ, .addr=0x58042, .value=0xae86 }, // 
     { .type=PHY_INIT_TYPE_PHY_FREQ, .addr=0x58081, .value=0x2300 }, // 
     { .type=PHY_INIT_TYPE_PHY_FREQ, .addr=0x58082, .value=0x23 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0xd0000, .value=0x1 }, // DWC_DDRPHYA_APBONLY0_MicroContMuxSel
@@ -1220,7 +1244,7 @@ static init_element_t seq3_2D_init_ddr_modalix[] = {
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41079, .value=0x0 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x4107a, .value=0x0 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x4107b, .value=0x0 }, // 
-    { .type=PHY_INIT_TYPE_PHY, .addr=0x4107c, .value=0x4348 }, // 
+    { .type=PHY_INIT_TYPE_PHY_FREQ, .addr=0x4107c, .value=0x4348 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x4107d, .value=0x0 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x4107e, .value=0x0 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x4107f, .value=0x0 }, // 
@@ -1228,7 +1252,7 @@ static init_element_t seq3_2D_init_ddr_modalix[] = {
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41081, .value=0x0 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41082, .value=0x0 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41083, .value=0x0 }, // 
-    { .type=PHY_INIT_TYPE_PHY, .addr=0x41084, .value=0x9748 }, // 
+    { .type=PHY_INIT_TYPE_PHY_FREQ, .addr=0x41084, .value=0x9748 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41085, .value=0x0 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41086, .value=0x0 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41087, .value=0x0 }, // 
@@ -5069,19 +5093,19 @@ static init_element_t seq3_2D_init_ddr_modalix[] = {
     { .type=PHY_INIT_TYPE_PHY, .addr=0x4181f, .value=0x0 }, // 
     { .type=PHY_INIT_TYPE_PHY_FREQ, .addr=0x41a2b, .value=0x4b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41a2f, .value=0x0 }, // 
-    { .type=PHY_INIT_TYPE_PHY, .addr=0x41a53, .value=0x3b00 }, // 
+    { .type=PHY_INIT_TYPE_PHY_FREQ, .addr=0x41a53, .value=0x3b00 }, // 
     { .type=PHY_INIT_TYPE_PHY_FREQ, .addr=0x41a57, .value=0x400 }, // 
     { .type=PHY_INIT_TYPE_PHY_FREQ, .addr=0x41a7b, .value=0x4b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41a7f, .value=0x0 }, // 
-    { .type=PHY_INIT_TYPE_PHY, .addr=0x41aa3, .value=0x3b00 }, // 
+    { .type=PHY_INIT_TYPE_PHY_FREQ, .addr=0x41aa3, .value=0x3b00 }, // 
     { .type=PHY_INIT_TYPE_PHY_FREQ, .addr=0x41aa7, .value=0x400 }, // 
     { .type=PHY_INIT_TYPE_PHY_FREQ, .addr=0x41b33, .value=0x4b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41b37, .value=0x0 }, // 
-    { .type=PHY_INIT_TYPE_PHY, .addr=0x41b5b, .value=0x3b00 }, // 
+    { .type=PHY_INIT_TYPE_PHY_FREQ, .addr=0x41b5b, .value=0x3b00 }, // 
     { .type=PHY_INIT_TYPE_PHY_FREQ, .addr=0x41b5f, .value=0x400 }, // 
     { .type=PHY_INIT_TYPE_PHY_FREQ, .addr=0x41bfb, .value=0x4b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41bff, .value=0x0 }, // 
-    { .type=PHY_INIT_TYPE_PHY, .addr=0x41c23, .value=0x3b00 }, // 
+    { .type=PHY_INIT_TYPE_PHY_FREQ, .addr=0x41c23, .value=0x3b00 }, // 
     { .type=PHY_INIT_TYPE_PHY_FREQ, .addr=0x41c27, .value=0x400 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41008, .value=0xc9d8 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41009, .value=0x0 }, // 
@@ -5199,7 +5223,7 @@ static init_element_t seq3_2D_init_ddr_modalix[] = {
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41079, .value=0x0 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x4107a, .value=0x0 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x4107b, .value=0x0 }, // 
-    { .type=PHY_INIT_TYPE_PHY, .addr=0x4107c, .value=0x4348 }, // 
+    { .type=PHY_INIT_TYPE_PHY_FREQ, .addr=0x4107c, .value=0x4348 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x4107d, .value=0x0 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x4107e, .value=0x0 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x4107f, .value=0x0 }, // 
@@ -5207,7 +5231,7 @@ static init_element_t seq3_2D_init_ddr_modalix[] = {
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41081, .value=0x0 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41082, .value=0x0 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41083, .value=0x0 }, // 
-    { .type=PHY_INIT_TYPE_PHY, .addr=0x41084, .value=0x9748 }, // 
+    { .type=PHY_INIT_TYPE_PHY_FREQ, .addr=0x41084, .value=0x9748 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41085, .value=0x0 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41086, .value=0x0 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41087, .value=0x0 }, // 
@@ -5418,6 +5442,17 @@ static init_element_t seq3_2D_init_ddr_modalix[] = {
 };
 
 static init_element_t seq3_2D_init_ddr_modalix_PHY_DDR_FREQ_3200_8[] = {
+#if ENABLE_DDR_RETRAINING
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x100a3, .value=0xb33 }, // DWC_DDRPHYA_DBYTE0_p0_PptCtlStatic
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x110a3, .value=0xb33 }, // DWC_DDRPHYA_DBYTE1_p0_PptCtlStatic
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x120a3, .value=0xb33 }, // DWC_DDRPHYA_DBYTE2_p0_PptCtlStatic
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x130a3, .value=0xb33 }, // DWC_DDRPHYA_DBYTE3_p0_PptCtlStatic
+#else
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x100a3, .value=0x833 }, // DWC_DDRPHYA_DBYTE0_p0_PptCtlStatic
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x110a3, .value=0x833 }, // DWC_DDRPHYA_DBYTE1_p0_PptCtlStatic
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x120a3, .value=0x833 }, // DWC_DDRPHYA_DBYTE2_p0_PptCtlStatic
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x130a3, .value=0x833 }, // DWC_DDRPHYA_DBYTE3_p0_PptCtlStatic
+#endif
     { .type=PHY_INIT_TYPE_PHY, .addr=0x2004c, .value=0x4a8b }, // DWC_DDRPHYA_MASTER0_p0_PllCtrl5_p0
     { .type=PHY_INIT_TYPE_PHY, .addr=0x20002, .value=0x2 }, // DWC_DDRPHYA_MASTER0_p0_PclkPtrInitVal_p0
     { .type=PHY_INIT_TYPE_PHY, .addr=0x90801, .value=0x26 }, // DWC_DDRPHYA_INITENG0_p0_Seq0BGPR1_p0
@@ -5449,6 +5484,7 @@ static init_element_t seq3_2D_init_ddr_modalix_PHY_DDR_FREQ_3200_8[] = {
     { .type=PHY_INIT_TYPE_PHY, .addr=0x12004c, .value=0x4a8b }, // DWC_DDRPHYA_MASTER0_p1_PllCtrl5_p1
     { .type=PHY_INIT_TYPE_PHY, .addr=0x58003, .value=0xc80 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x58008, .value=0x17df }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x5800e, .value=0xf }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x5802d, .value=0x5151 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x5802e, .value=0x5151 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x5802f, .value=0x5555 }, // 
@@ -5457,6 +5493,10 @@ static init_element_t seq3_2D_init_ddr_modalix_PHY_DDR_FREQ_3200_8[] = {
     { .type=PHY_INIT_TYPE_PHY, .addr=0x58032, .value=0x1616 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x58039, .value=0x2020 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x5803a, .value=0x2020 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x5803f, .value=0x505 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x58040, .value=0x505 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x58041, .value=0xae86 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x58042, .value=0xae86 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x58081, .value=0x2300 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x58082, .value=0x23 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x908f0, .value=0x33 }, // DWC_DDRPHYA_INITENG0_p0_Seq0BDLY0_p0
@@ -5472,6 +5512,8 @@ static init_element_t seq3_2D_init_ddr_modalix_PHY_DDR_FREQ_3200_8[] = {
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41053, .value=0x1b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41063, .value=0x1b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41073, .value=0x1b00 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x4107c, .value=0x4348 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x41084, .value=0x9748 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x4108b, .value=0x1b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x4109b, .value=0x1b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x410ab, .value=0x1b00 }, // 
@@ -5484,12 +5526,16 @@ static init_element_t seq3_2D_init_ddr_modalix_PHY_DDR_FREQ_3200_8[] = {
     { .type=PHY_INIT_TYPE_PHY, .addr=0x90811, .value=0x1 }, // DWC_DDRPHYA_INITENG0_p0_Seq0BGPR17_p0
     { .type=PHY_INIT_TYPE_PHY, .addr=0x90812, .value=0xff01 }, // DWC_DDRPHYA_INITENG0_p0_Seq0BGPR18_p0
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41a2b, .value=0x4b00 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x41a53, .value=0x3b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41a57, .value=0x400 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41a7b, .value=0x4b00 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x41aa3, .value=0x3b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41aa7, .value=0x400 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41b33, .value=0x4b00 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x41b5b, .value=0x3b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41b5f, .value=0x400 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41bfb, .value=0x4b00 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x41c23, .value=0x3b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41c27, .value=0x400 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41013, .value=0x1b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41023, .value=0x1b00 }, // 
@@ -5501,12 +5547,25 @@ static init_element_t seq3_2D_init_ddr_modalix_PHY_DDR_FREQ_3200_8[] = {
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41053, .value=0x1b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41063, .value=0x1b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41073, .value=0x1b00 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x4107c, .value=0x4348 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x41084, .value=0x9748 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x4108b, .value=0x1b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x4109b, .value=0x1b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x410ab, .value=0x1b00 }, // 
 };
 
 static init_element_t seq3_2D_init_ddr_modalix_PHY_DDR_FREQ_3200_16[] = {
+#if ENABLE_DDR_RETRAINING
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x100a3, .value=0xb33 }, // DWC_DDRPHYA_DBYTE0_p0_PptCtlStatic
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x110a3, .value=0xb33 }, // DWC_DDRPHYA_DBYTE1_p0_PptCtlStatic
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x120a3, .value=0xb33 }, // DWC_DDRPHYA_DBYTE2_p0_PptCtlStatic
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x130a3, .value=0xb33 }, // DWC_DDRPHYA_DBYTE3_p0_PptCtlStatic
+#else
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x100a3, .value=0x833 }, // DWC_DDRPHYA_DBYTE0_p0_PptCtlStatic
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x110a3, .value=0x833 }, // DWC_DDRPHYA_DBYTE1_p0_PptCtlStatic
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x120a3, .value=0x833 }, // DWC_DDRPHYA_DBYTE2_p0_PptCtlStatic
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x130a3, .value=0x833 }, // DWC_DDRPHYA_DBYTE3_p0_PptCtlStatic
+#endif
     { .type=PHY_INIT_TYPE_PHY, .addr=0x2004c, .value=0x4a8b }, // DWC_DDRPHYA_MASTER0_p0_PllCtrl5_p0
     { .type=PHY_INIT_TYPE_PHY, .addr=0x20002, .value=0x2 }, // DWC_DDRPHYA_MASTER0_p0_PclkPtrInitVal_p0
     { .type=PHY_INIT_TYPE_PHY, .addr=0x90801, .value=0x26 }, // DWC_DDRPHYA_INITENG0_p0_Seq0BGPR1_p0
@@ -5538,6 +5597,7 @@ static init_element_t seq3_2D_init_ddr_modalix_PHY_DDR_FREQ_3200_16[] = {
     { .type=PHY_INIT_TYPE_PHY, .addr=0x12004c, .value=0x4a8b }, // DWC_DDRPHYA_MASTER0_p1_PllCtrl5_p1
     { .type=PHY_INIT_TYPE_PHY, .addr=0x58003, .value=0xc80 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x58008, .value=0x17df }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x5800e, .value=0xf }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x5802d, .value=0x5151 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x5802e, .value=0x5151 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x5802f, .value=0x5555 }, // 
@@ -5546,6 +5606,10 @@ static init_element_t seq3_2D_init_ddr_modalix_PHY_DDR_FREQ_3200_16[] = {
     { .type=PHY_INIT_TYPE_PHY, .addr=0x58032, .value=0x1616 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x58039, .value=0x2020 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x5803a, .value=0x2020 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x5803f, .value=0x505 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x58040, .value=0x505 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x58041, .value=0xae86 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x58042, .value=0xae86 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x58081, .value=0x2300 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x58082, .value=0x23 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x908f0, .value=0x33 }, // DWC_DDRPHYA_INITENG0_p0_Seq0BDLY0_p0
@@ -5561,6 +5625,8 @@ static init_element_t seq3_2D_init_ddr_modalix_PHY_DDR_FREQ_3200_16[] = {
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41053, .value=0x1b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41063, .value=0x1b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41073, .value=0x1b00 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x4107c, .value=0x4348 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x41084, .value=0x9748 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x4108b, .value=0x1b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x4109b, .value=0x1b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x410ab, .value=0x1b00 }, // 
@@ -5573,12 +5639,16 @@ static init_element_t seq3_2D_init_ddr_modalix_PHY_DDR_FREQ_3200_16[] = {
     { .type=PHY_INIT_TYPE_PHY, .addr=0x90811, .value=0x1 }, // DWC_DDRPHYA_INITENG0_p0_Seq0BGPR17_p0
     { .type=PHY_INIT_TYPE_PHY, .addr=0x90812, .value=0xff01 }, // DWC_DDRPHYA_INITENG0_p0_Seq0BGPR18_p0
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41a2b, .value=0x4b00 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x41a53, .value=0x3b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41a57, .value=0x400 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41a7b, .value=0x4b00 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x41aa3, .value=0x3b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41aa7, .value=0x400 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41b33, .value=0x4b00 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x41b5b, .value=0x3b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41b5f, .value=0x400 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41bfb, .value=0x4b00 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x41c23, .value=0x3b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41c27, .value=0x400 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41013, .value=0x1b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41023, .value=0x1b00 }, // 
@@ -5590,12 +5660,25 @@ static init_element_t seq3_2D_init_ddr_modalix_PHY_DDR_FREQ_3200_16[] = {
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41053, .value=0x1b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41063, .value=0x1b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41073, .value=0x1b00 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x4107c, .value=0x4348 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x41084, .value=0x9748 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x4108b, .value=0x1b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x4109b, .value=0x1b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x410ab, .value=0x1b00 }, // 
 };
 
 static init_element_t seq3_2D_init_ddr_modalix_PHY_DDR_FREQ_6400_8[] = {
+#if ENABLE_DDR_RETRAINING
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x100a3, .value=0xb33 }, // DWC_DDRPHYA_DBYTE0_p0_PptCtlStatic
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x110a3, .value=0xb33 }, // DWC_DDRPHYA_DBYTE1_p0_PptCtlStatic
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x120a3, .value=0xb33 }, // DWC_DDRPHYA_DBYTE2_p0_PptCtlStatic
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x130a3, .value=0xb33 }, // DWC_DDRPHYA_DBYTE3_p0_PptCtlStatic
+#else
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x100a3, .value=0x833 }, // DWC_DDRPHYA_DBYTE0_p0_PptCtlStatic
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x110a3, .value=0x833 }, // DWC_DDRPHYA_DBYTE1_p0_PptCtlStatic
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x120a3, .value=0x833 }, // DWC_DDRPHYA_DBYTE2_p0_PptCtlStatic
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x130a3, .value=0x833 }, // DWC_DDRPHYA_DBYTE3_p0_PptCtlStatic
+#endif
     { .type=PHY_INIT_TYPE_PHY, .addr=0x2004c, .value=0x2e8f }, // DWC_DDRPHYA_MASTER0_p0_PllCtrl5_p0
     { .type=PHY_INIT_TYPE_PHY, .addr=0x20002, .value=0x4 }, // DWC_DDRPHYA_MASTER0_p0_PclkPtrInitVal_p0
     { .type=PHY_INIT_TYPE_PHY, .addr=0x90801, .value=0x4d }, // DWC_DDRPHYA_INITENG0_p0_Seq0BGPR1_p0
@@ -5627,6 +5710,7 @@ static init_element_t seq3_2D_init_ddr_modalix_PHY_DDR_FREQ_6400_8[] = {
     { .type=PHY_INIT_TYPE_PHY, .addr=0x12004c, .value=0x6e8f }, // DWC_DDRPHYA_MASTER0_p1_PllCtrl5_p1
     { .type=PHY_INIT_TYPE_PHY, .addr=0x58003, .value=0x1900 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x58008, .value=0x13df }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x5800e, .value=0xf }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x5802d, .value=0xb1b1 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x5802e, .value=0xb1b1 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x5802f, .value=0xbbbb }, // 
@@ -5635,6 +5719,10 @@ static init_element_t seq3_2D_init_ddr_modalix_PHY_DDR_FREQ_6400_8[] = {
     { .type=PHY_INIT_TYPE_PHY, .addr=0x58032, .value=0x606 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x58039, .value=0x0 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x5803a, .value=0x0 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x5803f, .value=0x505 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x58040, .value=0x505 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x58041, .value=0xae86 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x58042, .value=0xae86 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x58081, .value=0x4b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x58082, .value=0x43 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x908f0, .value=0x65 }, // DWC_DDRPHYA_INITENG0_p0_Seq0BDLY0_p0
@@ -5650,6 +5738,8 @@ static init_element_t seq3_2D_init_ddr_modalix_PHY_DDR_FREQ_6400_8[] = {
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41053, .value=0x2b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41063, .value=0x2b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41073, .value=0x2b00 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x4107c, .value=0x4348 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x41084, .value=0x9748 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x4108b, .value=0x2b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x4109b, .value=0x2b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x410ab, .value=0x2b00 }, // 
@@ -5669,12 +5759,16 @@ static init_element_t seq3_2D_init_ddr_modalix_PHY_DDR_FREQ_6400_8[] = {
     { .type=PHY_INIT_TYPE_PHY, .addr=0x90811, .value=0x0 }, // DWC_DDRPHYA_INITENG0_p0_Seq0BGPR17_p0
     { .type=PHY_INIT_TYPE_PHY, .addr=0x90812, .value=0xff00 }, // DWC_DDRPHYA_INITENG0_p0_Seq0BGPR18_p0
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41a2b, .value=0x6b00 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x41a53, .value=0x3b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41a57, .value=0x800 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41a7b, .value=0x6b00 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x41aa3, .value=0x3b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41aa7, .value=0x800 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41b33, .value=0x6b00 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x41b5b, .value=0x3b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41b5f, .value=0x800 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41bfb, .value=0x6b00 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x41c23, .value=0x3b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41c27, .value=0x800 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41013, .value=0x2b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41023, .value=0x2b00 }, // 
@@ -5686,12 +5780,25 @@ static init_element_t seq3_2D_init_ddr_modalix_PHY_DDR_FREQ_6400_8[] = {
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41053, .value=0x2b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41063, .value=0x2b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41073, .value=0x2b00 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x4107c, .value=0x4348 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x41084, .value=0x9748 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x4108b, .value=0x2b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x4109b, .value=0x2b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x410ab, .value=0x2b00 }, // 
 };
 
 static init_element_t seq3_2D_init_ddr_modalix_PHY_DDR_FREQ_6400_16[] = {
+#if ENABLE_DDR_RETRAINING
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x100a3, .value=0xb33 }, // DWC_DDRPHYA_DBYTE0_p0_PptCtlStatic
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x110a3, .value=0xb3f }, // DWC_DDRPHYA_DBYTE1_p0_PptCtlStatic
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x120a3, .value=0xb33 }, // DWC_DDRPHYA_DBYTE2_p0_PptCtlStatic
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x130a3, .value=0xb3f }, // DWC_DDRPHYA_DBYTE3_p0_PptCtlStatic
+#else
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x100a3, .value=0x833 }, // DWC_DDRPHYA_DBYTE0_p0_PptCtlStatic
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x110a3, .value=0x83f }, // DWC_DDRPHYA_DBYTE1_p0_PptCtlStatic
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x120a3, .value=0x833 }, // DWC_DDRPHYA_DBYTE2_p0_PptCtlStatic
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x130a3, .value=0x83f }, // DWC_DDRPHYA_DBYTE3_p0_PptCtlStatic
+#endif
     { .type=PHY_INIT_TYPE_PHY, .addr=0x2004c, .value=0x2e8f }, // DWC_DDRPHYA_MASTER0_p0_PllCtrl5_p0
     { .type=PHY_INIT_TYPE_PHY, .addr=0x20002, .value=0x4 }, // DWC_DDRPHYA_MASTER0_p0_PclkPtrInitVal_p0
     { .type=PHY_INIT_TYPE_PHY, .addr=0x90801, .value=0x4d }, // DWC_DDRPHYA_INITENG0_p0_Seq0BGPR1_p0
@@ -5706,23 +5813,24 @@ static init_element_t seq3_2D_init_ddr_modalix_PHY_DDR_FREQ_6400_16[] = {
     { .type=PHY_INIT_TYPE_PHY, .addr=0x20037, .value=0x41c }, // DWC_DDRPHYA_MASTER0_p0_ACSMWckWriteTogglePulse_p0
     { .type=PHY_INIT_TYPE_PHY, .addr=0x20037, .value=0x45c }, // DWC_DDRPHYA_MASTER0_p0_ACSMWckWriteTogglePulse_p0
     { .type=PHY_INIT_TYPE_PHY, .addr=0x20038, .value=0x1920 }, // DWC_DDRPHYA_MASTER0_p0_ACSMWckWriteFastTogglePulse_p0
-    { .type=PHY_INIT_TYPE_PHY, .addr=0x20039, .value=0x101c }, // DWC_DDRPHYA_MASTER0_p0_ACSMWckReadStaticLoPulse_p0
-    { .type=PHY_INIT_TYPE_PHY, .addr=0x2003a, .value=0x101c }, // DWC_DDRPHYA_MASTER0_p0_ACSMWckReadStaticHiPulse_p0
-    { .type=PHY_INIT_TYPE_PHY, .addr=0x2003b, .value=0x42c }, // DWC_DDRPHYA_MASTER0_p0_ACSMWckReadTogglePulse_p0
-    { .type=PHY_INIT_TYPE_PHY, .addr=0x2003c, .value=0x2d30 }, // DWC_DDRPHYA_MASTER0_p0_ACSMWckReadFastTogglePulse_p0
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x20039, .value=0x1018 }, // DWC_DDRPHYA_MASTER0_p0_ACSMWckReadStaticLoPulse_p0
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x2003a, .value=0x1018 }, // DWC_DDRPHYA_MASTER0_p0_ACSMWckReadStaticHiPulse_p0
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x2003b, .value=0x428 }, // DWC_DDRPHYA_MASTER0_p0_ACSMWckReadTogglePulse_p0
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x2003c, .value=0x2d2c }, // DWC_DDRPHYA_MASTER0_p0_ACSMWckReadFastTogglePulse_p0
     { .type=PHY_INIT_TYPE_PHY, .addr=0x2003d, .value=0x1004 }, // DWC_DDRPHYA_MASTER0_p0_ACSMWckFreqSwStaticLoPulse_p0
     { .type=PHY_INIT_TYPE_PHY, .addr=0x2003e, .value=0x1004 }, // DWC_DDRPHYA_MASTER0_p0_ACSMWckFreqSwStaticHiPulse_p0
     { .type=PHY_INIT_TYPE_PHY, .addr=0x2003f, .value=0x414 }, // DWC_DDRPHYA_MASTER0_p0_ACSMWckFreqSwTogglePulse_p0
     { .type=PHY_INIT_TYPE_PHY, .addr=0x20040, .value=0x1118 }, // DWC_DDRPHYA_MASTER0_p0_ACSMWckFreqSwFastTogglePulse_p0
-    { .type=PHY_INIT_TYPE_PHY, .addr=0x2002c, .value=0x843 }, // DWC_DDRPHYA_MASTER0_p0_ACSMRxEnPulse_p0
-    { .type=PHY_INIT_TYPE_PHY, .addr=0x2002d, .value=0x843 }, // DWC_DDRPHYA_MASTER0_p0_ACSMRxValPulse_p0
-    { .type=PHY_INIT_TYPE_PHY, .addr=0x20030, .value=0x843 }, // DWC_DDRPHYA_MASTER0_p0_ACSMRdcsPulse_p0
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x2002c, .value=0x83f }, // DWC_DDRPHYA_MASTER0_p0_ACSMRxEnPulse_p0
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x2002d, .value=0x83f }, // DWC_DDRPHYA_MASTER0_p0_ACSMRxValPulse_p0
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x20030, .value=0x83f }, // DWC_DDRPHYA_MASTER0_p0_ACSMRdcsPulse_p0
     { .type=PHY_INIT_TYPE_PHY, .addr=0x2002e, .value=0x81f }, // DWC_DDRPHYA_MASTER0_p0_ACSMTxEnPulse_p0
     { .type=PHY_INIT_TYPE_PHY, .addr=0x2002f, .value=0x81f }, // DWC_DDRPHYA_MASTER0_p0_ACSMWrcsPulse_p0
     { .type=PHY_INIT_TYPE_PHY, .addr=0x2004c, .value=0x6e8f }, // DWC_DDRPHYA_MASTER0_p0_PllCtrl5_p0
     { .type=PHY_INIT_TYPE_PHY, .addr=0x12004c, .value=0x6e8f }, // DWC_DDRPHYA_MASTER0_p1_PllCtrl5_p1
     { .type=PHY_INIT_TYPE_PHY, .addr=0x58003, .value=0x1900 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x58008, .value=0x13df }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x5800e, .value=0x0 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x5802d, .value=0xb1b1 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x5802e, .value=0xb1b1 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x5802f, .value=0xbbbb }, // 
@@ -5731,10 +5839,14 @@ static init_element_t seq3_2D_init_ddr_modalix_PHY_DDR_FREQ_6400_16[] = {
     { .type=PHY_INIT_TYPE_PHY, .addr=0x58032, .value=0x606 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x58039, .value=0x0 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x5803a, .value=0x0 }, // 
-    { .type=PHY_INIT_TYPE_PHY, .addr=0x58081, .value=0x4b00 }, // 
-    { .type=PHY_INIT_TYPE_PHY, .addr=0x58082, .value=0x43 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x5803f, .value=0x0 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x58040, .value=0x0 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x58041, .value=0xee06 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x58042, .value=0xee06 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x58081, .value=0x4300 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x58082, .value=0x3f }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x908f0, .value=0x65 }, // DWC_DDRPHYA_INITENG0_p0_Seq0BDLY0_p0
-    { .type=PHY_INIT_TYPE_PHY, .addr=0x908f1, .value=0x258 }, // DWC_DDRPHYA_INITENG0_p0_Seq0BDLY1_p0
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x908f1, .value=0x12c }, // DWC_DDRPHYA_INITENG0_p0_Seq0BDLY1_p0
     { .type=PHY_INIT_TYPE_PHY, .addr=0x908f4, .value=0x14 }, // DWC_DDRPHYA_INITENG0_p0_Seq0BDLY4_p0
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41013, .value=0x2b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41023, .value=0x2b00 }, // 
@@ -5746,24 +5858,37 @@ static init_element_t seq3_2D_init_ddr_modalix_PHY_DDR_FREQ_6400_16[] = {
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41053, .value=0x2b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41063, .value=0x2b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41073, .value=0x2b00 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x4107c, .value=0x4308 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x41084, .value=0xb748 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x4108b, .value=0x2b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x4109b, .value=0x2b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x410ab, .value=0x2b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x2004c, .value=0x2e8f }, // DWC_DDRPHYA_MASTER0_p0_PllCtrl5_p0
     { .type=PHY_INIT_TYPE_PHY, .addr=0x20045, .value=0x2 }, // DWC_DDRPHYA_MASTER0_p0_ACSMRptCntOverride_p0
+#if ENABLE_DDR_RETRAINING 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x1000f, .value=0x1089 }, // DWC_DDRPHYA_DBYTE0_p0_RxReplicaCtl04_p0
     { .type=PHY_INIT_TYPE_PHY, .addr=0x1100f, .value=0x1089 }, // DWC_DDRPHYA_DBYTE1_p0_RxReplicaCtl04_p0
     { .type=PHY_INIT_TYPE_PHY, .addr=0x1200f, .value=0x1089 }, // DWC_DDRPHYA_DBYTE2_p0_RxReplicaCtl04_p0
     { .type=PHY_INIT_TYPE_PHY, .addr=0x1300f, .value=0x1089 }, // DWC_DDRPHYA_DBYTE3_p0_RxReplicaCtl04_p0
+#else
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x1000f, .value=0x1088 }, // DWC_DDRPHYA_DBYTE0_p0_RxReplicaCtl04_p0
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x1100f, .value=0x1088 }, // DWC_DDRPHYA_DBYTE1_p0_RxReplicaCtl04_p0
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x1200f, .value=0x1088 }, // DWC_DDRPHYA_DBYTE2_p0_RxReplicaCtl04_p0
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x1300f, .value=0x1088 }, // DWC_DDRPHYA_DBYTE3_p0_RxReplicaCtl04_p0
+#endif
     { .type=PHY_INIT_TYPE_PHY, .addr=0x90811, .value=0x0 }, // DWC_DDRPHYA_INITENG0_p0_Seq0BGPR17_p0
     { .type=PHY_INIT_TYPE_PHY, .addr=0x90812, .value=0xff00 }, // DWC_DDRPHYA_INITENG0_p0_Seq0BGPR18_p0
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41a2b, .value=0x6b00 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x41a53, .value=0x2b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41a57, .value=0x800 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41a7b, .value=0x6b00 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x41aa3, .value=0x2b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41aa7, .value=0x800 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41b33, .value=0x6b00 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x41b5b, .value=0x2b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41b5f, .value=0x800 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41bfb, .value=0x6b00 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x41c23, .value=0x2b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41c27, .value=0x800 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41013, .value=0x2b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41023, .value=0x2b00 }, // 
@@ -5775,6 +5900,8 @@ static init_element_t seq3_2D_init_ddr_modalix_PHY_DDR_FREQ_6400_16[] = {
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41053, .value=0x2b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41063, .value=0x2b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x41073, .value=0x2b00 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x4107c, .value=0x4308 }, // 
+    { .type=PHY_INIT_TYPE_PHY, .addr=0x41084, .value=0xb748 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x4108b, .value=0x2b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x4109b, .value=0x2b00 }, // 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x410ab, .value=0x2b00 }, // 
