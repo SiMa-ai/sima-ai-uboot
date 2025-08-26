@@ -1,0 +1,36 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * Copyright (c) 2025 SiMa ai
+ */
+
+/dts-v1/;
+
+#include "simaai-modalix-h.dtsi"
+
+
+/ {
+	model = "SiMa.ai Modalix VDK Virtual Board";
+
+	chosen {
+		bootargs = "console=ttyS0,1152000n8 root=/dev/ram0 rw rootfstype=ramfs";
+	};
+
+	aliases {
+		console   = &uart0;
+		mmc0 = &emmc;
+		mmc1 = &sd;
+	};
+
+	memory@1000000000 {
+		device_type = "memory";
+		reg = <0x10 0x00000000 0x0e 0x00000000>;
+	};
+};
+
+&emmc {
+	status = "okay";
+};
+
+&sd {
+	status = "okay";
+};

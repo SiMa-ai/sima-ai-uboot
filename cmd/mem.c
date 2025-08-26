@@ -934,6 +934,8 @@ static ulong mem_test_alt(vu_long *buf, ulong start_addr, ulong end_addr,
 	return errs;
 }
 
+
+
 static int compare_regions(volatile unsigned long *bufa,
 			   volatile unsigned long *bufb, size_t count)
 {
@@ -1000,7 +1002,7 @@ static ulong mem_test_bitflip(vu_long *buf, ulong start, ulong end)
 }
 
 static ulong mem_test_quick(vu_long *buf, ulong start_addr, ulong end_addr,
-			    vu_long pattern, int iteration)
+			    vu_long pattern, int iteration, int rw_flag)
 {
 	vu_long *end;
 	vu_long *addr;
@@ -1026,33 +1028,37 @@ static ulong mem_test_quick(vu_long *buf, ulong start_addr, ulong end_addr,
 	}
 	length = (end_addr - start_addr) / sizeof(ulong);
 	end = buf + length;
-	printf("\rPattern %0*lX  Writing..."
-		"%12s"
-		"\b\b\b\b\b\b\b\b\b\b",
-		plen, pattern, "");
+	if (rw_flag == 0 || rw_flag == 2) {
+		printf("\rPattern %0*lX  Writing..."
+			"%12s"
+			"\b\b\b\b\b\b\b\b\b\b",
+			plen, pattern, "");
 
-	for (addr = buf, val = pattern; addr < end; addr++) {
-		schedule();
-		*addr = val;
-		val += incr;
+		for (addr = buf, val = pattern; addr < end; addr++) {
+			schedule();
+			*addr = val;
+			val += incr;
+		}
 	}
 
-	puts("Reading...");
+	if (rw_flag == 1 || rw_flag == 2) {
+		puts("Reading...");
 
-	for (addr = buf, val = pattern; addr < end; addr++) {
-		schedule();
-		readback = *addr;
-		if (readback != val) {
-			ulong offset = addr - buf;
+		for (addr = buf, val = pattern; addr < end; addr++) {
+			schedule();
+			readback = *addr;
+			//printf("\n Read org done...0x%llx, 0x%llx", readback , addr );
+			if (readback != val) {
+				ulong offset = addr - buf;
 
-			printf("\nMem error @ 0x%0*lX: found %0*lX, expected %0*lX\n",
-			       plen, start_addr + offset * sizeof(vu_long),
-			       plen, readback, plen, val);
-			errs++;
-			if (ctrlc())
-				return -1;
+				printf("\nMem error @ 0x%0*lX: found %0*lX, expected %0*lX\n",
+						plen, start_addr + offset * sizeof(vu_long), plen, readback, plen, val);
+				errs++;
+				if (ctrlc())
+					return -1;
+			}
+			val += incr;
 		}
-		val += incr;
 	}
 
 	return errs;
@@ -1232,6 +1238,7 @@ static int do_mem_mtest(struct cmd_tbl *cmdtp, int flag, int argc,
 	ulong errs = 0;	/* number of errors, or -1 if interrupted */
 	ulong pattern = 0;
 	int iteration;
+	ulong rw_flag = 2; /* default: read and write (2), 0 = write only, 1 = read only */
 
 	start = CONFIG_SYS_MEMTEST_START;
 	end = CONFIG_SYS_MEMTEST_END;
@@ -1250,6 +1257,10 @@ static int do_mem_mtest(struct cmd_tbl *cmdtp, int flag, int argc,
 
 	if (argc > 4)
 		if (strict_strtoul(argv[4], 16, &iteration_limit) < 0)
+			return CMD_RET_USAGE;
+
+	if (argc > 5)
+		if (strict_strtoul(argv[5], 16, &rw_flag) < 0)
 			return CMD_RET_USAGE;
 
 	if (end < start) {
@@ -1281,8 +1292,7 @@ static int do_mem_mtest(struct cmd_tbl *cmdtp, int flag, int argc,
 				errs = mem_test_bitflip(buf, start, end);
 			}
 		} else {
-			errs = mem_test_quick(buf, start, end, pattern,
-					      iteration);
+			errs = mem_test_quick(buf, start, end, pattern, iteration, rw_flag);
 		}
 		if (errs == -1UL)
 			break;
@@ -1560,7 +1570,7 @@ U_BOOT_CMD(
 
 #ifdef CONFIG_CMD_MEMTEST
 U_BOOT_CMD(
-	mtest,	5,	1,	do_mem_mtest,
+	mtest,	6,	1,	do_mem_mtest,
 	"simple RAM read/write test",
 	"[start [end [pattern [iterations]]]]"
 );

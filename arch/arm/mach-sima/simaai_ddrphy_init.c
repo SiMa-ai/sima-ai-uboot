@@ -65,9 +65,6 @@ void sima_ddr_init(void)
 	if(ddrc == NULL)
 		return;
 
-	ddrc->sequences[PHY_INIT_DDR_PREPARE_MAILBOX].elements = &seq_prepare_mailbox;
-	ddrc->sequences[PHY_INIT_DDR_PREPARE_MAILBOX].size = ARRAY_SIZE(seq_prepare_mailbox);
-
 	printf("\nDDR INIT: Target DDR controller frequency: %dMHz\n", freq_to_uint(ddrc->settings->freq));
 	for(j = 0; j < PHY_DDR_MAX_CONTROLLERS; j++) {
 		if(!(ddrc->settings->ddrc_mask & (1 << j)))
@@ -83,8 +80,13 @@ void sima_ddr_init(void)
 			run_dms_reset(&ddrc->addrs[j].resets[i]);
 		debug("DDR INIT: Brought controller %d from reset (1), starting postreset\n", j);
 		RUN_DDR_SEQUENCE(PHY_INIT_DDR_POSTRESET, ddrc);
-		debug("DDR INIT: Postreset completed for controller %d, preparing mailbox\n", j);
-		RUN_DDR_SEQUENCE(PHY_INIT_DDR_PREPARE_MAILBOX, ddrc);
+		if (MODALIX_ZEBU != get_board_id()) {
+			debug("DDR INIT: Postreset completed for controller %d, preparing mailbox\n", j);
+			ddrc->sequences[PHY_INIT_DDR_PREPARE_MAILBOX].elements = &seq_prepare_mailbox;
+			ddrc->sequences[PHY_INIT_DDR_PREPARE_MAILBOX].size = ARRAY_SIZE(seq_prepare_mailbox);
+			RUN_DDR_SEQUENCE(PHY_INIT_DDR_PREPARE_MAILBOX, ddrc);
+
+		}
 		debug("DDR INIT: Preparing mailboxes completed for controller %d, running 2D training\n", j);
 		RUN_DDR_SEQUENCE(PHY_INIT_DDR_2D_TRAINING, ddrc);
 #if defined(CONFIG_TARGET_DAVINCI)

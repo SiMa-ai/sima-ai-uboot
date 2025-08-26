@@ -406,7 +406,11 @@ ddrc_t * get_ddrc(void)
 #if defined(CONFIG_TARGET_DAVINCI)
 	res = sequences[ddrc.settings->freq](&ddrc.sequences);
 #elif defined(CONFIG_TARGET_MODALIX)
-	res = get_sequence_init_ddr_modalix(&ddrc.sequences);
+	if (MODALIX_ZEBU == get_board_id()) {
+		res = get_sequence_init_ddr_modalix_zebu(&ddrc.sequences);
+	} else {
+		res = get_sequence_init_ddr_modalix(&ddrc.sequences);
+	}
 #endif
 
 	if(res < 0) {
@@ -580,11 +584,26 @@ void board_specific_ddrc_settings(uint32_t cbase, chip_settings_t *sets)
 void board_specific_ddrphy_settings(uint32_t phybase, chip_settings_t *sets)
 {
 	int i = 0;
+	uint16_t b0, b1;
+    int swap_dqa = !!(sets->dqa_map[0] & 0x8);
+    int swap_dqb = !!(sets->dqb_map[0] & 0x8);
 
 	for(i = 0; i < 16; i++)
-		do_phy_write(phybase, 0x10080 + (i >> 3) * 0x1000 + (i & 7), sets->dqa_map[i] & 0x7);
+		do_phy_write(phybase, 0x10080 + ((i >> 3) ^ swap_dqa) * 0x1000 + (i & 7), sets->dqa_map[i] & 0x7);
 	for(i = 0; i < 16; i++)
-		do_phy_write(phybase, 0x12080 + (i >> 3) * 0x1000 + (i & 7), sets->dqb_map[i] & 0x7);
+		do_phy_write(phybase, 0x12080 + ((i >> 3) ^ swap_dqb) * 0x1000 + (i & 7), sets->dqb_map[i] & 0x7);
+	if(swap_dqa) {
+		b0 = do_phy_read(phybase, 0x100a3);
+		b1 = do_phy_read(phybase, 0x110a3);
+		do_phy_write(phybase, 0x110a3, b0);
+		do_phy_write(phybase, 0x100a3, b1);
+	}
+	if(swap_dqb) {
+		b0 = do_phy_read(phybase, 0x120a3);
+		b1 = do_phy_read(phybase, 0x130a3);
+		do_phy_write(phybase, 0x130a3, b0);
+		do_phy_write(phybase, 0x120a3, b1);
+	}
 	for(i = 0; i < 7; i++)
 		do_phy_write(phybase, 0x30090 + i, sets->caa_map[i] & 0x7);
 	for(i = 0; i < 7; i++)
@@ -617,6 +636,10 @@ void board_specific_mr_settings(uint32_t phybase, uint32_t addr, chip_settings_t
 	set_mr(phybase, addr + 0x43, 0, 3, (uint16_t)sets->odtwck);
 	set_mr(phybase, addr + 0x45, 6, 2, (uint16_t)sets->memcsodt);
 	set_mr(phybase, addr + 0x65, 5, 3, (uint16_t)sets->memodtnt);
+	if(sets->dqa_map[0] & 0x8)
+		do_phy_rmw(phybase, addr + 0x80, 0x3, 8, 8 + 2);
+	if(sets->dqb_map[0] & 0x8)
+		do_phy_rmw(phybase, addr + 0x80, 0x3, 10, 10 + 2);
 }
 #endif
 

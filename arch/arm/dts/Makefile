@@ -94,8 +94,11 @@ dtb-$(CONFIG_ARCH_SIMA) += \
 	simaai-davinci-combo-board.dtb \
 	simaai-davinci-dual-m2.dtb \
 	simaai-davinci-hhhl.dtb \
-	simaai-modalix-dvt.dtb
-
+	simaai-modalix-dvt.dtb \
+	simaai-modalix-hhhl.dtb \
+	simaai-modalix-hhhl_x16.dtb \
+	simaai-modalix-som.dtb \
+	simaai-modalix-vdk.dtb
 
 dtb-$(CONFIG_ARCH_MESON) += \
 	meson-a1-ad401.dtb

@@ -43,7 +43,7 @@
 	"forcenetcfg=\0"
 
 #define BOOTENV_BOOTARGS \
-	"bootargs_common=console=ttyS0,921600n8\0" \
+	"bootargs_common=console=ttyS0,115200n8 uio_pdrv_genirq.of_id=generic-uio\0"\
 	"rootfs_partid=4\0"\
 	"fix_rootfs_mmc=setenv bootargs ${bootargs_common} netcfg=${netcfg} ${nfs_linux_intf_cmd} root=/dev/mmcblk${devnum}p${rootfs_partid} rw rootwait\0" \
 	"fix_rootfs_cpio=setenv bootargs ${bootargs_common} netcfg=${netcfg} ${nfs_linux_intf_cmd} root=/dev/ram0 rw rootfstype=ramfs\0" \
@@ -66,14 +66,15 @@
 	func(NET, staticip, na)
 
 #define ENV_MEM_LAYOUT_SETTINGS \
-	"fdt_addr=0x1004000000\0" \
-	"dtbo_addr=0x1005000000\0" \
+	"fdt_addr=0x1184000000\0" \
+	"dtbo_addr=0x1185000000\0" \
 	"dtb_resize=0x1000\0" \
-	"scriptaddr=0x1007000000\0" \
-	"kernel_addr=0x1000000000\0" \
-	"cpio_addr=0x1008000000\0" \
+	"scriptaddr=0x1187000000\0" \
+	"kernel_addr=0x1180000000\0" \
+	"cpio_addr=0x1188000000\0" \
 	"cpio_size=0x1F000000\0" \
 	"cpio_name=simaai-image-palette-modalix.cpio.gz\0" \
+	"initrd_high=0xFFFFFFFFFFFFFFFF\0" \
 	"booti_initrd=-\0"
 
 #define BOOTENV_DEFAULT_PATH \

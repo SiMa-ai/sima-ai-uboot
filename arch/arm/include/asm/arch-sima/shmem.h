@@ -9,6 +9,7 @@
 #include <stdio.h>
 
 typedef enum board_id_t {
+	MODALIX_ZEBU			= 0x00000000,
 	DAVINCI_DVT_COMBO_BOARD 	= 0x00000011,
 	DAVINCI_DVT_933MHZ_BOARD 	= 0x00001011,
 	DAVINCI_CHAR_BOARD 		= 0x00000021,
@@ -17,6 +18,10 @@ typedef enum board_id_t {
 	DAVINCI_HHHL 			= 0x00000041,
 	MODALIX_DVT 		        = 0x00000101,
 	MODALIX_HHHL 		        = 0x00000121,
+	MODALIX_HHHL_X16 			= 0x00001121,
+	MODALIX_SOM                     = 0x00000144,
+	MODALIX_SOM_MICRONFLASH         = 0x00001144,
+	MODALIX_VDK			= 0x00000FF1,
 } board_id_t;
 
 int populate_mac(char *mac);

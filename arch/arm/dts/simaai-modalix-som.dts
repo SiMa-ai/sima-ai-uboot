@@ -1,0 +1,100 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * Copyright (c) 2025 SiMa ai
+ */
+
+/dts-v1/;
+
+#include "simaai-modalix.dtsi"
+#include <dt-bindings/gpio/gpio.h>
+
+/ {
+	model = "SiMa.ai Modalix SoM Board";
+
+	chosen {
+		bootargs = "console=ttyS0,1152000n8 root=/dev/ram0 rw rootfstype=ramfs";
+	};
+
+	aliases {
+		console   = &uart0;
+		mmc0 = &emmc;
+		gpio0 = &port1;
+		gpio1 = &port6;
+	};
+
+	memory@1000000000 {
+		device_type = "memory";
+		reg = <0x10 0x00000000 0x7 0x00000000>;
+	};
+};
+
+&gpio10 {
+	pinctrl-0 = <&pins_gpio12_default>;
+	pinctrl-names = "default";
+	status = "okay";
+};
+
+&gpio60 {
+	pinctrl-0 = <&pins_gpio60_default>, <&pins_gpio61_default>,
+		    <&pins_gpio62_default>, <&pins_gpio63_default>,
+		    <&pins_gpio64_default>, <&pins_gpio65_default>,
+		    <&pins_gpio66_default>, <&pins_gpio67_default>;
+	pinctrl-names = "default";
+	status = "okay";
+};
+
+&port1 {
+	snps,nr-gpios = <4>;
+#ifndef CONFIG_DEBUG_UART_BOARD_INIT
+	usb-hog {
+		gpio-hog;
+		gpios = <2 GPIO_ACTIVE_HIGH>;
+		output-high;
+		line-name = "usb_uart12";
+       };
+#endif
+};
+
+&port6 {
+	uart-hog {
+		gpio-hog;
+		gpios = <0 GPIO_ACTIVE_HIGH>;
+		output-low;
+		line-name = "usb_uart60";
+	};
+};
+
+&sio10_clk {
+	/* usb uart doesn't enable clock divider, let's mark it unused so clock driver enables it */
+	simaai,ignore-unused = <0x100>;
+};
+
+&uart1 {
+	status = "disabled";
+};
+
+&uart2 {
+	status = "disabled";
+};
+
+&emmc {
+	status = "okay";
+};
+
+&xgmac0 {
+	phy-handle = <&ethernet_phy0>;
+	phy-mode = "sgmii";
+	max-speed = <1000>;
+	managed = "in-band-status";
+	status = "okay";
+
+	mdio0 {
+		compatible = "snps,dwmac-mdio";
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		ethernet_phy0: ethernet-phy@0 {
+			reg = <0>;
+		};
+	};
+};

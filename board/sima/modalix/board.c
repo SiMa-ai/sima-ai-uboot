@@ -4,6 +4,7 @@
 #include <cpu_func.h>
 #include <dm.h>
 #include <debug_uart.h>
+#include <version_string.h>
 #include <asm/global_data.h>
 #include <asm/armv8/mmu.h>
 #include <asm/arch/simaai_ddr_utils.h>
@@ -16,11 +17,26 @@
 #endif
 
 #define modalix_writel(A, T, V) *(( volatile T *)(A)) = (V)
+#define UART2_DIV_INDEX		8
+#define UART2_DIV_VALUE		1
+#define SIMAAI_SIODIV_EN	BIT(31)
 
 extern const boardinfo_t boardinfo_modalix_dvt;
+extern const boardinfo_t boardinfo_modalix_hhhl;
+extern const boardinfo_t boardinfo_modalix_som;
+extern const boardinfo_t boardinfo_modalix_som_micronFlash;
+extern const boardinfo_t boardinfo_modalix_vdk;
+extern const boardinfo_t boardinfo_modalix_hhhl_x16;
+extern const boardinfo_t boardinfo_modalix_zebu;
 
 static const boardinfo_t* boards[] = {
 	&boardinfo_modalix_dvt,
+	&boardinfo_modalix_hhhl,
+	&boardinfo_modalix_som,
+	&boardinfo_modalix_som_micronFlash,
+	&boardinfo_modalix_vdk,
+	&boardinfo_modalix_hhhl_x16,
+	&boardinfo_modalix_zebu,
 };
 
 static struct mm_region simaai_mem_map[] = {
@@ -81,6 +97,68 @@ static inline void write_clusterctrl(unsigned int val)
 }
 
 static int init_sio(void){
+	board_id_t id = get_board_id();
+	volatile uint32_t val = 0;
+
+	if (id == MODALIX_ZEBU) {
+		modalix_writel( (SIO0_AHB_START_ADDR + SIO_REG__SIO_OE_ADDR) , uint32_t, 0xaa );
+		modalix_writel( (SIO0_AHB_START_ADDR + SIO_REG__SIO_RT_ADDR) , uint32_t, 0xff );
+		modalix_writel( (SIO0_AHB_START_ADDR + SIO_REG__SIO_IE_ADDR) , uint32_t, 0x55 );
+		modalix_writel( (SIO0_AHB_START_ADDR + SIO_REG__SIO_PDN_ADDR) , uint32_t, 0xaa );
+		modalix_writel( (SIO0_AHB_START_ADDR + SIO_REG__SIO_PUP_ADDR) , uint32_t, 0x00 );
+		modalix_writel( (SIO0_AHB_START_ADDR + SIO_REG__SIO_STR_ADDR) , uint32_t, 0x10101010 );
+		modalix_writel( (SIO0_AHB_START_ADDR + SIO_REG__SIO_RSTSET_ADDR) , uint32_t, (1 << 6) | (1 << 7) | (1 << 8) | (1 << 9) );
+		modalix_writel( (SIO0_AHB_START_ADDR + SIO_REG__SIO_DIV__REGISTER_ARRAY_ADDR + (6 << 2)) , uint32_t, 0x1 );
+		modalix_writel( (SIO0_AHB_START_ADDR + SIO_REG__SIO_DIV__REGISTER_ARRAY_ADDR + (6 << 2)) , uint32_t, 0x80000001 );
+		modalix_writel( (SIO0_AHB_START_ADDR + SIO_REG__SIO_DIV__REGISTER_ARRAY_ADDR + (7 << 2)) , uint32_t, 0x1 );
+		modalix_writel( (SIO0_AHB_START_ADDR + SIO_REG__SIO_DIV__REGISTER_ARRAY_ADDR + (7 << 2)) , uint32_t, 0x80000001 );
+		modalix_writel( (SIO0_AHB_START_ADDR + SIO_REG__SIO_DIV__REGISTER_ARRAY_ADDR + (8 << 2)) , uint32_t, 0x1 );
+		modalix_writel( (SIO0_AHB_START_ADDR + SIO_REG__SIO_DIV__REGISTER_ARRAY_ADDR + (8 << 2)) , uint32_t, 0x80000001 );
+		modalix_writel( (SIO0_AHB_START_ADDR + SIO_REG__SIO_DIV__REGISTER_ARRAY_ADDR + (9 << 2)) , uint32_t, 0x1 );
+		modalix_writel( (SIO0_AHB_START_ADDR + SIO_REG__SIO_DIV__REGISTER_ARRAY_ADDR + (9 << 2)) , uint32_t, 0x80000001 );
+		udelay(1);
+		modalix_writel( (SIO0_AHB_START_ADDR + SIO_REG__SIO_RSTCLR_ADDR) , uint32_t, (1 << 6) | (1 << 7) | (1 << 8) | (1 << 9) );
+		modalix_writel( (SIO0_AHB_START_ADDR + SIO_REG__SIO_MX1_ADDR) , uint32_t, 0x0101 );
+		modalix_writel( (SIO0_AHB_START_ADDR + SIO_REG__SIO_MX2_ADDR) , uint32_t, 0x01010101 );
+		modalix_writel( (SIO0_AHB_START_ADDR + 0x1000 + GPIO_REG__GPIO_SWPORTA_CTL_ADDR), uint32_t, 0xff );
+		modalix_writel( (SIO0_AHB_START_ADDR + SIO_REG__SIO_SIRQ_ADDR), uint32_t, 0xba98 );
+		return 0;
+	}
+
+	if ((id == MODALIX_SOM) || (id == MODALIX_SOM_MICRONFLASH)) {
+		val = *((volatile uint32_t *)(SIO1_AHB_START_ADDR + SIO_REG__SIO_OE_ADDR));
+		modalix_writel( (SIO1_AHB_START_ADDR + SIO_REG__SIO_OE_ADDR) , uint32_t, 0x24 | val);
+		modalix_writel( (SIO1_AHB_START_ADDR + SIO_REG__SIO_RT_ADDR) , uint32_t, 0x30);
+		val = *((volatile uint32_t *)(SIO1_AHB_START_ADDR + SIO_REG__SIO_IE_ADDR));
+		modalix_writel( (SIO1_AHB_START_ADDR + SIO_REG__SIO_IE_ADDR) , uint32_t, 0x14 | val);
+		modalix_writel( (SIO1_AHB_START_ADDR + SIO_REG__SIO_PDN_ADDR) , uint32_t, 0x20);
+		modalix_writel( (SIO1_AHB_START_ADDR + SIO_REG__SIO_PUP_ADDR) , uint32_t, 0x00);
+		modalix_writel( (SIO1_AHB_START_ADDR + SIO_REG__SIO_STR_ADDR) , uint32_t, 0x10f0000);
+		modalix_writel( (SIO1_AHB_START_ADDR + SIO_REG__SIO_RSTSET_ADDR) , uint32_t, (1 << 8));
+		modalix_writel( (SIO1_AHB_START_ADDR + SIO_REG__SIO_DIV__REGISTER_ARRAY_ADDR + (8 << 2)) , uint32_t, 0x1);
+		modalix_writel( (SIO1_AHB_START_ADDR + SIO_REG__SIO_DIV__REGISTER_ARRAY_ADDR + (8 << 2)) , uint32_t, 0x80000001);
+		udelay(1);
+		modalix_writel( (SIO1_AHB_START_ADDR + SIO_REG__SIO_RSTCLR_ADDR) , uint32_t, (1 << 8));
+		val = *((volatile uint32_t *)(SIO1_AHB_START_ADDR + SIO_REG__SIO_MX1_ADDR));
+		modalix_writel( (SIO1_AHB_START_ADDR + SIO_REG__SIO_MX1_ADDR) , uint32_t, 0x0101 | val);
+		val = *((volatile uint32_t *)(SIO1_AHB_START_ADDR + SIO_REG__SIO_MX2_ADDR));
+		modalix_writel( (SIO1_AHB_START_ADDR + SIO_REG__SIO_MX2_ADDR) , uint32_t, 0x01010200 | val);
+		modalix_writel( (SIO1_AHB_START_ADDR + 0x1000 + GPIO_REG__GPIO_SWPORTA_CTL_ADDR), uint32_t, 0xf0);
+		val = *((volatile uint32_t *)(SIO1_AHB_START_ADDR + 0x1000 + GPIO_REG__GPIO_SWPORTA_DR_ADDR));
+		modalix_writel( (SIO1_AHB_START_ADDR + 0x1000 + GPIO_REG__GPIO_SWPORTA_DR_ADDR), uint32_t, 0x4 | val);
+		val = *((volatile uint32_t *)(SIO1_AHB_START_ADDR + 0x1000 + GPIO_REG__GPIO_SWPORTA_DDR_ADDR));
+		modalix_writel( (SIO1_AHB_START_ADDR + 0x1000 + GPIO_REG__GPIO_SWPORTA_DDR_ADDR), uint32_t, 0x4 | val);
+		modalix_writel( (SIO1_AHB_START_ADDR + SIO_REG__SIO_SIRQ_ADDR), uint32_t, 0xba00);
+
+		modalix_writel( (SIO6_AHB_START_ADDR + SIO_REG__SIO_OE_ADDR) , uint32_t, 0xff);
+		modalix_writel( (SIO6_AHB_START_ADDR + SIO_REG__SIO_IE_ADDR) , uint32_t, 0xff);
+		modalix_writel( (SIO6_AHB_START_ADDR + SIO_REG__SIO_MX1_ADDR) , uint32_t, 0x0101);
+		modalix_writel( (SIO6_AHB_START_ADDR + SIO_REG__SIO_MX2_ADDR) , uint32_t, 0x02020202);
+		modalix_writel( (SIO6_AHB_START_ADDR + 0x1000 + GPIO_REG__GPIO_SWPORTA_DDR_ADDR), uint32_t, 0x1);
+
+		return 0;
+	}
+
 	/* SIO[1] UART2 - APU console 115200 */
 	/* SIO[1] UART3 - CVU console 115200 */
 	modalix_writel( (SIO1_AHB_START_ADDR + SIO_REG__SIO_OE_ADDR) , uint32_t, 0xa0);
@@ -100,6 +178,10 @@ static int init_sio(void){
 	modalix_writel( (SIO1_AHB_START_ADDR + SIO_REG__SIO_MX2_ADDR) , uint32_t, 0x01010000);
 	modalix_writel( (SIO1_AHB_START_ADDR + 0x1000 + GPIO_REG__GPIO_SWPORTA_CTL_ADDR), uint32_t, 0xf0);
 	modalix_writel( (SIO1_AHB_START_ADDR + SIO_REG__SIO_SIRQ_ADDR), uint32_t, 0xba00);
+
+	if (id == MODALIX_HHHL || id == MODALIX_HHHL_X16)
+		return 0;
+
 	/* SIO[2] UART2 - M4  console 115200 */
 	modalix_writel( (SIO2_AHB_START_ADDR + SIO_REG__SIO_OE_ADDR) , uint32_t, 0x20);
 	modalix_writel( (SIO2_AHB_START_ADDR + SIO_REG__SIO_RT_ADDR) , uint32_t, 0x30);
@@ -141,8 +223,29 @@ int arch_cpu_init(void)
 	return 0;
 }
 
+void init_uart12_clk_div(void)
+{
+	modalix_writel( (SIO1_AHB_START_ADDR + SIO_REG__SIO_RSTSET_ADDR) , uint32_t, (1 << UART2_DIV_INDEX));
+	modalix_writel( (SIO1_AHB_START_ADDR + SIO_REG__SIO_DIV__REGISTER_ARRAY_ADDR + (UART2_DIV_INDEX << 2)) , uint32_t, UART2_DIV_VALUE);
+	modalix_writel( (SIO1_AHB_START_ADDR + SIO_REG__SIO_DIV__REGISTER_ARRAY_ADDR + (UART2_DIV_INDEX << 2)) , uint32_t, UART2_DIV_VALUE | SIMAAI_SIODIV_EN);
+	udelay(1);
+	modalix_writel( (SIO1_AHB_START_ADDR + SIO_REG__SIO_RSTCLR_ADDR) , uint32_t, (1 << UART2_DIV_INDEX));
+}
+
 int board_init(void)
 {
+	board_id_t id = get_board_id();
+
+	/* SOM and HHHL X16 board has 28Gig with ECC enabled */
+	if ((id == MODALIX_SOM) || (id == MODALIX_SOM_MICRONFLASH) || (id == MODALIX_HHHL_X16))
+		mem_map[2].size = 0x700000000UL;
+
+	if (get_board_id() == MODALIX_ZEBU)
+		mem_map[2].size = 0x200000000UL;
+
+	if ((id == MODALIX_SOM) || (id == MODALIX_SOM_MICRONFLASH))
+		init_uart12_clk_div();
+
 	return 0;
 }
 
@@ -151,6 +254,31 @@ void sima_set_dtb_name(void)
 	boardinfo_t *info = get_board_info();
 
 	env_set("fdt_name", info->linuxdtb);
+}
+
+void print_simaai_banner(void)
+{
+	char buf[255] = {0};
+	int len = 0;
+	char *corp = " * SiMa Technologies, Inc. * \n";
+	int i = 0;
+
+	len += sprintf(&buf[len], "%s\n", corp);
+	len += sprintf(&buf[len], "%s\n", version_string);
+
+	puts("\n");
+
+	for (int i = 0; i < 30; i++)
+		puts("*");
+
+	puts("\n");
+	puts(buf);
+
+	for (int i = 0; i < 30; i++)
+		puts("*");
+
+	puts("\n");
+	puts("\n");
 }
 
 #ifdef CONFIG_BOARD_LATE_INIT
@@ -163,8 +291,17 @@ int board_late_init(void)
 	boardinfo_t *info = get_board_info();
 	unsigned char fw_dev_part[4] = { 0 };
 	const char *s = NULL;
+	char bootcmd_str[40];
 
-	sima_eth_init();
+	if  (info->id == MODALIX_ZEBU) {
+		env_set("bootdelay", "0");
+		sprintf(bootcmd_str, "booti %s - %s",
+			env_get("kernel_addr"), env_get("fdt_addr"));
+		env_set("bootcmd", bootcmd_str);
+	}
+
+	if (info->id != MODALIX_VDK && info->id != MODALIX_ZEBU)
+		sima_eth_init();
 
 	res = populate_mac(mac);
 	for(i = 0; i < 4; i++) {
@@ -202,6 +339,8 @@ int board_late_init(void)
 		}
 	}
 
+	print_simaai_banner();
+
 	return 0;
 }
 #endif
@@ -214,12 +353,37 @@ int ft_board_setup(void *blob, struct bd_info *bd)
 	const char pcieocm_path[] = "/reserved-memory/ocm@600000";
 	const char pcieep_path[] = "/pcie0@0x6000000";
 	const char dmscma_path[] = "/reserved-memory/dms@0x1400000000";
+	const char xgmac_path[4][20] = {
+					"/ethernet@a800000",
+					"/ethernet@b800000",
+					"/ethernet@c800000",
+					"/ethernet@d800000"
+					};
+	const char propname[] = "local-mac-address";
 
 	const fdt64_t new_ocm[] = { cpu_to_fdt64(0x0), cpu_to_fdt64(0x800000) };
 	const fdt64_t new_pcie[] = { cpu_to_fdt64(0x800000), cpu_to_fdt64(0x0) };
 	fdt64_t *new_dmscma;
 	char *ep = NULL;
 	uint64_t dmscma_size = SZ_1G;
+	unsigned char mac[ARP_HLEN];
+
+	/* update mac addresses */
+	for (i=0; i < 4; i++) {
+		if (eth_env_get_enetaddr_by_index("eth", i, mac)) {
+			nodeoffset = fdt_path_offset(blob, xgmac_path[i]);
+			if (nodeoffset < 0) {
+				printf("Cannot find path %s in dtb: %s\n", xgmac_path[i], fdt_strerror(nodeoffset));
+				continue;
+			}
+
+			if (fdt_get_property(blob, nodeoffset, propname, NULL)) {
+				res = fdt_setprop(blob, nodeoffset, propname, (void *)mac, sizeof(mac));
+				if (res)
+					printf("failed to set mac address err=%s\n", fdt_strerror(res));
+			}
+		}
+	}
 
 	if(get_pcie_enabled())
 		printf("PCIe enabled, leaving OCM memory node unchanged\n");

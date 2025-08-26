@@ -1,0 +1,27 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * Copyright (c) 2025 SiMa ai
+ */
+
+/dts-v1/;
+
+#include "simaai-modalix.dtsi"
+
+
+/ {
+	model = "SiMa.ai Modalix Zebu";
+
+	chosen {
+		bootargs = "console=ttyS0,15625000n8 root=/dev/ram0 rw rootfstype=ramfs";
+	};
+
+	aliases {
+		console   = &uart3;
+	};
+
+	memory@1000000000 {
+		device_type = "memory";
+		reg = <0x10 0x00000000 0x2 0x00000000>;
+	};
+};
+

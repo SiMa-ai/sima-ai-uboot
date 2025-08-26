@@ -512,6 +512,10 @@ static int xgmac_start_resets_modalix(struct udevice *dev)
 	struct xgmac_priv *xgmac = dev_get_priv(dev);
 	phy_interface_t interface = dev_read_phy_mode(dev);
 
+	/* if phy is already configured, no need to reconfigure xpcs */
+	if (xgmac->phy)
+		return 0;
+
 	return configure_xpcs_modalix(xgmac->xpcs_regs, interface);
 }
 
