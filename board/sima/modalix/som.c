@@ -90,9 +90,17 @@
 }
 
 ddrc_settings_t ddrc_settings_simaai_som = {
-        .ddrc_mask = 0xf,
-        .freq = PHY_DDR_FREQ_6400_16,
-        .chip_settings = SOM_CHIP_SETTINGS,
+	.ddrc_mask = 0xf,
+	.freq = PHY_DDR_FREQ_6400_16,
+	.chip_settings = SOM_CHIP_SETTINGS,
+	.rank = DDR_DUAL_RANK,
+};
+
+ddrc_settings_t ddrc_settings_simaai_som_8g = {
+	.ddrc_mask = 0xf,
+	.freq = PHY_DDR_FREQ_6400_16_2GB,
+	.chip_settings = SOM_CHIP_SETTINGS,
+	.rank = DDR_SINGLE_RANK,
 };
 
 const boardinfo_t boardinfo_modalix_som = {
@@ -109,4 +117,20 @@ const boardinfo_t boardinfo_modalix_som_micronFlash = {
 	.ddr = &ddrc_settings_simaai_som,
 	.ubootdtb = "simaai-modalix-som",
 	.linuxdtb = "modalix-som.dtb",
+};
+
+const boardinfo_t boardinfo_modalix_som_v2 = {
+	.name = "SiMa.ai Modalix SoM X16 board",
+	.id = MODALIX_SOM_V2,
+	.ddr = &ddrc_settings_simaai_som,
+	.ubootdtb = "simaai-modalix-som",
+	.linuxdtb = "modalix-som.dtb",
+};
+
+const boardinfo_t boardinfo_modalix_som_8g = {
+	.name = "SiMa.ai Modalix SoM 8Gig board",
+	.id = MODALIX_SOM_8G,
+	.ddr = &ddrc_settings_simaai_som_8g,
+	.ubootdtb = "simaai-modalix-som_8g",
+	.linuxdtb = "modalix-som_8g.dtb",
 };

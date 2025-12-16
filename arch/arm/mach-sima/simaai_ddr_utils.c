@@ -40,6 +40,7 @@
 typedef volatile uint16_t ddrphy_reg_t;
 #elif defined(CONFIG_TARGET_MODALIX)
 #include <asm/arch/init_ddr_modalix.h>
+#include <asm/arch/init_ddr_modalix_1r.h>
 #include <asm/arch/modalix/prc_addr_map.h>
 #include <asm/arch/modalix/mlsoc_addr_map_defines.h>
 #define PRC_BASE PRC_APB_START_ADDR
@@ -314,6 +315,7 @@ static uint32_t freqs[PHY_DDR_FREQ_NUM] = {
 	[PHY_DDR_FREQ_3200_16] = 3200,
 	[PHY_DDR_FREQ_6400_8] = 6400,
 	[PHY_DDR_FREQ_6400_16] = 6400,
+	[PHY_DDR_FREQ_6400_16_2GB] = 6400,
 #endif
 };
 
@@ -406,10 +408,16 @@ ddrc_t * get_ddrc(void)
 #if defined(CONFIG_TARGET_DAVINCI)
 	res = sequences[ddrc.settings->freq](&ddrc.sequences);
 #elif defined(CONFIG_TARGET_MODALIX)
-	if (MODALIX_ZEBU == get_board_id()) {
+	if (IS_ZEBU(get_board_id())) {
 		res = get_sequence_init_ddr_modalix_zebu(&ddrc.sequences);
 	} else {
-		res = get_sequence_init_ddr_modalix(&ddrc.sequences);
+		if (ddrc.settings->rank == DDR_SINGLE_RANK) {
+			res = get_sequence_init_ddr_modalix_1r(&ddrc.sequences);
+		} else if (ddrc.settings->rank == DDR_DUAL_RANK) {
+			res = get_sequence_init_ddr_modalix(&ddrc.sequences);
+		} else {
+			 printf("DDR INIT: Error. Unkown rank type\n");
+		}
 	}
 #endif
 

@@ -24,19 +24,35 @@
 extern const boardinfo_t boardinfo_modalix_dvt;
 extern const boardinfo_t boardinfo_modalix_hhhl;
 extern const boardinfo_t boardinfo_modalix_som;
+extern const boardinfo_t boardinfo_modalix_som_v2;
 extern const boardinfo_t boardinfo_modalix_som_micronFlash;
+extern const boardinfo_t boardinfo_modalix_som_8g;
 extern const boardinfo_t boardinfo_modalix_vdk;
 extern const boardinfo_t boardinfo_modalix_hhhl_x16;
+extern const boardinfo_t boardinfo_modalix_hhhl_v2;
+extern const boardinfo_t boardinfo_modalix_hhhl_v2_1r;
 extern const boardinfo_t boardinfo_modalix_zebu;
+extern const boardinfo_t boardinfo_modalix_zebu_basic;
+extern const boardinfo_t boardinfo_modalix_zebu_pcie;
+extern const boardinfo_t boardinfo_modalix_zebu_eth;
+extern const boardinfo_t boardinfo_modalix_zebu_mipi;
 
 static const boardinfo_t* boards[] = {
 	&boardinfo_modalix_dvt,
 	&boardinfo_modalix_hhhl,
 	&boardinfo_modalix_som,
+	&boardinfo_modalix_som_v2,
 	&boardinfo_modalix_som_micronFlash,
+	&boardinfo_modalix_som_8g,
 	&boardinfo_modalix_vdk,
 	&boardinfo_modalix_hhhl_x16,
+	&boardinfo_modalix_hhhl_v2,
+	&boardinfo_modalix_hhhl_v2_1r,
 	&boardinfo_modalix_zebu,
+	&boardinfo_modalix_zebu_basic,
+	&boardinfo_modalix_zebu_pcie,
+	&boardinfo_modalix_zebu_eth,
+	&boardinfo_modalix_zebu_mipi,
 };
 
 static struct mm_region simaai_mem_map[] = {
@@ -100,7 +116,7 @@ static int init_sio(void){
 	board_id_t id = get_board_id();
 	volatile uint32_t val = 0;
 
-	if (id == MODALIX_ZEBU) {
+	if (IS_ZEBU(id)) {
 		modalix_writel( (SIO0_AHB_START_ADDR + SIO_REG__SIO_OE_ADDR) , uint32_t, 0xaa );
 		modalix_writel( (SIO0_AHB_START_ADDR + SIO_REG__SIO_RT_ADDR) , uint32_t, 0xff );
 		modalix_writel( (SIO0_AHB_START_ADDR + SIO_REG__SIO_IE_ADDR) , uint32_t, 0x55 );
@@ -125,7 +141,7 @@ static int init_sio(void){
 		return 0;
 	}
 
-	if ((id == MODALIX_SOM) || (id == MODALIX_SOM_MICRONFLASH)) {
+	if ((id == MODALIX_SOM) || (id == MODALIX_SOM_MICRONFLASH) || (id == MODALIX_SOM_V2) || (id == MODALIX_SOM_8G)) {
 		val = *((volatile uint32_t *)(SIO1_AHB_START_ADDR + SIO_REG__SIO_OE_ADDR));
 		modalix_writel( (SIO1_AHB_START_ADDR + SIO_REG__SIO_OE_ADDR) , uint32_t, 0x24 | val);
 		modalix_writel( (SIO1_AHB_START_ADDR + SIO_REG__SIO_RT_ADDR) , uint32_t, 0x30);
@@ -237,14 +253,20 @@ int board_init(void)
 	board_id_t id = get_board_id();
 
 	/* SOM and HHHL X16 board has 28Gig with ECC enabled */
-	if ((id == MODALIX_SOM) || (id == MODALIX_SOM_MICRONFLASH) || (id == MODALIX_HHHL_X16))
+	if ((id == MODALIX_SOM) || (id == MODALIX_SOM_MICRONFLASH) || (id == MODALIX_HHHL_X16) ||
+			(id == MODALIX_SOM_V2))
 		mem_map[2].size = 0x700000000UL;
 
-	if (get_board_id() == MODALIX_ZEBU)
+	if (IS_ZEBU(id))
 		mem_map[2].size = 0x200000000UL;
 
-	if ((id == MODALIX_SOM) || (id == MODALIX_SOM_MICRONFLASH))
+	if (id == MODALIX_SOM_8G)
+		mem_map[2].size = 0x1c0000000UL;
+
+#ifndef CONFIG_DEBUG_UART
+	if ((id == MODALIX_SOM) || (id == MODALIX_SOM_MICRONFLASH) || (id == MODALIX_SOM_V2) || (id == MODALIX_SOM_8G))
 		init_uart12_clk_div();
+#endif
 
 	return 0;
 }
@@ -293,14 +315,16 @@ int board_late_init(void)
 	const char *s = NULL;
 	char bootcmd_str[40];
 
-	if  (info->id == MODALIX_ZEBU) {
+	if (IS_ZEBU(info->id)) {
 		env_set("bootdelay", "0");
 		sprintf(bootcmd_str, "booti %s - %s",
 			env_get("kernel_addr"), env_get("fdt_addr"));
 		env_set("bootcmd", bootcmd_str);
 	}
 
-	if (info->id != MODALIX_VDK && info->id != MODALIX_ZEBU)
+	if (info->id != MODALIX_VDK && info->id != MODALIX_ZEBU &&
+					info->id != MODALIX_ZEBU_BASIC &&
+					info->id != MODALIX_ZEBU_PCIE)
 		sima_eth_init();
 
 	res = populate_mac(mac);

@@ -97,7 +97,10 @@ dtb-$(CONFIG_ARCH_SIMA) += \
 	simaai-modalix-dvt.dtb \
 	simaai-modalix-hhhl.dtb \
 	simaai-modalix-hhhl_x16.dtb \
+	simaai-modalix-hhhl_v2_1r.dtb \
+	simaai-modalix-hhhl_v2.dtb \
 	simaai-modalix-som.dtb \
+	simaai-modalix-som_8g.dtb \
 	simaai-modalix-vdk.dtb
 
 dtb-$(CONFIG_ARCH_MESON) += \

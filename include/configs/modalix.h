@@ -66,16 +66,17 @@
 	func(NET, staticip, na)
 
 #define ENV_MEM_LAYOUT_SETTINGS \
-	"fdt_addr=0x1184000000\0" \
-	"dtbo_addr=0x1185000000\0" \
-	"dtb_resize=0x1000\0" \
-	"scriptaddr=0x1187000000\0" \
-	"kernel_addr=0x1180000000\0" \
-	"cpio_addr=0x1188000000\0" \
-	"cpio_size=0x1F000000\0" \
-	"cpio_name=simaai-image-palette-modalix.cpio.gz\0" \
-	"initrd_high=0xFFFFFFFFFFFFFFFF\0" \
-	"booti_initrd=-\0"
+        "fdt_addr=0x1079000000\0" \
+        "dtbo_addr=0x107A000000\0" \
+        "dtb_resize=0x1000\0" \
+        "scriptaddr=0x107C000000\0" \
+        "kernel_addr=0x1075000000\0" \
+        "cpio_addr=0x107D000000\0" \
+        "cpio_size=0x1F000000\0" \
+        "cpio_name=simaai-image-palette-modalix.cpio.gz\0" \
+        "initrd_high=0xFFFFFFFFFFFFFFFF\0" \
+        "fdt_high=0xFFFFFFFFFFFFFFFF\0" \
+        "booti_initrd=-\0"
 
 #define BOOTENV_DEFAULT_PATH \
 	"boot_path=/boot-0/\0"

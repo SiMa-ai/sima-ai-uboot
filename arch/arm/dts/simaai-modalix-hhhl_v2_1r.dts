@@ -1,0 +1,70 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * Copyright (c) 2025 SiMa ai
+ */
+
+/dts-v1/;
+
+#include "simaai-modalix.dtsi"
+
+
+/ {
+	model = "SiMa.ai Modalix HHHL V2 DDR X16 single rank Board";
+
+	chosen {
+		bootargs = "console=ttyS0,1152000n8 root=/dev/ram0 rw rootfstype=ramfs";
+		firmware-loader = <&fs_loader0>;
+	};
+
+        fs_loader0: fs-loader {
+                bootph-all;
+                compatible = "u-boot,fs-loader";
+                phandlepart = <&emmc 4>;
+        };
+
+	aliases {
+		console   = &uart0;
+		mmc0 = &emmc;
+		mmc1 = &sd;
+	};
+
+	memory@1000000000 {
+		device_type = "memory";
+		reg = <0x10 0x00000000 0x03 0x80000000>;
+	};
+};
+
+&uart1 {
+	status = "disabled";
+};
+
+&uart2 {
+	status = "disabled";
+};
+
+&emmc {
+	status = "okay";
+};
+
+&sd {
+	max-frequency= <800000000>;
+	status = "okay";
+};
+
+&xgmac3 {
+	phy-handle = <&ethernet_phy0>;
+	phy-mode = "usxgmii";
+	managed = "in-band-status";
+	status = "okay";
+
+	mdio3 {
+		compatible = "snps,dwmac-mdio";
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		ethernet_phy0: ethernet-phy@0 {
+			compatible = "ethernet-phy-ieee802.3-c45";
+			reg = <0>;
+		};
+	};
+};

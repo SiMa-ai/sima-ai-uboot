@@ -80,7 +80,7 @@ void sima_ddr_init(void)
 			run_dms_reset(&ddrc->addrs[j].resets[i]);
 		debug("DDR INIT: Brought controller %d from reset (1), starting postreset\n", j);
 		RUN_DDR_SEQUENCE(PHY_INIT_DDR_POSTRESET, ddrc);
-		if (MODALIX_ZEBU != get_board_id()) {
+		if (!IS_ZEBU(get_board_id())) {
 			debug("DDR INIT: Postreset completed for controller %d, preparing mailbox\n", j);
 			ddrc->sequences[PHY_INIT_DDR_PREPARE_MAILBOX].elements = &seq_prepare_mailbox;
 			ddrc->sequences[PHY_INIT_DDR_PREPARE_MAILBOX].size = ARRAY_SIZE(seq_prepare_mailbox);

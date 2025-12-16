@@ -31,6 +31,7 @@ typedef struct ddrc_settings_t_ {
 	chip_settings_t chip_settings[PHY_DDR_MAX_CONTROLLERS];
 	uint32_t ddrc_mask;
 	ddr_freq_t freq;
+	ddr_rank_t rank;
 } ddrc_settings_t;
 
 typedef struct ddrc_t_ {

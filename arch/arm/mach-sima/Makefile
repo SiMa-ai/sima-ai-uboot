@@ -7,4 +7,4 @@ obj-$(CONFIG_TARGET_DAVINCI) += firmware_ddr.o init_ddr_800MHz.o init_ddr_933MHz
 
 obj-$(CONFIG_TARGET_MODALIX) += firmware_ddr_modalix.o init_ddr_modalix.o \
 			init_eth_phy_modalix.o ddr_phy_debug_modalix.o \
-			init_ddr_modalix_zebu.o
+			init_ddr_modalix_zebu.o init_ddr_modalix_1r.o
