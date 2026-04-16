@@ -27,15 +27,18 @@ extern const boardinfo_t boardinfo_modalix_som;
 extern const boardinfo_t boardinfo_modalix_som_v2;
 extern const boardinfo_t boardinfo_modalix_som_micronFlash;
 extern const boardinfo_t boardinfo_modalix_som_8g;
+extern const boardinfo_t boardinfo_modalix_som_16g;
 extern const boardinfo_t boardinfo_modalix_vdk;
 extern const boardinfo_t boardinfo_modalix_hhhl_x16;
 extern const boardinfo_t boardinfo_modalix_hhhl_v2;
 extern const boardinfo_t boardinfo_modalix_hhhl_v2_1r;
+extern const boardinfo_t boardinfo_modalix_hhhl_v2_1r_wnb;
 extern const boardinfo_t boardinfo_modalix_zebu;
 extern const boardinfo_t boardinfo_modalix_zebu_basic;
 extern const boardinfo_t boardinfo_modalix_zebu_pcie;
 extern const boardinfo_t boardinfo_modalix_zebu_eth;
 extern const boardinfo_t boardinfo_modalix_zebu_mipi;
+extern const boardinfo_t boardinfo_modalix_kontron;
 
 static const boardinfo_t* boards[] = {
 	&boardinfo_modalix_dvt,
@@ -44,15 +47,18 @@ static const boardinfo_t* boards[] = {
 	&boardinfo_modalix_som_v2,
 	&boardinfo_modalix_som_micronFlash,
 	&boardinfo_modalix_som_8g,
+	&boardinfo_modalix_som_16g,
 	&boardinfo_modalix_vdk,
 	&boardinfo_modalix_hhhl_x16,
 	&boardinfo_modalix_hhhl_v2,
 	&boardinfo_modalix_hhhl_v2_1r,
+	&boardinfo_modalix_hhhl_v2_1r_wnb,
 	&boardinfo_modalix_zebu,
 	&boardinfo_modalix_zebu_basic,
 	&boardinfo_modalix_zebu_pcie,
 	&boardinfo_modalix_zebu_eth,
 	&boardinfo_modalix_zebu_mipi,
+	&boardinfo_modalix_kontron,
 };
 
 static struct mm_region simaai_mem_map[] = {
@@ -141,7 +147,7 @@ static int init_sio(void){
 		return 0;
 	}
 
-	if ((id == MODALIX_SOM) || (id == MODALIX_SOM_MICRONFLASH) || (id == MODALIX_SOM_V2) || (id == MODALIX_SOM_8G)) {
+	if ((id == MODALIX_SOM) || (id == MODALIX_SOM_MICRONFLASH) || (id == MODALIX_SOM_V2) || (id == MODALIX_SOM_8G) || (id == MODALIX_SOM_16G)) {
 		val = *((volatile uint32_t *)(SIO1_AHB_START_ADDR + SIO_REG__SIO_OE_ADDR));
 		modalix_writel( (SIO1_AHB_START_ADDR + SIO_REG__SIO_OE_ADDR) , uint32_t, 0x24 | val);
 		modalix_writel( (SIO1_AHB_START_ADDR + SIO_REG__SIO_RT_ADDR) , uint32_t, 0x30);
@@ -195,7 +201,8 @@ static int init_sio(void){
 	modalix_writel( (SIO1_AHB_START_ADDR + 0x1000 + GPIO_REG__GPIO_SWPORTA_CTL_ADDR), uint32_t, 0xf0);
 	modalix_writel( (SIO1_AHB_START_ADDR + SIO_REG__SIO_SIRQ_ADDR), uint32_t, 0xba00);
 
-	if (id == MODALIX_HHHL || id == MODALIX_HHHL_X16)
+	if (id == MODALIX_HHHL || id == MODALIX_HHHL_X16 || id == MODALIX_KONTRON ||
+		id == MODALIX_HHHL_V2_1R_WNB)
 		return 0;
 
 	/* SIO[2] UART2 - M4  console 115200 */
@@ -227,11 +234,13 @@ void board_debug_uart_init(void)
 
 int arch_cpu_init(void)
 {
-	// Disable sending of Cache Clean Evict
-	u32 val = read_clusterctrl();
-	val |= 1 << 3;
-	write_clusterctrl(val);
-
+	uint16_t secure_boot = get_secure_boot_status();
+	if (!secure_boot) { //disabled for secure boot
+						// Disable sending of Cache Clean Evict
+		u32 val = read_clusterctrl();
+		val |= 1 << 3;
+		write_clusterctrl(val);
+	}
 #ifdef CONFIG_DEBUG_UART
 	debug_uart_init();
 #endif
@@ -253,7 +262,7 @@ int board_init(void)
 	board_id_t id = get_board_id();
 
 	/* SOM and HHHL X16 board has 28Gig with ECC enabled */
-	if ((id == MODALIX_SOM) || (id == MODALIX_SOM_MICRONFLASH) || (id == MODALIX_HHHL_X16) ||
+	if ((id == MODALIX_KONTRON) || (id == MODALIX_SOM) || (id == MODALIX_SOM_MICRONFLASH) || (id == MODALIX_HHHL_X16) ||
 			(id == MODALIX_SOM_V2))
 		mem_map[2].size = 0x700000000UL;
 
@@ -263,8 +272,11 @@ int board_init(void)
 	if (id == MODALIX_SOM_8G)
 		mem_map[2].size = 0x1c0000000UL;
 
+	if (id == MODALIX_SOM_16G)
+		mem_map[2].size = 0x380000000UL;
+
 #ifndef CONFIG_DEBUG_UART
-	if ((id == MODALIX_SOM) || (id == MODALIX_SOM_MICRONFLASH) || (id == MODALIX_SOM_V2) || (id == MODALIX_SOM_8G))
+	if ((id == MODALIX_SOM) || (id == MODALIX_SOM_MICRONFLASH) || (id == MODALIX_SOM_V2) || (id == MODALIX_SOM_8G) || (id == MODALIX_SOM_16G))
 		init_uart12_clk_div();
 #endif
 
@@ -314,6 +326,9 @@ int board_late_init(void)
 	unsigned char fw_dev_part[4] = { 0 };
 	const char *s = NULL;
 	char bootcmd_str[40];
+	uint16_t secure_boot = 0;
+
+	printf("MLA Frequency: %dMHz\n", get_mla_freq());
 
 	if (IS_ZEBU(info->id)) {
 		env_set("bootdelay", "0");
@@ -323,8 +338,8 @@ int board_late_init(void)
 	}
 
 	if (info->id != MODALIX_VDK && info->id != MODALIX_ZEBU &&
-					info->id != MODALIX_ZEBU_BASIC &&
-					info->id != MODALIX_ZEBU_PCIE)
+	    info->id != MODALIX_ZEBU_BASIC && info->id != MODALIX_ZEBU_PCIE &&
+	    info->id != MODALIX_ZEBU_MIPI)
 		sima_eth_init();
 
 	res = populate_mac(mac);
@@ -348,6 +363,15 @@ int board_late_init(void)
 		s = env_get("rootfs_partid");
 		strcat(fw_dev_part, s ? s : "4");
 		env_set("fw_dev_part", fw_dev_part);
+	}
+
+	secure_boot = get_secure_boot_status();
+	if (secure_boot) {
+		env_set("secure_boot_dtbo","secure-boot.dtbo");
+		env_set("secure_boot_mode","1");
+	} else {
+		env_set("secure_boot_dtbo",NULL);
+		env_set("secure_boot_mode",NULL);
 	}
 
 	sima_set_dtb_name();
@@ -490,12 +514,18 @@ int ft_board_setup(void *blob, struct bd_info *bd)
 int dram_init(void)
 {
 	int ret;
+	uint16_t ddr_init_done = 0;
 
 	ret = fdtdec_setup_mem_size_base();
 	if (ret)
 		return ret;
 
-	sima_ddr_init();
+	ddr_init_done = shmem_ddr_init_done();
+
+	if (!ddr_init_done)
+		sima_ddr_init();
+	else
+		printf("DDR Already Initialized Skipping here..\n");
 
 #ifdef CONFIG_CMD_DDR
 	cli_init();
@@ -529,14 +559,39 @@ int board_fit_config_name_match(const char *name)
 #endif
 
 #ifdef CONFIG_DISPLAY_BOARDINFO
-int checkboard (void)
+#define PCIE_APB_START_ADDR 0x0005e00000ULL
+#define PCIE_SYS_REG__PCIE0_LINK_DBG_2_ADDR 0x001000b4
+
+void get_pcie_reg_info(void)
 {
-	boardinfo_t *info = get_board_info();
+  board_id_t id = get_board_id();
+  printf("\tPCIE0_LINK_DBG_2: 0x%x\n",
+         *((u32 *)(PCIE_APB_START_ADDR + PCIE_SYS_REG__PCIE0_LINK_DBG_2_ADDR)));
 
-	printf("Board: %s\n", info->name);
-	printf("U-boot device tree name: %s.dtb\n", info->ubootdtb);
-	printf("Linux device tree name: %s\n", info->linuxdtb);
+  if (!IS_ZEBU(id))
+    printf("\tIOMUX_REG_0: 0x%x\n",
+           *((u32 *)(PCIE_APB_START_ADDR + PRC_REG__IOMUX_REG__IOMUX_REG_0_ADDR)));
+}
 
-	return 0;
+
+int checkboard(void) {
+  boardinfo_t *info = get_board_info();
+  uint32_t pcieEn = get_pcie_enabled();
+
+  printf("Board: %s\n", info->name);
+  printf("Board-id: %d\n", info->id);
+  printf("Secure-boot: %d\n", get_secure_boot_status());
+  printf("Alt-boot: %d\n", get_boot_partitions_mode());
+  printf("pcie-enabled: %d\n", pcieEn);
+  printf("u-boot src: %d\n", shmem_get_uboot_src());
+  printf("U-boot device tree name: %s.dtb\n", info->ubootdtb);
+  printf("Linux device tree name: %s\n", info->linuxdtb);
+
+  if (pcieEn) {
+    printf("PCIe Reg info\n");
+    get_pcie_reg_info();
+  }
+
+  return 0;
 }
 #endif

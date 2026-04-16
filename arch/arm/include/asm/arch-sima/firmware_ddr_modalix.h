@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 /*
  * Copyright (c) 2024 Sima ai
- * Generated 01/10/2025 01:27:31 by nilesh.r
+ * Generated 01/07/2026 14:04:15 by gopal
  */
 
 #ifndef __FIRMWARE_DDR_MODALIX_H__

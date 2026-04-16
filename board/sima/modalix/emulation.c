@@ -7,16 +7,15 @@
 
 ddrc_settings_t ddrc_settings_simaai_emulation = {
 	.ddrc_mask = 0xf,
-	.freq = PHY_DDR_FREQ_6400_16,
-	.rank = DDR_DUAL_RANK,
+	.type = PHY_DDR_3200_X16_2R_16Gb,
 };
 
 const boardinfo_t boardinfo_modalix_zebu = {
-	.name = "SiMa.ai emulation test bench",
+	.name = "SiMa.ai emulation ethernet test bench",
 	.id = MODALIX_ZEBU,
 	.ddr = &ddrc_settings_simaai_emulation,
 	.ubootdtb = "simaai-modalix-zebu",
-	.linuxdtb = "michelangelo-emulation-bench.dtb",
+	.linuxdtb = "modalix-zebu-eth.dtb",
 };
 
 const boardinfo_t boardinfo_modalix_zebu_basic = {
@@ -24,7 +23,7 @@ const boardinfo_t boardinfo_modalix_zebu_basic = {
 	.id = MODALIX_ZEBU_BASIC,
 	.ddr = &ddrc_settings_simaai_emulation,
 	.ubootdtb = "simaai-modalix-zebu",
-	.linuxdtb = "michelangelo-emulation-bench.dtb",
+	.linuxdtb = "modalix-zebu-basic.dtb",
 };
 
 const boardinfo_t boardinfo_modalix_zebu_pcie = {
@@ -32,7 +31,7 @@ const boardinfo_t boardinfo_modalix_zebu_pcie = {
 	.id = MODALIX_ZEBU_PCIE,
 	.ddr = &ddrc_settings_simaai_emulation,
 	.ubootdtb = "simaai-modalix-zebu",
-	.linuxdtb = "michelangelo-emulation-bench.dtb",
+	.linuxdtb = "modalix-zebu-pcie.dtb",
 };
 
 const boardinfo_t boardinfo_modalix_zebu_eth = {
@@ -40,7 +39,7 @@ const boardinfo_t boardinfo_modalix_zebu_eth = {
 	.id = MODALIX_ZEBU_ETH,
 	.ddr = &ddrc_settings_simaai_emulation,
 	.ubootdtb = "simaai-modalix-zebu",
-	.linuxdtb = "michelangelo-emulation-bench.dtb",
+	.linuxdtb = "modalix-zebu-eth.dtb",
 };
 
 const boardinfo_t boardinfo_modalix_zebu_mipi = {
@@ -48,5 +47,5 @@ const boardinfo_t boardinfo_modalix_zebu_mipi = {
 	.id = MODALIX_ZEBU_MIPI,
 	.ddr = &ddrc_settings_simaai_emulation,
 	.ubootdtb = "simaai-modalix-zebu",
-	.linuxdtb = "michelangelo-emulation-bench.dtb",
+	.linuxdtb = "modalix-zebu-eth.dtb",
 };

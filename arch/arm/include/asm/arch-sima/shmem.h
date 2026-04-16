@@ -24,15 +24,18 @@ typedef enum board_id_t {
 	MODALIX_HHHL_X16 		= 0x00001121,
 	MODALIX_HHHL_V2 		= 0x00000123,
 	MODALIX_HHHL_V2_1R 		= 0x00002123,
+	MODALIX_HHHL_V2_1R_WNB 		= 0x00003123,
 	MODALIX_SOM                     = 0x00000144,
 	MODALIX_SOM_V2                  = 0x00002144,
 	MODALIX_SOM_MICRONFLASH         = 0x00001144,
 	MODALIX_SOM_8G                  = 0x00004144,
+	MODALIX_SOM_16G                 = 0x00003144,
 	MODALIX_VDK			= 0x00000FF1,
 	MODALIX_ZEBU_BASIC		= 0x00000FE5,
 	MODALIX_ZEBU_PCIE		= 0x00001FE5,
 	MODALIX_ZEBU_ETH		= 0x00002FE5,
 	MODALIX_ZEBU_MIPI		= 0x00003FE5,
+	MODALIX_KONTRON 		= 0x00020014,
 } board_id_t;
 
 #define IS_ZEBU(id) (((id) == MODALIX_ZEBU) || \
@@ -45,6 +48,8 @@ int populate_mac(char *mac);
 board_id_t get_board_id(void);
 uint32_t get_boot_partitions_mode( void );
 void shmem_ocm_set_uboot_run_mode(uint32_t state);
-uint32_t get_pcie_enabled( void );
+uint32_t get_pcie_enabled(void);
+uint16_t get_secure_boot_status(void);
+uint8_t shmem_get_uboot_src(void);
 
 #endif /* __SHMEM_H__ */

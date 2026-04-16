@@ -65,7 +65,7 @@ void sima_ddr_init(void)
 	if(ddrc == NULL)
 		return;
 
-	printf("\nDDR INIT: Target DDR controller frequency: %dMHz\n", freq_to_uint(ddrc->settings->freq));
+	printf("\nDDR INIT: Target DDR controller frequency: %dMHz\n", freq_to_uint(ddrc->settings->type));
 	for(j = 0; j < PHY_DDR_MAX_CONTROLLERS; j++) {
 		if(!(ddrc->settings->ddrc_mask & (1 << j)))
 			continue;

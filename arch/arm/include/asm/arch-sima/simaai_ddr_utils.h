@@ -30,8 +30,7 @@ typedef struct ddrc_addrs_t_ {
 typedef struct ddrc_settings_t_ {
 	chip_settings_t chip_settings[PHY_DDR_MAX_CONTROLLERS];
 	uint32_t ddrc_mask;
-	ddr_freq_t freq;
-	ddr_rank_t rank;
+	ddr_type_t type;
 } ddrc_settings_t;
 
 typedef struct ddrc_t_ {
@@ -59,7 +58,7 @@ void do_phy_poll(uint32_t base, uint32_t regoff, uint16_t expdata);
 
 ddrc_t * get_ddrc(void);
 unique_sequence_t * get_unique_vals(ddrc_t *ddrc, init_type_t sequence);
-uint32_t freq_to_uint(ddr_freq_t freq);
+uint32_t freq_to_uint(ddr_type_t type);
 ddrc_settings_t * get_ddrc_settings(void);
 void board_specific_ddrc_settings(uint32_t cbase, chip_settings_t *sets);
 void board_specific_ddrphy_settings(uint32_t phybase, chip_settings_t *sets);

@@ -567,7 +567,7 @@ static int mmc_go_idle(struct mmc *mmc)
 	struct mmc_cmd cmd;
 	int err;
 
-	udelay(1000);
+	udelay(10000);
 
 	cmd.cmdidx = MMC_CMD_GO_IDLE_STATE;
 	cmd.cmdarg = 0;
@@ -578,7 +578,7 @@ static int mmc_go_idle(struct mmc *mmc)
 	if (err)
 		return err;
 
-	udelay(2000);
+	udelay(20000);
 
 	return 0;
 }
@@ -2872,10 +2872,10 @@ static int mmc_power_cycle(struct mmc *mmc)
 		return ret;
 
 	/*
-	 * SD spec recommends at least 1ms of delay. Let's wait for 2ms
+	 * SD spec recommends at least 1ms of delay. Let's wait for 20ms
 	 * to be on the safer side.
 	 */
-	udelay(2000);
+	udelay(20000);
 	return mmc_power_on(mmc);
 }
 

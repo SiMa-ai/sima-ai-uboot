@@ -169,7 +169,7 @@ static int sdhci_transfer_data(struct sdhci_host *host, struct mmc_data *data)
 			}
 		}
 		if (timeout-- > 0)
-			udelay(10);
+			udelay(1000);
 		else {
 			log_err("Transfer data timeout\n");
 			return -ETIMEDOUT;

@@ -32,13 +32,32 @@ test -n "$target_rootfs" || target_rootfs_=mmc; fix_cmd=fix_rootfs_${target_root
 
 fatload mmc ${devnum}:${distro_bootpart} $fdt_addr ${boot_path}$fdt_name;
 fdt addr ${fdt_addr}
+setenv all_dtbos
+if test -n "${dtbos}"; then setenv all_dtbos ${dtbos}; fi
+if test -n "${secure_boot_dtbo}"; then setenv all_dtbos ${all_dtbos} ${secure_boot_dtbo}; fi
 #Loop through provided dtbos and apply them
-for dtbo in ${dtbos}; do
-	fdt resize ${dtb_resize}
-	fatload mmc ${devnum}:${distro_bootpart} ${dtbo_addr} ${boot_path}${dtbo}
-	fdt apply ${dtbo_addr}
+for dtbo in ${all_dtbos}; do
+	# Skip if the variable happens to be empty
+	if test -n "${dtbo}"; then
+		fdt resize ${dtb_resize}
+		fatload mmc ${devnum}:${distro_bootpart} ${dtbo_addr} ${boot_path}${dtbo}
+		fdt apply ${dtbo_addr}
+	fi
 done
-
-fatload mmc ${devnum}:${distro_bootpart} $kernel_addr ${boot_path}Image;
+# Determine which Kernel Image to load based on the C-provided variable
+if test "${secure_boot_mode}" = "1"; then
+    echo "Secure Boot detected: Loading encrypted Image.enc"
+    setenv kernel_file "Image.enc"
+else
+    echo "Standard Boot: Loading Image"
+    setenv kernel_file "Image"
+fi
+fatload mmc ${devnum}:${distro_bootpart} $kernel_addr ${boot_path}${kernel_file};
 test "$target_rootfs_" = "cpio" && fatload mmc ${devnum}:${distro_bootpart} $cpio_addr $cpio_name && booti_initrd_=$cpio_addr:$cpio_size;
+# Cleanup RAM variables before execution
+# This ensures that even if booti fails or a user stops at the prompt,
+# these temporary variables aren't sitting around to be accidentally saved.
+setenv kernel_file
+setenv secure_boot_mode
+setenv secure_boot_dtbo
 booti $kernel_addr $booti_initrd_ $fdt_addr

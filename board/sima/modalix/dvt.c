@@ -91,16 +91,14 @@
 
 ddrc_settings_t ddrc_settings_simaai_dvt8 = {
 	.ddrc_mask = 0xf,
-	.freq = PHY_DDR_FREQ_6400_8,
+	.type = PHY_DDR_3200_X8_2R_16Gb,
 	.chip_settings = DVT_CHIP_SETTINGS,
-	.rank = DDR_DUAL_RANK,
 };
 
 ddrc_settings_t ddrc_settings_simaai_dvt16 = {
 	.ddrc_mask = 0xf,
-	.freq = PHY_DDR_FREQ_6400_16,
+	.type = PHY_DDR_3200_X16_2R_16Gb,
 	.chip_settings = DVT_CHIP_SETTINGS,
-	.rank = DDR_DUAL_RANK,
 };
 
 const boardinfo_t boardinfo_modalix_dvt = {

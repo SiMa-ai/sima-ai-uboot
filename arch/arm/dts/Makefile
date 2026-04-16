@@ -101,7 +101,9 @@ dtb-$(CONFIG_ARCH_SIMA) += \
 	simaai-modalix-hhhl_v2.dtb \
 	simaai-modalix-som.dtb \
 	simaai-modalix-som_8g.dtb \
-	simaai-modalix-vdk.dtb
+	simaai-modalix-som_16g.dtb \
+	simaai-modalix-vdk.dtb \
+	simaai-modalix-kontron.dtb
 
 dtb-$(CONFIG_ARCH_MESON) += \
 	meson-a1-ad401.dtb

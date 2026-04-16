@@ -301,6 +301,7 @@ ENDPROC(apply_core_errata)
 WEAK(lowlevel_init)
 	mov	x29, lr			/* Save LR */
 
+#if !defined(CONFIG_ARMV8_SEC_FIRMWARE_SUPPORT)
 #if defined(CONFIG_GICV2) || defined(CONFIG_GICV3)
 	branch_if_slave x0, 1f
 	ldr	x0, =GICD_BASE
@@ -313,6 +314,7 @@ WEAK(lowlevel_init)
 	ldr	x0, =GICD_BASE
 	ldr	x1, =GICC_BASE
 	bl	gic_init_secure_percpu
+#endif
 #endif
 #endif
 

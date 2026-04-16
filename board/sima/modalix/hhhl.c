@@ -90,9 +90,8 @@
 
 ddrc_settings_t ddrc_settings_simaai_hhhl_V2_1R = {
 	.ddrc_mask = 0xf,
-	.freq = PHY_DDR_FREQ_6400_16,
+	.type = PHY_DDR_3200_X16_1R_16Gb,
 	.chip_settings = HHHL_V2_1R_CHIP_SETTINGS,
-	.rank = DDR_SINGLE_RANK,
 };
 
 extern ddrc_settings_t ddrc_settings_simaai_dvt8;
@@ -125,6 +124,14 @@ const boardinfo_t boardinfo_modalix_hhhl_v2 = {
 const boardinfo_t boardinfo_modalix_hhhl_v2_1r = {
 	.name = "SiMa.ai Modalix HHHL V2 DDR X16 single rank (1r) board",
 	.id = MODALIX_HHHL_V2_1R,
+	.ddr = &ddrc_settings_simaai_hhhl_V2_1R,
+	.ubootdtb = "simaai-modalix-hhhl_v2_1r",
+	.linuxdtb = "modalix-hhhl_1r.dtb",
+};
+
+const boardinfo_t boardinfo_modalix_hhhl_v2_1r_wnb = {
+	.name = "SiMa.ai Modalix HHHL V2 DDR X16 1-rank with Winbond flash",
+	.id = MODALIX_HHHL_V2_1R_WNB,
 	.ddr = &ddrc_settings_simaai_hhhl_V2_1R,
 	.ubootdtb = "simaai-modalix-hhhl_v2_1r",
 	.linuxdtb = "modalix-hhhl_1r.dtb",

@@ -311,11 +311,13 @@ static uint32_t freqs[PHY_DDR_FREQ_NUM] = {
 	[PHY_DDR_FREQ_933MHz] = 933,
 #endif
 #if defined(CONFIG_TARGET_MODALIX)
-	[PHY_DDR_FREQ_3200_8] = 3200,
-	[PHY_DDR_FREQ_3200_16] = 3200,
-	[PHY_DDR_FREQ_6400_8] = 6400,
-	[PHY_DDR_FREQ_6400_16] = 6400,
-	[PHY_DDR_FREQ_6400_16_2GB] = 6400,
+	[PHY_DDR_1600_X8_2R_16Gb] = 1600,
+	[PHY_DDR_1600_X16_2R_16Gb] = 1600,
+	[PHY_DDR_3200_X8_2R_16Gb] = 3200,
+	[PHY_DDR_3200_X16_2R_16Gb] = 3200,
+	[PHY_DDR_3200_X16_1R_16Gb] = 3200,
+	[PHY_DDR_3200_X16_1R_8Gb] = 3200,
+	[PHY_DDR_3200_X16_1R_16Gb_8GB] = 3200,
 #endif
 };
 
@@ -406,18 +408,12 @@ ddrc_t * get_ddrc(void)
 	}
 	ddrc.settings = get_ddrc_settings();
 #if defined(CONFIG_TARGET_DAVINCI)
-	res = sequences[ddrc.settings->freq](&ddrc.sequences);
+	res = sequences[ddrc.settings->type](&ddrc.sequences);
 #elif defined(CONFIG_TARGET_MODALIX)
 	if (IS_ZEBU(get_board_id())) {
 		res = get_sequence_init_ddr_modalix_zebu(&ddrc.sequences);
 	} else {
-		if (ddrc.settings->rank == DDR_SINGLE_RANK) {
-			res = get_sequence_init_ddr_modalix_1r(&ddrc.sequences);
-		} else if (ddrc.settings->rank == DDR_DUAL_RANK) {
 			res = get_sequence_init_ddr_modalix(&ddrc.sequences);
-		} else {
-			 printf("DDR INIT: Error. Unkown rank type\n");
-		}
 	}
 #endif
 
@@ -438,12 +434,12 @@ unique_sequence_t * get_unique_vals(ddrc_t *ddrc, init_type_t sequence)
 	if(sequence > PHY_INIT_TYPE_NUM)
 		return NULL;
 
-	return &ddrc->sequences[sequence].unique_vals[ddrc->settings->freq];
+	return &ddrc->sequences[sequence].unique_vals[ddrc->settings->type];
 }
 
-uint32_t freq_to_uint(ddr_freq_t freq)
+uint32_t freq_to_uint(ddr_type_t type)
 {
-	return freqs[freq];
+	return freqs[type];
 }
 
 void do_apb_write(uint32_t base, uint32_t regoff, uint32_t data)

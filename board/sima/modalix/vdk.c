@@ -7,9 +7,8 @@
 
 ddrc_settings_t ddrc_settings_simaai_vdk = {
 	.ddrc_mask = 0x0,
-	.freq = PHY_DDR_FREQ_6400_8,
+	.type = PHY_DDR_3200_X8_2R_16Gb,
 	.chip_settings = { },
-	.rank = DDR_DUAL_RANK,
 };
 
 const boardinfo_t boardinfo_modalix_vdk = {

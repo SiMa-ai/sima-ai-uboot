@@ -201,7 +201,11 @@ int32_t run_sequence(uint32_t cbase, uint32_t phybase, init_sequence_t s,
 						break;
 					}
 			debug("PHY INIT: Frequency specific value: %#x\n", res);
-			do_apb_write(cbase, s.elements[i].addr, res);
+			if( u && (j < u->size)) {
+				do_apb_write(cbase, s.elements[i].addr, res);
+			} else { // do not need to configure those specific registers for this ddr type
+				printf("not configured address:0x%x \n", s.elements[i].addr);
+			}
 			res = 0;
 			break;
 		case PHY_INIT_TYPE_READ:

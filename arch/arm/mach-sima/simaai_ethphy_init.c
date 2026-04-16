@@ -24,6 +24,7 @@
 #endif
 #include <asm/arch/phy_init.h>
 #include <asm/arch/init_eth_phy.h>
+#include <asm/arch/shmem.h>
 
 #define RUN_SEQUENCE(d, base, phybase, fw) res = run_sequence(base, phybase, sequences[d], fw, PHY_DDR_FIRMWARE_NUM, NULL, NULL); if(res) continue
 
@@ -95,7 +96,10 @@ void sima_eth_init(void)
 #if defined(CONFIG_TARGET_DAVINCI)
 	res = get_sequence_init_eth_phy(&sequences);
 #elif defined(CONFIG_TARGET_MODALIX)
-	res = get_sequence_init_eth_phy_modalix(&sequences);
+	if (get_board_id() == MODALIX_ZEBU_ETH)
+		res = get_sequence_init_eth_phy_modalix_zebu(&sequences);
+	else
+		res = get_sequence_init_eth_phy_modalix(&sequences);
 #endif
 	for(i = 0; i < ARRAY_SIZE(eth_phy_base_addr); i++) {
 		res = 0;

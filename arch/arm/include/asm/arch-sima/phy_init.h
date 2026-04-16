@@ -13,23 +13,19 @@
 #define PRINT_PHY_TRAINING_MESSAGES 1
 #endif
 
-typedef enum ddr_rank_t_ {
-	DDR_SINGLE_RANK,
-	DDR_DUAL_RANK,
-	DDR_MAX_RANK
-} ddr_rank_t;
-
-typedef enum ddr_freq_t_ {
+typedef enum ddr_type_t_ {
 	PHY_DDR_FREQ_533MHz,
 	PHY_DDR_FREQ_800MHz,
 	PHY_DDR_FREQ_933MHz,
-	PHY_DDR_FREQ_3200_8,
-	PHY_DDR_FREQ_3200_16,
-	PHY_DDR_FREQ_6400_8,
-	PHY_DDR_FREQ_6400_16,
-	PHY_DDR_FREQ_6400_16_2GB,
+	PHY_DDR_1600_X8_2R_16Gb,
+	PHY_DDR_1600_X16_2R_16Gb,
+	PHY_DDR_3200_X8_2R_16Gb,
+	PHY_DDR_3200_X16_2R_16Gb,
+	PHY_DDR_3200_X16_1R_16Gb,
+	PHY_DDR_3200_X16_1R_8Gb,
+	PHY_DDR_3200_X16_1R_16Gb_8GB,
 	PHY_DDR_FREQ_NUM,
-} ddr_freq_t;
+} ddr_type_t;
 
 typedef enum init_type_t_ {
 	PHY_INIT_TYPE_WRITE,

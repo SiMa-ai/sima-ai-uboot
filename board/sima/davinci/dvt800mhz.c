@@ -7,7 +7,7 @@
 
 static ddrc_settings_t ddrc_settings_simaai_dvt_800mhz = {
 	.ddrc_mask = 0xf,
-	.freq = PHY_DDR_FREQ_800MHz,
+	.type = PHY_DDR_FREQ_800MHz,
 	.chip_settings = {
 		[0] = {
 			.tximp = PHY_DDR_TXIMP_40_OHM,

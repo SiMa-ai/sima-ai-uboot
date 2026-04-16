@@ -16,7 +16,8 @@ config TARGET_MODALIX
 	select ARM64
 	select BOARD_LATE_INIT
 	select GICV3
-	select GICV3_SUPPORT_GIC600
+	select GIC600_RDIST_PWRON
+	select ARM_PSCI_FW
 	imply MULTI_DTB_FIT
 
 endchoice

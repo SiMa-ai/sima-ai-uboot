@@ -7,7 +7,7 @@
 
 static ddrc_settings_t ddrc_settings_simaai_hhhl = {
 	.ddrc_mask = 0xf,
-	.freq = PHY_DDR_FREQ_933MHz,
+	.type = PHY_DDR_FREQ_933MHz,
 	.chip_settings = {
 		[0] = {
 			.tximp = PHY_DDR_TXIMP_28_OHM,

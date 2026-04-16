@@ -34,6 +34,8 @@
 #define CONFIG_ETHPRIME "eth0"
 #define CONFIG_PHY_ADDR 0
 
+#define CFG_SYS_MEM_RESERVE_SECURE 0x8000000
+
 #include <config_distro_bootcmd.h>
 
 #define BOOTENV_DEFAULT_NETCFG \

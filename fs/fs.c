@@ -35,6 +35,7 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
+bool verify_image(uint8_t *src, uint64_t len, uint64_t *out_len);
 static struct blk_desc *fs_dev_desc;
 static int fs_dev_part;
 static struct disk_partition fs_partition;
@@ -803,9 +804,30 @@ int do_load(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[],
 		puts(")");
 	}
 	puts("\n");
+	uint64_t final_len = 0;
+	/* In general the minimum size of kernel is >2MB
+	 * and other files like flattened device tree, dtbo
+	 * are less than 2MB. The current assumption is that if u-boot
+	 *  is asked to load bigger than 2MB then it is kernel image, hence
+	 * decrypt the image before loading.
+	 */
+	uint16_t secure_boot = get_secure_boot_status();
+	if (secure_boot && (len_read > (2 * 1024 * 1024)))
+	{
+		int res = verify_image((uint8_t *)addr, len_read, &final_len);
+		if (!res)
+		{
+			printf("Image Verification Failed \n");
+			return 1;
+		}
+		else
+		{
+			printf("Image Verification Success \n");
+		}
+	}
 
 	env_set_hex("fileaddr", addr);
-	env_set_hex("filesize", len_read);
+	env_set_hex("filesize", final_len);
 
 	return 0;
 }

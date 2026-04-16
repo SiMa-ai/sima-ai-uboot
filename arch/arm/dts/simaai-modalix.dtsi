@@ -284,6 +284,19 @@
                 };
             };
 
+	psci {
+                        compatible = "arm,psci-0.2";
+                method = "smc";
+                };
+
+	firmware {
+                optee {
+                        compatible = "linaro,optee-tz";
+                        method = "smc";
+                };
+
+        };
+
         timer@040A4000 {
                 compatible = "arm,armv8-timer";
                 interrupts = <0x1 0x10 0xff08 0x1 0xf 0xff08 0x1 0xe 0xff08 0x1 0xd 0xff08>;
