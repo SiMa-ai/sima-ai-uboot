@@ -101,6 +101,12 @@ ddrc_settings_t ddrc_settings_simaai_som_8g = {
 	.chip_settings = SOM_CHIP_SETTINGS,
 };
 
+ddrc_settings_t ddrc_settings_simaai_som_8g_x64 = {
+	.ddrc_mask = 0x3,
+	.type = PHY_DDR_3200_X16_1R_16Gb_8GB,
+	.chip_settings = SOM_CHIP_SETTINGS,
+};
+
 ddrc_settings_t ddrc_settings_simaai_som_16g = {
 	.ddrc_mask = 0xf,
 	.type = PHY_DDR_3200_X16_1R_16Gb_8GB,
@@ -138,9 +144,26 @@ const boardinfo_t boardinfo_modalix_som_8g = {
 	.ubootdtb = "simaai-modalix-som_8g",
 	.linuxdtb = "modalix-som_8g.dtb",
 };
+
+const boardinfo_t boardinfo_modalix_som_8g_x64 = {
+	.name = "SiMa.ai Modalix SoM 8Gig single DRAM board",
+	.id = MODALIX_SOM_8G_X64,
+	.ddr = &ddrc_settings_simaai_som_8g_x64,
+	.ubootdtb = "simaai-modalix-som_8g",
+	.linuxdtb = "modalix-som_8g_x64.dtb",
+};
+
 const boardinfo_t boardinfo_modalix_som_16g = {
 	.name = "SiMa.ai Modalix SoM 16Gig board",
 	.id = MODALIX_SOM_16G,
+	.ddr = &ddrc_settings_simaai_som_16g,
+	.ubootdtb = "simaai-modalix-som_16g",
+	.linuxdtb = "modalix-som_16g.dtb",
+};
+
+const boardinfo_t boardinfo_modalix_som_16g_nohdmi = {
+	.name = "SiMa.ai Modalix SoM 16Gig non-hdmi board",
+	.id = MODALIX_SOM_16G_NOHDMI,
 	.ddr = &ddrc_settings_simaai_som_16g,
 	.ubootdtb = "simaai-modalix-som_16g",
 	.linuxdtb = "modalix-som_16g.dtb",

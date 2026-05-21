@@ -27,7 +27,9 @@ extern const boardinfo_t boardinfo_modalix_som;
 extern const boardinfo_t boardinfo_modalix_som_v2;
 extern const boardinfo_t boardinfo_modalix_som_micronFlash;
 extern const boardinfo_t boardinfo_modalix_som_8g;
+extern const boardinfo_t boardinfo_modalix_som_8g_x64;
 extern const boardinfo_t boardinfo_modalix_som_16g;
+extern const boardinfo_t boardinfo_modalix_som_16g_nohdmi;
 extern const boardinfo_t boardinfo_modalix_vdk;
 extern const boardinfo_t boardinfo_modalix_hhhl_x16;
 extern const boardinfo_t boardinfo_modalix_hhhl_v2;
@@ -47,7 +49,9 @@ static const boardinfo_t* boards[] = {
 	&boardinfo_modalix_som_v2,
 	&boardinfo_modalix_som_micronFlash,
 	&boardinfo_modalix_som_8g,
+	&boardinfo_modalix_som_8g_x64,
 	&boardinfo_modalix_som_16g,
+	&boardinfo_modalix_som_16g_nohdmi,
 	&boardinfo_modalix_vdk,
 	&boardinfo_modalix_hhhl_x16,
 	&boardinfo_modalix_hhhl_v2,
@@ -91,6 +95,10 @@ static struct mm_region simaai_mem_map[] = {
 };
 
 struct mm_region *mem_map = simaai_mem_map;
+
+#ifdef CONFIG_DISPLAY_BOARDINFO
+int print_ocm_info(void);
+#endif;
 
 static boardinfo_t * get_board_info(void)
 {
@@ -147,7 +155,8 @@ static int init_sio(void){
 		return 0;
 	}
 
-	if ((id == MODALIX_SOM) || (id == MODALIX_SOM_MICRONFLASH) || (id == MODALIX_SOM_V2) || (id == MODALIX_SOM_8G) || (id == MODALIX_SOM_16G)) {
+	if ((id == MODALIX_SOM) || (id == MODALIX_SOM_MICRONFLASH) || (id == MODALIX_SOM_V2) || (id == MODALIX_SOM_8G) || (id == MODALIX_SOM_16G)
+	     || (id == MODALIX_SOM_16G_NOHDMI) || (id == MODALIX_SOM_8G_X64)) {
 		val = *((volatile uint32_t *)(SIO1_AHB_START_ADDR + SIO_REG__SIO_OE_ADDR));
 		modalix_writel( (SIO1_AHB_START_ADDR + SIO_REG__SIO_OE_ADDR) , uint32_t, 0x24 | val);
 		modalix_writel( (SIO1_AHB_START_ADDR + SIO_REG__SIO_RT_ADDR) , uint32_t, 0x30);
@@ -269,14 +278,15 @@ int board_init(void)
 	if (IS_ZEBU(id))
 		mem_map[2].size = 0x200000000UL;
 
-	if (id == MODALIX_SOM_8G)
+	if ((id == MODALIX_SOM_8G) || (id == MODALIX_SOM_8G_X64))
 		mem_map[2].size = 0x1c0000000UL;
 
-	if (id == MODALIX_SOM_16G)
+	if ((id == MODALIX_SOM_16G) || (id == MODALIX_SOM_16G_NOHDMI))
 		mem_map[2].size = 0x380000000UL;
 
 #ifndef CONFIG_DEBUG_UART
-	if ((id == MODALIX_SOM) || (id == MODALIX_SOM_MICRONFLASH) || (id == MODALIX_SOM_V2) || (id == MODALIX_SOM_8G) || (id == MODALIX_SOM_16G))
+	if ((id == MODALIX_SOM) || (id == MODALIX_SOM_MICRONFLASH) || (id == MODALIX_SOM_V2) || (id == MODALIX_SOM_8G) ||
+	   (id == MODALIX_SOM_16G) || (id == MODALIX_SOM_16G_NOHDMI) || (id == MODALIX_SOM_8G_X64))
 		init_uart12_clk_div();
 #endif
 
@@ -316,6 +326,60 @@ void print_simaai_banner(void)
 }
 
 #ifdef CONFIG_BOARD_LATE_INIT
+
+#define MODALIX_APU_CORES               8
+#define MODALIX_APU_FREQ_MHZ            1400
+#define MODALIX_EVU_CORES               4
+#define MODALIX_EVU_FREQ_MHZ            1000
+#define MODALIX_ISP_FREQ_MHZ            1200
+#define MODALIX_QSPI_SIZE_MB            64
+#define MODALIX_DRAM_BUS_WIDTH_BITS     128
+#define MODALIX_MLA_TOPS                50
+
+static uint32_t modalix_ddr_chip_width(ddr_type_t type)
+{
+	switch (type) {
+	case PHY_DDR_1600_X16_2R_16Gb:
+	case PHY_DDR_3200_X16_2R_16Gb:
+	case PHY_DDR_3200_X16_1R_16Gb:
+	case PHY_DDR_3200_X16_1R_8Gb:
+	case PHY_DDR_3200_X16_1R_16Gb_8GB:
+		return 16;
+	case PHY_DDR_1600_X8_2R_16Gb:
+	case PHY_DDR_3200_X8_2R_16Gb:
+		return 8;
+	default:
+		return 0;
+	}
+}
+
+static void print_soc_ip_details(void)
+{
+	ddrc_settings_t *ddr = get_ddrc_settings();
+	uint64_t dram_size = mem_map[2].size;
+	uint32_t ddr_mhz = ddr ? freq_to_uint(ddr->type) : 0;
+	uint32_t ddr_mbps = ddr_mhz * 2;  /* DDR = double data rate */
+	uint32_t chip_width = ddr ? modalix_ddr_chip_width(ddr->type) : 0;
+	uint32_t mla_mhz = get_mla_freq();
+
+	printf("SoC IP details:\n");
+	printf("\tAPU : ARM Cortex-A65, %u cores @ %u.%u GHz\n",
+	       MODALIX_APU_CORES,
+	       MODALIX_APU_FREQ_MHZ / 1000, (MODALIX_APU_FREQ_MHZ / 100) % 10);
+	printf("\tEVU : EV74, %u cores @ %u.%u GHz\n",
+	       MODALIX_EVU_CORES,
+	       MODALIX_EVU_FREQ_MHZ / 1000, (MODALIX_EVU_FREQ_MHZ / 100) % 10);
+	printf("\tISP : ARM C71 @ %u.%u GHz\n",
+	       MODALIX_ISP_FREQ_MHZ / 1000, (MODALIX_ISP_FREQ_MHZ / 100) % 10);
+	printf("\tQSPI: %u MB\n", MODALIX_QSPI_SIZE_MB);
+	printf("\tDRAM: LPDDR5 %llu GiB, %u-bit @ %u Mbps (chip x%u)\n",
+	       (unsigned long long)(dram_size >> 30),
+	       MODALIX_DRAM_BUS_WIDTH_BITS, ddr_mbps, chip_width);
+	printf("\tMLA : %u TOPS %u.%u GHz\n",
+	       MODALIX_MLA_TOPS,
+	       mla_mhz / 1000, (mla_mhz / 100) % 10);
+}
+
 int board_late_init(void)
 {
 	uint32_t altboot;
@@ -387,7 +451,11 @@ int board_late_init(void)
 		}
 	}
 
-	print_simaai_banner();
+    print_simaai_banner();
+#ifdef CONFIG_DISPLAY_BOARDINFO
+    print_ocm_info();
+#endif
+    print_soc_ip_details();
 
 	return 0;
 }
@@ -573,8 +641,7 @@ void get_pcie_reg_info(void)
            *((u32 *)(PCIE_APB_START_ADDR + PRC_REG__IOMUX_REG__IOMUX_REG_0_ADDR)));
 }
 
-
-int checkboard(void) {
+int print_ocm_info(void) {
   boardinfo_t *info = get_board_info();
   uint32_t pcieEn = get_pcie_enabled();
 

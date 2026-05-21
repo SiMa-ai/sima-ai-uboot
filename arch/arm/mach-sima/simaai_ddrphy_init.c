@@ -155,6 +155,10 @@ void sima_ddr_init(void)
 	}
 
 	printf("DDR INITIALIZATION SUMMARY\n");
-	for(j = 0; j < 4; j++)
+	for(j = 0; j < 4; j++) {
+		if(!(ddrc->settings->ddrc_mask & (1 << j)))
+			continue;
+
 		printf("DDR %d: %s\n", j, summary[j]?"PASSED":"FAILED");
+	}
 }
