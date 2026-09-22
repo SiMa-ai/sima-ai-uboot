@@ -26,10 +26,27 @@ static char ops[PHY_INIT_TYPE_NUM][40] = {
 	[PHY_INIT_TYPE_PHYPOLL] = "Poll from PHY",
 	[PHY_INIT_TYPE_DDRCSETTINGS] = "Set DDRC settings",
 	[PHY_INIT_TYPE_PHYSETTINGS] = "Set PHY settings",
+	[PHY_INIT_TYPE_DELAY] = "Delay (us)",
+	[PHY_INIT_TYPE_FIRMWARE_OVERLAY] = "Overlay raw PHY values",
 };
 #ifdef PRINT_PHY_TRAINING_MESSAGES
 extern char major_messages[0x100][90];
 #endif
+
+/*
+ * .data placement is critical: pre-relocation BSS is not yet zeroed (gets
+ * cleared by crt0_64.S clear_bss only AFTER board_init_f returns). If this
+ * cb pointer lived in BSS, it would hold garbage during cold-boot training,
+ * making `if (cb)` pass and the indirect call jump to a garbage address.
+ * Same fix pattern as ddr_quickboot_mode in ddr_tuning.c.
+ */
+static phy_post_training_cb_t sima_post_training_cb
+	__attribute__((section(".data"))) = NULL;
+
+void phy_init_set_post_training_cb(phy_post_training_cb_t cb)
+{
+	sima_post_training_cb = cb;
+}
 
 static inline void load_firmware(uint32_t base, firmware_t f, chip_settings_t *s) {
 	uint32_t i;
@@ -245,6 +262,31 @@ int32_t run_sequence(uint32_t cbase, uint32_t phybase, init_sequence_t s,
 			res = do_training_run(phybase, s.elements[i].value);
 			if((res == 0) && (s.elements[i].value)) {
 				res = do_phy_read(phybase, s.elements[i].addr) && 0xff;
+			}
+			/*
+			 * Post-training capture hook — calls cb if registered.
+			 * Stays NULL in DIAG; warm-boot path never registers
+			 * it. Only cold-boot capture registers it.
+			 */
+			if (res == 0 && sima_post_training_cb)
+				sima_post_training_cb(phybase);
+			break;
+		case PHY_INIT_TYPE_DELAY:
+			udelay(s.elements[i].value);
+			break;
+		case PHY_INIT_TYPE_FIRMWARE_OVERLAY:
+			/* Raw value-loop into PHY memory: no mailbox poke, no MR
+			 * settings. Used to apply the QB diff window on top of an
+			 * already-loaded base firmware. */
+			if (f == NULL)
+				res = -2;
+			else if (s.elements[i].value >= fs)
+				res = -3;
+			else {
+				firmware_t fw = f[s.elements[i].value];
+				uint32_t n;
+				for (n = 0; n < fw.size; n++)
+					do_phy_write(phybase, fw.addr + n, fw.values[n]);
 			}
 			break;
 		case PHY_INIT_TYPE_DEBUG:

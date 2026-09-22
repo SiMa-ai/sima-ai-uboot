@@ -42,6 +42,8 @@ typedef enum init_type_t_ {
 	PHY_INIT_TYPE_DDRCSETTINGS,
 	PHY_INIT_TYPE_PHYSETTINGS,
 	PHY_INIT_TYPE_DEBUG_RANGE,
+	PHY_INIT_TYPE_DELAY,
+	PHY_INIT_TYPE_FIRMWARE_OVERLAY,
 	PHY_INIT_TYPE_NUM
 } init_type_t;
 
@@ -226,5 +228,14 @@ int32_t run_sequence(uint32_t cbase, uint32_t phybase, init_sequence_t s,
 		firmware_t *f, int32_t fs, chip_settings_t *sets, unique_sequence_t *u);
 int32_t wait_training_completion(uint32_t ddrcbase, uint32_t ddrcphybase,
 		init_sequence_t s, firmware_t *f, int32_t fs);
+
+/*
+ * Post-training capture hook. If registered, run_sequence() calls this
+ * immediately after a PHY_INIT_TYPE_RUN element where do_training_run()
+ * returns 0 (mail=0x07). The callback must halt the PMU (MicroReset=1)
+ * and switch to APB mode (MicroContMuxSel=0) BEFORE reading CSRs —
+ */
+typedef void (*phy_post_training_cb_t)(uint32_t phy_base);
+void phy_init_set_post_training_cb(phy_post_training_cb_t cb);
 
 #endif /* __PHY_INIT_H__ */

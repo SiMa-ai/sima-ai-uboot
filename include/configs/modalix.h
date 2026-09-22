@@ -50,6 +50,8 @@
 	"fix_rootfs_mmc=setenv bootargs ${bootargs_common} netcfg=${netcfg} ${nfs_linux_intf_cmd} root=/dev/mmcblk${devnum}p${rootfs_partid} rw rootwait\0" \
 	"fix_rootfs_cpio=setenv bootargs ${bootargs_common} netcfg=${netcfg} ${nfs_linux_intf_cmd} root=/dev/ram0 rw rootfstype=ramfs\0" \
 	"fix_rootfs_nfs=setenv bootargs ${bootargs_common} netcfg=${netcfg} ${nfs_linux_intf_cmd} root=/dev/nfs rw nfsroot=${serverip}:${npath},v3 ip=${ipaddr}:::::eth0:none nfsrootdebug\0" \
+	"fix_rootfs_usb=setenv bootargs ${bootargs_common} netcfg=${netcfg} ${nfs_linux_intf_cmd} root=/dev/sda${rootfs_partid} rw rootwait\0" \
+	"fix_rootfs_nvme=setenv bootargs ${bootargs_common} netcfg=${netcfg} ${nfs_linux_intf_cmd} root=/dev/nvme${devnum}n1p${rootfs_partid} rw rootwait\0" \
 	"target_rootfs=\0"
 
 #define BOOTENV_DEV_NET(devtypeu, devtypel, instance) \
@@ -62,20 +64,24 @@
 	"bootcmd_dhcp=previpaddr=${ipaddr}; dhcp; dns ${tftpserver} serverip; run bootcmd_net; setenv ipaddr ${previpaddr}\0"
 
 #define BOOT_TARGET_DEVICES(func) \
+	func(USB, usb, 0) \
 	func(MMC, mmc, 1) \
 	func(MMC, mmc, 0) \
+	func(NVME, nvme, 0) \
 	func(DHCP, dhcp, na) \
-	func(NET, staticip, na)
+	func(NET, staticip, na) \
+
 
 #define ENV_MEM_LAYOUT_SETTINGS \
         "fdt_addr=0x1079000000\0" \
         "dtbo_addr=0x107A000000\0" \
-        "dtb_resize=0x1000\0" \
+        "dtb_resize=0x10000\0" \
         "scriptaddr=0x107C000000\0" \
         "kernel_addr=0x1075000000\0" \
         "cpio_addr=0x107D000000\0" \
         "cpio_size=0x1F000000\0" \
         "cpio_name=simaai-image-palette-modalix.cpio.gz\0" \
+        "rbaddr=0x1010000000\0" \
         "initrd_high=0xFFFFFFFFFFFFFFFF\0" \
         "fdt_high=0xFFFFFFFFFFFFFFFF\0" \
         "booti_initrd=-\0"

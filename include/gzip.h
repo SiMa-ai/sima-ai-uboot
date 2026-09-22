@@ -32,7 +32,7 @@ int gzip_parse_header(const unsigned char *src, unsigned long len);
  * @src
  * Return: 0 if OK, -1 on error
  */
-int gunzip(void *dst, int dstlen, unsigned char *src, unsigned long *lenp);
+int gunzip(void *dst, unsigned long dstlen, unsigned char *src, unsigned long *lenp);
 
 /**
  * zunzip() - Uncompress blocks compressed with zlib without headers
@@ -46,7 +46,7 @@ int gunzip(void *dst, int dstlen, unsigned char *src, unsigned long *lenp);
  * @offset: start offset within the src buffer
  * Return: 0 if OK, -1 on error
  */
-int zunzip(void *dst, int dstlen, unsigned char *src, unsigned long *lenp,
+int zunzip(void *dst, unsigned long dstlen, unsigned char *src, unsigned long *lenp,
 	   int stoponerr, int offset);
 
 /**

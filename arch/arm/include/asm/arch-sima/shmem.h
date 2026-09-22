@@ -30,6 +30,7 @@ typedef enum board_id_t {
 	MODALIX_SOM_MICRONFLASH         = 0x00001144,
 	MODALIX_SOM_8G                  = 0x00004144,
 	MODALIX_SOM_8G_X64              = 0x00006144,
+	MODALIX_SOM_8G_HDMI             = 0x00007144,
 	MODALIX_SOM_16G                 = 0x00003144,
 	MODALIX_SOM_16G_NOHDMI          = 0x00005144,
 	MODALIX_VDK			= 0x00000FF1,
@@ -53,5 +54,10 @@ void shmem_ocm_set_uboot_run_mode(uint32_t state);
 uint32_t get_pcie_enabled(void);
 uint16_t get_secure_boot_status(void);
 uint8_t shmem_get_uboot_src(void);
+uint16_t shmem_ddr_init_done(void);
+uint32_t get_mla_freq(void);
+uint32_t shmem_ddr_tuning_available(void);
+uint32_t shmem_ddr_tuning_addr(void);
+void shmem_ddr_tuning_clear(void);
 
 #endif /* __SHMEM_H__ */

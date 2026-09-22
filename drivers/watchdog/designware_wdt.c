@@ -105,6 +105,15 @@ static int designware_wdt_start(struct udevice *dev, u64 timeout, ulong flags)
 	return designware_wdt_reset(dev);
 }
 
+static int designware_wdt_expire_now(struct udevice *dev, ulong flags)
+{
+	/*
+	 * Arm the shortest timeout and return, so the caller can wait for the
+	 * reset instead of falling back to the uclass hang() loop.
+	 */
+	return designware_wdt_start(dev, 1, flags);
+}
+
 static int designware_wdt_probe(struct udevice *dev)
 {
 	struct designware_wdt_priv *priv = dev_get_priv(dev);
@@ -151,6 +160,7 @@ static const struct wdt_ops designware_wdt_ops = {
 	.start = designware_wdt_start,
 	.reset = designware_wdt_reset,
 	.stop = designware_wdt_stop,
+	.expire_now = designware_wdt_expire_now,
 };
 
 static const struct udevice_id designware_wdt_ids[] = {

@@ -153,6 +153,14 @@ const boardinfo_t boardinfo_modalix_som_8g_x64 = {
 	.linuxdtb = "modalix-som_8g_x64.dtb",
 };
 
+const boardinfo_t boardinfo_modalix_som_8g_hdmi = {
+	.name = "SiMa.ai Modalix SoM 8Gig hdmi board",
+	.id = MODALIX_SOM_8G_HDMI,
+	.ddr = &ddrc_settings_simaai_som_8g_x64,
+	.ubootdtb = "simaai-modalix-som_8g",
+	.linuxdtb = "modalix-som_8g_x64.dtb",
+};
+
 const boardinfo_t boardinfo_modalix_som_16g = {
 	.name = "SiMa.ai Modalix SoM 16Gig board",
 	.id = MODALIX_SOM_16G,

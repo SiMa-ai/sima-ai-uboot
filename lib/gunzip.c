@@ -71,7 +71,7 @@ int gzip_parse_header(const unsigned char *src, unsigned long len)
 	return i;
 }
 
-int gunzip(void *dst, int dstlen, unsigned char *src, unsigned long *lenp)
+int gunzip(void *dst, unsigned long dstlen, unsigned char *src, unsigned long *lenp)
 {
 	int offset = gzip_parse_header(src, *lenp);
 
@@ -274,7 +274,7 @@ out:
 /*
  * Uncompress blocks compressed with zlib without headers
  */
-int zunzip(void *dst, int dstlen, unsigned char *src, unsigned long *lenp,
+int zunzip(void *dst, unsigned long dstlen, unsigned char *src, unsigned long *lenp,
 						int stoponerr, int offset)
 {
 	z_stream s;
@@ -292,7 +292,7 @@ int zunzip(void *dst, int dstlen, unsigned char *src, unsigned long *lenp,
 	s.next_in = src + offset;
 	s.avail_in = *lenp - offset;
 	s.next_out = dst;
-	s.avail_out = dstlen;
+	s.avail_out = (dstlen > 0xffffffffUL) ? 0xffffffffUL : dstlen;
 	do {
 		r = inflate(&s, Z_FINISH);
 		if (stoponerr == 1 && r != Z_STREAM_END &&

@@ -39,6 +39,7 @@
 };
 
 &sd {
+	max-frequency= <800000000>;
 	status = "okay";
 };
 

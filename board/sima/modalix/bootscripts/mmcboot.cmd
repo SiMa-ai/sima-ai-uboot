@@ -17,8 +17,9 @@ if test -n ${nfs_linux_intf}; then
 	setenv nfs_linux_intf_cmd "nfs_linux_intf=${nfs_linux_intf}"
 fi;
 
-part list mmc ${devnum} -bootable bparts; for bpart in ${bparts}; do if test ${bpart} -eq 5; then;env set rootfs_partid 5;elif test ${bpart} -eq 4;then; env set rootfs_partid 4;fi; done;
-if test ${upgrade_available} -eq 1; then
+if test "${devtype}" = "mmc"; then
+    part list mmc ${devnum} -bootable bparts; for bpart in ${bparts}; do if test ${bpart} -eq 5; then;env set rootfs_partid 5;elif test ${bpart} -eq 4;then; env set rootfs_partid 4;fi; done;
+    if test ${upgrade_available} -eq 1; then
 	if test -n ${bootcount} && test ${bootcount} -gt ${bootlimit}; then
 		echo "failed to boot from current version, fall back to previous"
 		if test ${rootfs_partid} -eq 5; then
@@ -27,10 +28,12 @@ if test ${upgrade_available} -eq 1; then
 					setenv rootfs_partid 5
 				fi
 				setenv upgrade_available 0;setenv bootcount 0;setenv fallback true;saveenv
-fi;fi;
-test -n "$target_rootfs" || target_rootfs_=mmc; fix_cmd=fix_rootfs_${target_rootfs_}; run $fix_cmd;
+    fi;fi;
+fi;
 
-fatload mmc ${devnum}:${distro_bootpart} $fdt_addr ${boot_path}$fdt_name;
+test -n "$target_rootfs" || target_rootfs_=${devtype}; fix_cmd=fix_rootfs_${target_rootfs_}; run $fix_cmd;
+
+fatload "${devtype}" ${devnum}:${distro_bootpart} $fdt_addr ${boot_path}$fdt_name;
 fdt addr ${fdt_addr}
 setenv all_dtbos
 if test -n "${dtbos}"; then setenv all_dtbos ${dtbos}; fi
@@ -40,7 +43,7 @@ for dtbo in ${all_dtbos}; do
 	# Skip if the variable happens to be empty
 	if test -n "${dtbo}"; then
 		fdt resize ${dtb_resize}
-		fatload mmc ${devnum}:${distro_bootpart} ${dtbo_addr} ${boot_path}${dtbo}
+		fatload "${devtype}" ${devnum}:${distro_bootpart} ${dtbo_addr} ${boot_path}${dtbo}
 		fdt apply ${dtbo_addr}
 	fi
 done
@@ -52,7 +55,7 @@ else
     echo "Standard Boot: Loading Image"
     setenv kernel_file "Image"
 fi
-fatload mmc ${devnum}:${distro_bootpart} $kernel_addr ${boot_path}${kernel_file};
+fatload "${devtype}" ${devnum}:${distro_bootpart} $kernel_addr ${boot_path}${kernel_file};
 test "$target_rootfs_" = "cpio" && fatload mmc ${devnum}:${distro_bootpart} $cpio_addr $cpio_name && booti_initrd_=$cpio_addr:$cpio_size;
 # Cleanup RAM variables before execution
 # This ensures that even if booti fails or a user stops at the prompt,

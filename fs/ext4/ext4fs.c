@@ -76,7 +76,9 @@ int ext4fs_read_file(struct ext2fs_node *node, loff_t pos,
 	int log2blksz = fs->dev_desc->log2blksz;
 	int log2_fs_blocksize = LOG2_BLOCK_SIZE(node->data) - log2blksz;
 	int blocksize = (1 << (log2_fs_blocksize + log2blksz));
-	unsigned int filesize = le32_to_cpu(node->inode.size);
+	/* size_high holds the upper 32 size bits for ext4 regular files */
+	loff_t filesize = le32_to_cpu(node->inode.size) |
+		((loff_t)le32_to_cpu(node->inode.size_high) << 32);
 	lbaint_t previous_block_number = -1;
 	lbaint_t delayed_start = 0;
 	lbaint_t delayed_extent = 0;

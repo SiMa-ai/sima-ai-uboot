@@ -7,7 +7,7 @@
 #include <asm/arch/init_ddr_modalix.h>
 #include <linux/kernel.h>
 
-static init_element_t seq1_init_ddr_modalix[] = {
+init_element_t seq1_init_ddr_modalix[] = {
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00010b84, .value=0x1 }, // OPCTRL1
     { .type=PHY_INIT_TYPE_WRITE_FREQ, .addr=0x00010000, .value=0x3080008 }, // MSTR0
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00010010, .value=0x101 }, // MSTR4
@@ -869,7 +869,7 @@ static init_element_t seq1_init_ddr_modalix_PHY_DDR_3200_X16_1R_16Gb_8GB[] = {
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x0103002c, .value=0x00000505 }, // ADDRMAP11
 };
 
-static init_element_t seq2_init_ddr_modalix[] = {
+init_element_t seq2_init_ddr_modalix[] = {
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00010180, .value=0x00000211 }, // PWRCTL;
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01010180, .value=0x00000211 }, // PWRCTL;
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00010180, .value=0x00000211 }, // PWRCTL;
@@ -19400,7 +19400,7 @@ static init_element_t seq3_2D_init_ddr_modalix_PHY_DDR_3200_X16_1R_16Gb_8GB[] = 
     { .type=PHY_INIT_TYPE_PHY, .addr=0x2007e, .value=0x11 }, // DWC_DDRPHYA_MASTER0_p0_HwtControlVal
 };
 
-static init_element_t seq4_init_ddr_modalix[] = {
+init_element_t seq4_init_ddr_modalix[] = {
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00010c80, .value=0x00000000 }, // SWCTL;
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x01010c80, .value=0x00000000 }, // SWCTL;
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x00010510, .value=0x00000024 }, // DFIMISC;
@@ -19496,7 +19496,8 @@ static init_element_t seq4_init_ddr_modalix_PHY_DDR_3200_X16_1R_16Gb_8GB[] = {
     { .type=PHY_INIT_TYPE_WRITE, .addr=0x010200f8, .value=0x37FFFFFF }, // SBRRANGE0;
 };
 
-static init_sequence_t sequences_init_ddr_modalix[PHY_INIT_NUM] = {
+/* Non-static — qb_init_ddr_modalix.c reads this read-only table. */
+init_sequence_t sequences_init_ddr_modalix[PHY_INIT_NUM] = {
     [PHY_INIT_DDR_PRERESET] = {
         .elements = &seq1_init_ddr_modalix[0],
         .size = ARRAY_SIZE(seq1_init_ddr_modalix),

@@ -8,10 +8,12 @@
 #include <asm/global_data.h>
 #include <asm/armv8/mmu.h>
 #include <asm/arch/simaai_ddr_utils.h>
+#include <asm/arch/ddr_tuning.h>
 #include <asm/arch/modalix/prc_addr_map.h>
 #include <asm/arch/modalix/sio_addr_map.h>
 #include <asm/arch/modalix/gpio_addr_map.h>
 #include <asm/arch/modalix/mlsoc_addr_map_defines.h>
+#include <linux/delay.h>
 #ifdef CONFIG_OF_BOARD_SETUP
 #include <linux/sizes.h>
 #endif
@@ -27,6 +29,7 @@ extern const boardinfo_t boardinfo_modalix_som;
 extern const boardinfo_t boardinfo_modalix_som_v2;
 extern const boardinfo_t boardinfo_modalix_som_micronFlash;
 extern const boardinfo_t boardinfo_modalix_som_8g;
+extern const boardinfo_t boardinfo_modalix_som_8g_hdmi;
 extern const boardinfo_t boardinfo_modalix_som_8g_x64;
 extern const boardinfo_t boardinfo_modalix_som_16g;
 extern const boardinfo_t boardinfo_modalix_som_16g_nohdmi;
@@ -49,6 +52,7 @@ static const boardinfo_t* boards[] = {
 	&boardinfo_modalix_som_v2,
 	&boardinfo_modalix_som_micronFlash,
 	&boardinfo_modalix_som_8g,
+	&boardinfo_modalix_som_8g_hdmi,
 	&boardinfo_modalix_som_8g_x64,
 	&boardinfo_modalix_som_16g,
 	&boardinfo_modalix_som_16g_nohdmi,
@@ -89,16 +93,63 @@ static struct mm_region simaai_mem_map[] = {
 		.attrs = PTE_BLOCK_MEMTYPE(MT_NORMAL) |
 			 PTE_BLOCK_INNER_SHARE
 	}, {
+		/* PCIe0 64-bit MEM: 0x4000000000 - 0x40EFFFFFFF */
+		.virt = 0x4000000000UL,
+		.phys = 0x4000000000UL,
+		.size = 0x0F0000000UL,
+		.attrs = PTE_BLOCK_MEMTYPE(MT_DEVICE_NGNRNE) |
+			 PTE_BLOCK_NON_SHARE |
+			 PTE_BLOCK_PXN | PTE_BLOCK_UXN
+	}, {
+		/* PCIe0 ECAM: 0x4FF0000000 - 0x4FFFFFFFFF */
+		.virt = 0x4FF0000000UL,
+		.phys = 0x4FF0000000UL,
+		.size = 0x10000000UL,
+		.attrs = PTE_BLOCK_MEMTYPE(MT_DEVICE_NGNRNE) |
+			 PTE_BLOCK_NON_SHARE |
+			 PTE_BLOCK_PXN | PTE_BLOCK_UXN
+	}, {
+		/* PCIe2 64-bit MEM: 0x6000000000 - 0x60EFFFFFFF */
+		.virt = 0x6000000000UL,
+		.phys = 0x6000000000UL,
+		.size = 0x0F0000000UL,
+		.attrs = PTE_BLOCK_MEMTYPE(MT_DEVICE_NGNRNE) |
+			 PTE_BLOCK_NON_SHARE |
+			 PTE_BLOCK_PXN | PTE_BLOCK_UXN
+	}, {
+		/* PCIe2 ECAM: 0x6FF0000000 - 0x6FFFFFFFFF */
+		.virt = 0x6FF0000000UL,
+		.phys = 0x6FF0000000UL,
+		.size = 0x10000000UL,
+		.attrs = PTE_BLOCK_MEMTYPE(MT_DEVICE_NGNRNE) |
+			 PTE_BLOCK_NON_SHARE |
+			 PTE_BLOCK_PXN | PTE_BLOCK_UXN
+	}, {
+		/* PCIe3 64-bit MEM: 0x7000000000 - 0x70EFFFFFFF */
+		.virt = 0x7000000000UL,
+		.phys = 0x7000000000UL,
+		.size = 0x0F0000000UL,
+		.attrs = PTE_BLOCK_MEMTYPE(MT_DEVICE_NGNRNE) |
+			 PTE_BLOCK_NON_SHARE |
+			 PTE_BLOCK_PXN | PTE_BLOCK_UXN
+	}, {
+		/* PCIe3 ECAM: 0x7FF0000000 - 0x7FFFFFFFFF */
+		.virt = 0x7FF0000000UL,
+		.phys = 0x7FF0000000UL,
+		.size = 0x10000000UL,
+		.attrs = PTE_BLOCK_MEMTYPE(MT_DEVICE_NGNRNE) |
+			 PTE_BLOCK_NON_SHARE |
+			 PTE_BLOCK_PXN | PTE_BLOCK_UXN
+}, {
+
 		/* List terminator */
 		0,
-	}
+}
 };
 
 struct mm_region *mem_map = simaai_mem_map;
 
-#ifdef CONFIG_DISPLAY_BOARDINFO
-int print_ocm_info(void);
-#endif;
+static int print_ocm_info(void);
 
 static boardinfo_t * get_board_info(void)
 {
@@ -156,7 +207,7 @@ static int init_sio(void){
 	}
 
 	if ((id == MODALIX_SOM) || (id == MODALIX_SOM_MICRONFLASH) || (id == MODALIX_SOM_V2) || (id == MODALIX_SOM_8G) || (id == MODALIX_SOM_16G)
-	     || (id == MODALIX_SOM_16G_NOHDMI) || (id == MODALIX_SOM_8G_X64)) {
+	     || (id == MODALIX_SOM_16G_NOHDMI) || (id == MODALIX_SOM_8G_X64) || (id == MODALIX_SOM_8G_HDMI)) {
 		val = *((volatile uint32_t *)(SIO1_AHB_START_ADDR + SIO_REG__SIO_OE_ADDR));
 		modalix_writel( (SIO1_AHB_START_ADDR + SIO_REG__SIO_OE_ADDR) , uint32_t, 0x24 | val);
 		modalix_writel( (SIO1_AHB_START_ADDR + SIO_REG__SIO_RT_ADDR) , uint32_t, 0x30);
@@ -186,6 +237,18 @@ static int init_sio(void){
 		modalix_writel( (SIO6_AHB_START_ADDR + SIO_REG__SIO_MX1_ADDR) , uint32_t, 0x0101);
 		modalix_writel( (SIO6_AHB_START_ADDR + SIO_REG__SIO_MX2_ADDR) , uint32_t, 0x02020202);
 		modalix_writel( (SIO6_AHB_START_ADDR + 0x1000 + GPIO_REG__GPIO_SWPORTA_DDR_ADDR), uint32_t, 0x1);
+
+		/* SIO[2] I2C3 - LM96163 fan sensor */
+		modalix_writel( (SIO2_AHB_START_ADDR + SIO_REG__SIO_OE_ADDR) , uint32_t, 0xc0);
+		modalix_writel( (SIO2_AHB_START_ADDR + SIO_REG__SIO_IE_ADDR) , uint32_t, 0xc0);
+		modalix_writel( (SIO2_AHB_START_ADDR + SIO_REG__SIO_RSTSET_ADDR) , uint32_t, (1 << 5));
+		modalix_writel( (SIO2_AHB_START_ADDR + SIO_REG__SIO_DIV__REGISTER_ARRAY_ADDR + (5 << 2)) , uint32_t, 0x0a);
+		modalix_writel( (SIO2_AHB_START_ADDR + SIO_REG__SIO_DIV__REGISTER_ARRAY_ADDR + (5 << 2)) , uint32_t, 0x0a | SIMAAI_SIODIV_EN);
+		udelay(1);
+		modalix_writel( (SIO2_AHB_START_ADDR + SIO_REG__SIO_RSTCLR_ADDR) , uint32_t, (1 << 5));
+		modalix_writel( (SIO2_AHB_START_ADDR + SIO_REG__SIO_MX1_ADDR) , uint32_t, 0x0100);
+		modalix_writel( (SIO2_AHB_START_ADDR + SIO_REG__SIO_MX2_ADDR) , uint32_t, 0x00000000);
+		modalix_writel( (SIO2_AHB_START_ADDR + 0x1000 + GPIO_REG__GPIO_SWPORTA_CTL_ADDR), uint32_t, 0xc0);
 
 		return 0;
 	}
@@ -278,7 +341,7 @@ int board_init(void)
 	if (IS_ZEBU(id))
 		mem_map[2].size = 0x200000000UL;
 
-	if ((id == MODALIX_SOM_8G) || (id == MODALIX_SOM_8G_X64))
+	if ((id == MODALIX_SOM_8G) || (id == MODALIX_SOM_8G_X64) || (id == MODALIX_SOM_8G_HDMI))
 		mem_map[2].size = 0x1c0000000UL;
 
 	if ((id == MODALIX_SOM_16G) || (id == MODALIX_SOM_16G_NOHDMI))
@@ -286,7 +349,7 @@ int board_init(void)
 
 #ifndef CONFIG_DEBUG_UART
 	if ((id == MODALIX_SOM) || (id == MODALIX_SOM_MICRONFLASH) || (id == MODALIX_SOM_V2) || (id == MODALIX_SOM_8G) ||
-	   (id == MODALIX_SOM_16G) || (id == MODALIX_SOM_16G_NOHDMI) || (id == MODALIX_SOM_8G_X64))
+	   (id == MODALIX_SOM_16G) || (id == MODALIX_SOM_16G_NOHDMI) || (id == MODALIX_SOM_8G_X64) || (id == MODALIX_SOM_8G_HDMI))
 		init_uart12_clk_div();
 #endif
 
@@ -380,6 +443,10 @@ static void print_soc_ip_details(void)
 	       mla_mhz / 1000, (mla_mhz / 100) % 10);
 }
 
+#if IS_ENABLED(CONFIG_DM_I2C)
+int modalix_lm96163_fan_init(void);
+#endif
+
 int board_late_init(void)
 {
 	uint32_t altboot;
@@ -452,10 +519,27 @@ int board_late_init(void)
 	}
 
     print_simaai_banner();
-#ifdef CONFIG_DISPLAY_BOARDINFO
     print_ocm_info();
-#endif
     print_soc_ip_details();
+
+	/*
+	 * Persist freshly captured QB blob to vfat 0:3 as DDR_TRAI.BIN.
+	 * No-op on warm boot (capture is gated to cold boots only).
+	 */
+	sima_ddr_save_pending_tuning();
+
+#if IS_ENABLED(CONFIG_DM_I2C)
+	/*
+	 * On SoM boards, program the LM96163 autonomous fan LUT now so the
+	 * board fan is controlled from boot onward (and preserved across the
+	 * kernel handoff). Best-effort: a failure must not block boot.
+	 */
+	if (info->id == MODALIX_SOM || info->id == MODALIX_SOM_MICRONFLASH ||
+	    info->id == MODALIX_SOM_V2 || info->id == MODALIX_SOM_8G ||
+	    info->id == MODALIX_SOM_8G_X64 || info->id == MODALIX_SOM_8G_HDMI ||
+	    info->id == MODALIX_SOM_16G || info->id == MODALIX_SOM_16G_NOHDMI)
+		modalix_lm96163_fan_init();
+#endif
 
 	return 0;
 }
@@ -626,11 +710,10 @@ int board_fit_config_name_match(const char *name)
 }
 #endif
 
-#ifdef CONFIG_DISPLAY_BOARDINFO
 #define PCIE_APB_START_ADDR 0x0005e00000ULL
 #define PCIE_SYS_REG__PCIE0_LINK_DBG_2_ADDR 0x001000b4
 
-void get_pcie_reg_info(void)
+static void get_pcie_reg_info(void)
 {
   board_id_t id = get_board_id();
   printf("\tPCIE0_LINK_DBG_2: 0x%x\n",
@@ -641,7 +724,7 @@ void get_pcie_reg_info(void)
            *((u32 *)(PCIE_APB_START_ADDR + PRC_REG__IOMUX_REG__IOMUX_REG_0_ADDR)));
 }
 
-int print_ocm_info(void) {
+static int print_ocm_info(void) {
   boardinfo_t *info = get_board_info();
   uint32_t pcieEn = get_pcie_enabled();
 
@@ -661,4 +744,3 @@ int print_ocm_info(void) {
 
   return 0;
 }
-#endif

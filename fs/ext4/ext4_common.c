@@ -2325,7 +2325,9 @@ int ext4fs_open(const char *filename, loff_t *len)
 		if (status == 0)
 			goto fail;
 	}
-	*len = le32_to_cpu(fdiro->inode.size);
+	/* size_high holds the upper 32 size bits for ext4 regular files */
+	*len = le32_to_cpu(fdiro->inode.size) |
+		((loff_t)le32_to_cpu(fdiro->inode.size_high) << 32);
 	ext4fs_file = fdiro;
 
 	return 0;

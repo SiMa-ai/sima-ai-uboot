@@ -16,6 +16,8 @@
 #include <linux/delay.h>
 #include <asm/arch/phy_init.h>
 #include <asm/arch/simaai_ddr_utils.h>
+#include <asm/arch/ddr_tuning.h>
+#include <asm/arch/shmem.h>
 
 #define RUN_DDR_SEQUENCE(d, dc) res = run_sequence(dc->addrs[j].ddrc_base, dc->addrs[j].phy_base, \
 		dc->sequences[d], dc->firmwares, PHY_DDR_FIRMWARE_NUM, &dc->settings->chip_settings[j], \
@@ -23,6 +25,16 @@
 #define RUN_DDR_SEQUENCE_BREAK(d, dc) res = run_sequence(dc->addrs[j].ddrc_base, dc->addrs[j].phy_base, \
 		dc->sequences[d], dc->firmwares, PHY_DDR_FIRMWARE_NUM, &dc->settings->chip_settings[j], \
 		get_unique_vals(dc, d)); if(res) break
+/*
+ * Variant that does NOT continue on error — caller is responsible for any
+ * post-call diagnostics + `continue`. Used for 2D_TRAINING so the
+ * "ctrl N took ..." printf runs even when run_sequence returns -5
+ * (get_mail() timeout). On this board the serial buffer flush is gated
+ * on that printf appearing, so skipping it makes the QB hang invisible.
+ */
+#define RUN_DDR_SEQUENCE_NOCONT(d, dc) res = run_sequence(dc->addrs[j].ddrc_base, dc->addrs[j].phy_base, \
+		dc->sequences[d], dc->firmwares, PHY_DDR_FIRMWARE_NUM, &dc->settings->chip_settings[j], \
+		get_unique_vals(dc, d))
 
 static init_element_t seq_prepare_mailbox[] = {
     { .type=PHY_INIT_TYPE_PHY, .addr=0xd0031, .value=0x1  },
@@ -60,10 +72,48 @@ void sima_ddr_init(void)
 #endif
 #endif
 	uint32_t summary[4] = {0};
-	ddrc_t *ddrc = get_ddrc();
+	ddrc_t *ddrc;
+	const struct ddr_tuning_hdr *qb_hdr = NULL;
+	int qb_active = 0;
+	ddrc_settings_t *s;
+	uint64_t total_t0, total_t1, total_freq;
 
+	asm volatile("mrs %0, cntvct_el0" : "=r"(total_t0));
+	asm volatile("mrs %0, cntfrq_el0" : "=r"(total_freq));
+
+#if defined(CONFIG_TARGET_MODALIX)
+	if (shmem_ddr_tuning_available() == 1) {
+		s = get_ddrc_settings();
+		if (s)
+			qb_hdr = sima_ddr_qb_validate_blob(
+					(uint32_t)get_board_id(),
+					(uint32_t)s->type,
+					s->ddrc_mask);
+		if (qb_hdr) {
+			qb_active = 1;
+		} else {
+			printf("DDR INIT: QuickBoot blob rejected; clearing flag\n");
+			shmem_ddr_tuning_clear();
+		}
+	}
+	sima_ddr_quickboot_set(qb_active);
+#endif
+	ddrc = get_ddrc();
 	if(ddrc == NULL)
 		return;
+
+	/*
+	 * Register a NO-OP cb on cold boot. This makes the
+	 * `if (cb)` check in PHY_INIT_TYPE_RUN handler pass and triggers
+	 * an indirect call, but the cb itself does nothing. Isolates "cb
+	 * being called per RUN" from "cb actually doing capture work".
+	 */
+#if defined(CONFIG_TARGET_MODALIX)
+	if (!qb_active) {
+		sima_ddr_qb_capture_reset();
+		phy_init_set_post_training_cb(sima_ddr_qb_post_training_capture);
+	}
+#endif
 
 	printf("\nDDR INIT: Target DDR controller frequency: %dMHz\n", freq_to_uint(ddrc->settings->type));
 	for(j = 0; j < PHY_DDR_MAX_CONTROLLERS; j++) {
@@ -82,13 +132,48 @@ void sima_ddr_init(void)
 		RUN_DDR_SEQUENCE(PHY_INIT_DDR_POSTRESET, ddrc);
 		if (!IS_ZEBU(get_board_id())) {
 			debug("DDR INIT: Postreset completed for controller %d, preparing mailbox\n", j);
-			ddrc->sequences[PHY_INIT_DDR_PREPARE_MAILBOX].elements = &seq_prepare_mailbox;
+			ddrc->sequences[PHY_INIT_DDR_PREPARE_MAILBOX].elements = (init_element_t *)&seq_prepare_mailbox;
 			ddrc->sequences[PHY_INIT_DDR_PREPARE_MAILBOX].size = ARRAY_SIZE(seq_prepare_mailbox);
 			RUN_DDR_SEQUENCE(PHY_INIT_DDR_PREPARE_MAILBOX, ddrc);
 
 		}
 		debug("DDR INIT: Preparing mailboxes completed for controller %d, running 2D training\n", j);
-		RUN_DDR_SEQUENCE(PHY_INIT_DDR_2D_TRAINING, ddrc);
+		{
+			uint64_t cnt0, cnt1, freq;
+			asm volatile("mrs %0, cntvct_el0" : "=r"(cnt0));
+			asm volatile("mrs %0, cntfrq_el0" : "=r"(freq));
+			/*
+			 * ColdBoot: RUN_DDR_SEQUENCE(2D_TRAINING) trains for ~5 s.
+			 * QuickBoot: RUN_DDR_SEQUENCE(2D_TRAINING) is the QB "load"
+			 *       sequence (MemReset, PMU clock, ECC disable,
+			 *       IMEM+DMEM load). Then we splat per-board state
+			 *       into PMU DMEM and trigger the firmware via the
+			 *       QB "run" sequence in the STORE slot.
+			 */
+			/*
+			 * QuickBoot: BEFORE seq3_2D writes DMEM, pre-patch
+			 * qb_firmware_ddr_modalix_2D_1_values[] with THIS
+			 * controller's captured Message Block + SAVE area
+			 * from the OCM blob. seq3_2D's PHY_INIT_TYPE_FIRMWARE
+			 * load then writes the per-board values to PHY DMEM
+			 * (with side-effects gated off in phy_init.c when
+			 * sima_ddr_quickboot_active()). The PHY_INIT_TYPE_RUN
+			 * at the end of seq3_2D starts the QB PMU firmware
+			 * which short-circuits training and drives DFI ready.
+			 */
+#if defined(CONFIG_TARGET_MODALIX)
+			if (qb_active)
+				sima_ddr_qb_patch_firmware_array(qb_hdr, j);
+#endif
+			RUN_DDR_SEQUENCE_NOCONT(PHY_INIT_DDR_2D_TRAINING, ddrc);
+			asm volatile("mrs %0, cntvct_el0" : "=r"(cnt1));
+			printf("DDR INIT: 2D training ctrl %d took %llu us (res=%d, qb=%d)\n",
+			       j,
+			       (unsigned long long)((cnt1 - cnt0) * 1000000ULL / (freq ? freq : 1)),
+			       res, qb_active);
+			if (res)
+				continue;
+		}
 #if defined(CONFIG_TARGET_DAVINCI)
 #if ((DIAGNOSTIC_TEST == 4) || (DIAGNOSTIC_TEST == 5) || (DIAGNOSTIC_TEST == 6))
 		test_count=1;
@@ -161,4 +246,39 @@ void sima_ddr_init(void)
 
 		printf("DDR %d: %s\n", j, summary[j]?"PASSED":"FAILED");
 	}
+
+#if defined(CONFIG_TARGET_MODALIX)
+	/*
+	 * Cold-boot capture only. On Quick boot, tRoot already restored the
+	 * blob to OCM from DDR_TRAI.BIN; re-capturing would just rewrite
+	 * the same data.
+	 */
+	/*
+	 * Cold-boot only: publish the captured blob header + CRC into
+	 * OCM. Per-controller data is already in OCM (cb wrote it in
+	 * place during training).
+	 */
+	if (res == 0 && !qb_active)
+		sima_ddr_capture_tuning();
+
+	/* Unregister the cb regardless of capture outcome. */
+	phy_init_set_post_training_cb(NULL);
+
+	/*
+	 * Consolidated banner — total wall-clock for sima_ddr_init and boot
+	 * mode on one line, printed AFTER per-controller training-time lines
+	 * so it shows up in the visible part of the serial log even on
+	 * boards where the very-early prints are swallowed.
+	 */
+	asm volatile("mrs %0, cntvct_el0" : "=r"(total_t1));
+	{
+		uint64_t total_us = (total_t1 - total_t0) * 1000000ULL /
+				    (total_freq ? total_freq : 1);
+		printf("DDR INIT: Boot mode: %s, total DDR init time: %llu us (%llu.%03llu s)\n",
+		       qb_active ? "QuickBoot (warm)" : "Cold (full training)",
+		       (unsigned long long)total_us,
+		       (unsigned long long)(total_us / 1000000ULL),
+		       (unsigned long long)((total_us / 1000ULL) % 1000ULL));
+	}
+#endif
 }

@@ -26,6 +26,7 @@
 #include <asm/cache.h>
 #include <asm/global_data.h>
 #include <asm/io.h>
+#include <asm/arch/shmem.h>
 #include <div64.h>
 #include <linux/math64.h>
 #include <linux/sizes.h>
@@ -804,7 +805,7 @@ int do_load(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[],
 		puts(")");
 	}
 	puts("\n");
-	uint64_t final_len = 0;
+	uint64_t final_len = len_read;
 	/* In general the minimum size of kernel is >2MB
 	 * and other files like flattened device tree, dtbo
 	 * are less than 2MB. The current assumption is that if u-boot

@@ -398,6 +398,19 @@
                 pinctrl-names = "default";
         };
 
+        i2c23: i2c@0402b000 {
+                compatible = "snps,designware-i2c";
+                reg = <0x0 0x0402b000 0x0 0x100>;
+                clock-frequency = <100000>;
+                clocks = <&sio20_clk SIMAAI_SIO_DEV_I2C3>;
+                resets = <&reset20 SIMAAI_SIO_DEV_I2C3>;
+                pinctrl-0 = <&pins_i2c23_default>;
+                pinctrl-names = "default";
+                #address-cells = <1>;
+                #size-cells = <0>;
+                status = "disabled";
+        };
+
 	uart3: uart@04006000 {
                 compatible = "snps,dw-apb-uart";
                 reg = <0x0 0x04006000 0x0 0x100>;
@@ -482,6 +495,13 @@
 		status = "disabled";
 	};
 
+	/* HPI shmem window for troot_upgrade; mirrors the kernel hpi_client
+	 * node in modalix-vis.dtsi (minus mboxes/status) -- keep in sync. */
+	hpi_client {
+		compatible = "simaai,modalix-hpi-client";
+		simaai,fixed-shmem = /bits/ 64 <0x1207500000 0x2200000>;
+	};
+
 	timer_clk: timerclk {
 		compatible = "fixed-clock";
 		#clock-cells = <0>;
@@ -561,6 +581,44 @@
 		status = "disabled";
 	};
 
+	pcie0_rc: pci@4000000000 {
+		compatible = "pci-host-ecam-generic";
+		device_type = "pci";
+		reg = <0x0000004F 0xF0000000 0x00000000 0x10000000>;
+		reg-names = "PCI ECAM";
+		linux,pci-domain = <0>;
+		#address-cells = <3>;
+		#size-cells = <2>;
+		ranges = <0x82000000 0x00000000 0x80000000 0x00000000 0x80000000 0x00000000 0x10000000>,
+		         <0xC3000000 0x00000040 0x00000000 0x00000040 0x00000000 0x0000000F 0x00000000>;
+		status = "disabled";
+	};
+
+	pcie2_rc: pci@6000000000 {
+		compatible = "pci-host-ecam-generic";
+		device_type = "pci";
+		reg = <0x0000006F 0xF0000000 0x00000000 0x10000000>;
+		reg-names = "PCI ECAM";
+		linux,pci-domain = <2>;
+		#address-cells = <3>;
+		#size-cells = <2>;
+		ranges = <0x82000000 0x00000000 0xa0000000 0x00000000 0xa0000000 0x00000000 0x10000000>,
+		         <0xC3000000 0x00000060 0x00000000 0x00000060 0x00000000 0x0000000F 0x00000000>;
+		status = "disabled";
+	};
+
+	pcie3_rc: pci@7000000000 {
+		compatible = "pci-host-ecam-generic";
+		device_type = "pci";
+		reg = <0x0000007F 0xF0000000 0x00000000 0x10000000>;
+		reg-names = "PCI ECAM";
+		linux,pci-domain = <3>;
+		#address-cells = <3>;
+		#size-cells = <2>;
+		ranges = <0x82000000 0x00000000 0xb0000000 0x00000000 0xb0000000 0x00000000 0x10000000>,
+		         <0xC3000000 0x00000070 0x00000000 0x00000070 0x00000000 0x0000000F 0x00000000>;
+		status = "disabled";
+	};
 
 	pinmux00: pinmux@0x04000000 {
 		compatible = "simaai,pinctrl-sio";

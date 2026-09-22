@@ -34,6 +34,10 @@ typedef struct __attribute__((packed))
         uint16_t secure_boot;
         uint32_t mla_freq;
         uint8_t u_boot_src;
+        /* New fields for QB tuning blob discovery — tRoot writes both
+         * on a successful warm boot (with valid DDR_TRAI.BIN). */
+        uint32_t ddr_tuning_available;
+        uint32_t ddr_tuning_address;
 } shmem_ocm_s;
 volatile shmem_ocm_s *shmem_ocm_addr = (volatile shmem_ocm_s *)(SHMEM_OCM_ADDR);
 #define VERIFY_IMAGE (6)
@@ -113,7 +117,7 @@ bool verify_image(uint64_t src_phys, uint64_t len, uint64_t *out_len)
         memcpy(ocm_addr, src_v, cur_len);
         offset += cur_len;
 
-        flush_cache(ocm_addr, cur_len);
+        flush_cache((unsigned long)ocm_addr, cur_len);
 
         // Notify tRoot to decrypt
         shmem_ocm_addr->src_addr = (uint64_t)ocm_addr;
@@ -137,7 +141,7 @@ bool verify_image(uint64_t src_phys, uint64_t len, uint64_t *out_len)
                 printf("*** kernel verification failure ****\n");
                 while(1);
         }
-        invalidate_dcache_range(ocm_addr, ocm_addr + chunk);
+        invalidate_dcache_range((unsigned long)ocm_addr, (unsigned long)(ocm_addr + chunk));
 
         // Map destination DDR physical to virtual
         uint8_t *dst_v = phys_to_virt(src_phys + *out_len);
@@ -154,4 +158,23 @@ bool verify_image(uint64_t src_phys, uint64_t len, uint64_t *out_len)
 uint8_t shmem_get_uboot_src(void) {
     invalidate_dcache_range(SHMEM_OCM_ADDR, SHMEM_OCM_ADDR + 1024);
     return shmem_ocm_addr->u_boot_src;
+}
+
+uint32_t shmem_ddr_tuning_available(void)
+{
+    invalidate_dcache_range(SHMEM_OCM_ADDR, SHMEM_OCM_ADDR + 1024);
+    return shmem_ocm_addr->ddr_tuning_available;
+}
+
+uint32_t shmem_ddr_tuning_addr(void)
+{
+    invalidate_dcache_range(SHMEM_OCM_ADDR, SHMEM_OCM_ADDR + 1024);
+    return shmem_ocm_addr->ddr_tuning_address;
+}
+
+void shmem_ddr_tuning_clear(void)
+{
+    shmem_ocm_addr->ddr_tuning_available = 0;
+    shmem_ocm_addr->ddr_tuning_address = 0;
+    flush_cache(SHMEM_OCM_ADDR, 1024);
 }

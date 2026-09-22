@@ -7,6 +7,7 @@
 #include <asm/arch/simaai_ddr_utils.h>
 #include <asm/arch/firmware_ddr.h>
 #include <asm/arch/shmem.h>
+#include <asm/arch/ddr_tuning.h>
 #include <linux/delay.h>
 #if defined(CONFIG_TARGET_DAVINCI)
 #include <asm/arch/init_ddr_933MHz.h>
@@ -397,6 +398,8 @@ static ddrc_t ddrc = {
 	.settings = NULL,
 };
 
+extern int32_t get_sequence_init_ddr_modalix_qb(init_sequence_t **sequences);
+
 ddrc_t * get_ddrc(void)
 {
 	int32_t res = 0;
@@ -412,8 +415,10 @@ ddrc_t * get_ddrc(void)
 #elif defined(CONFIG_TARGET_MODALIX)
 	if (IS_ZEBU(get_board_id())) {
 		res = get_sequence_init_ddr_modalix_zebu(&ddrc.sequences);
+	} else if (sima_ddr_quickboot_active()) {
+		res = get_sequence_init_ddr_modalix_qb(&ddrc.sequences);
 	} else {
-			res = get_sequence_init_ddr_modalix(&ddrc.sequences);
+		res = get_sequence_init_ddr_modalix(&ddrc.sequences);
 	}
 #endif
 

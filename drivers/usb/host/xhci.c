@@ -1267,6 +1267,7 @@ static int xhci_lowlevel_init(struct xhci_ctrl *ctrl)
 		return -ENODEV;
 	}
 
+        mdelay(200);	 
 	/* Zero'ing IRQ control register and IRQ pending register */
 	xhci_writel(&ctrl->ir_set->irq_control, 0x0);
 	xhci_writel(&ctrl->ir_set->irq_pending, 0x0);
